@@ -7,6 +7,7 @@ include (
         'bmv:icon',
         'bmv:btpblock',
         'bmv:bridge',
+        'bmv:bsc',
         'bsh',
         'nativecoin',
         'xcall',
