@@ -24,6 +24,7 @@ import scorex.util.ArrayList;
 import scorex.util.HashMap;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +37,7 @@ public class BTPMessageVerifier implements BMV {
     private DictDB<Hash, Snapshot> snapshots = Context.newDictDB("snapshots", Snapshot.class);
 
     public BTPMessageVerifier(BigInteger chainId, BigInteger epoch, byte[] header,
-            List<EthAddress> recents, List<EthAddress> validators) {
+                              String recents, String validators) {
 
         Config.setOnce(Config.CHAIN_ID, chainId);
         Config.setOnce(Config.EPOCH, epoch);
@@ -50,10 +51,13 @@ public class BTPMessageVerifier implements BMV {
         mta.setOffset(head.getNumber().longValue());
         mta.add(head.getHash().toBytes());
 
+        EthAddresses _validators = EthAddresses.fromString(validators);
+        EthAddresses _recents = EthAddresses.fromString(recents);
         if (head.getNumber().compareTo(BigInteger.ZERO) == 0) {
-            Context.require(recents.size() == 1, "Wrong recent signers");
+            Context.require(_recents.size() == 1, "Wrong recent signers");
         } else {
-            Context.require(recents.size() == validators.size() / 2 + 1,
+
+            Context.require(_recents.size() == _validators.size() / 2 + 1,
                     "Wrong recent signers - validators/2+1");
         }
 
@@ -61,11 +65,11 @@ public class BTPMessageVerifier implements BMV {
         this.mta.set(mta);
         this.heads.set(head.getHash(), head);
         this.snapshots.set(head.getHash(), new Snapshot(
-                    head.getHash(),
-                    head.getNumber(),
-                    validators,
-                    head.getValidators(),
-                    recents));
+                head.getHash(),
+                head.getNumber(),
+                new EthAddresses(_validators),
+                new EthAddresses(head.getValidators()),
+                new EthAddresses(_recents)));
     }
 
     @External(readonly = true)
@@ -107,7 +111,6 @@ public class BTPMessageVerifier implements BMV {
         int i = 0;
         byte[][]ret = new byte[msgs.size()][];
         for (MessageEvent msg : msgs) {
-            System.out.println("DBG) Message:" + new String(msg.getMessage()));
             ret[i++] = msg.getMessage();
         }
         return ret;
@@ -135,9 +138,12 @@ public class BTPMessageVerifier implements BMV {
             Hash newRoot = confirmations.get(0).getHash();
             // TODO improve to ensure that root snapshot exists
             snapshot(newRoot);
-            trie.prune(newRoot, node -> {
-                heads.set(node, null);
-                snapshots.set(node, null);
+            trie.prune(newRoot, new BlockTree.OnRemoveListener() {
+                @Override
+                public void onRemove(Hash node) {
+                    heads.set(node, null);
+                    snapshots.set(node, null);
+                }
             });
             for (int i = confirmations.size()-1; i>=0; i--) {
                 mta.add(confirmations.get(i).getHash().toBytes());
@@ -172,7 +178,6 @@ public class BTPMessageVerifier implements BMV {
 
         Header head = null;
         for (Header confirmation : confirmations) {
-            //if (confirmation.getReceiptHash().equals(mp.getId())) {
             if (confirmation.getHash().equals(mp.getId())) {
                 head = confirmation;
                 break;
@@ -275,10 +280,10 @@ public class BTPMessageVerifier implements BMV {
         List<Header> confirmations = new ArrayList<>();
         Map<EthAddress, Boolean> validators = new HashMap<>();
         while (snap != null) {
-            List<EthAddress> newValidators = snap.getCandidates();
+            EthAddresses newValidators = snap.getCandidates();
             validators.put(head.getSigner(), Boolean.TRUE);
             if (head.isEpochBlock()) {
-                List<EthAddress> oldValidators = snap.getValidators();
+                EthAddresses oldValidators = snap.getValidators();
                 if (validators.size() > oldValidators.size() / 2 &&
                         countBy(validators, newValidators) > newValidators.size() * 2 / 3) {
                     confirmations.add(head);
@@ -326,10 +331,10 @@ public class BTPMessageVerifier implements BMV {
         return snap;
     }
 
-    private static int countBy(Map<EthAddress, Boolean> vals, List<EthAddress> newVals) {
+    private static int countBy(Map<EthAddress, Boolean> vals, EthAddresses newVals) {
         int cnt = 0;
-        for (EthAddress val : newVals) {
-            if (vals.containsKey(val)) {
+        for (int i = 0; i < newVals.size(); i++) {
+            if (vals.containsKey(newVals.get(i))) {
                 cnt++;
             }
         }

@@ -62,13 +62,4 @@ public class EventLog {
     public Hash getSignature() {
         return Hash.of(topics.get(0));
     }
-
-    @Override
-    public String toString() {
-        return "EventLog{" +
-                "address=" + address +
-                ", topics=" + topics +
-                ", data=" + Arrays.toString(data) +
-                '}';
-    }
 }
