@@ -29,38 +29,26 @@ import java.util.List;
 public class Snapshot {
     private Hash hash;
     private BigInteger number;
-    private List<EthAddress> validators;
-    private List<EthAddress> candidates;
-    private List<EthAddress> recents;
+    private EthAddresses validators;
+    private EthAddresses candidates;
+    private EthAddresses recents;
 
-    public Snapshot(Hash hash, BigInteger number, List<EthAddress> validators,
-            List<EthAddress> candidates, List<EthAddress> recents) {
+    public Snapshot(Hash hash, BigInteger number, EthAddresses validators,
+            EthAddresses candidates, EthAddresses recents) {
         this.hash = hash;
         this.number = number;
-        this.validators = Collections.unmodifiableList(validators);
-        this.candidates = Collections.unmodifiableList(candidates);
-        this.recents = Collections.unmodifiableList(recents);
+        this.validators = validators;
+        this.candidates = candidates;
+        this.recents = recents;
     }
 
     public static void writeObject(ObjectWriter w, Snapshot o) {
         w.beginList(5);
         w.writeNullable(o.hash);
         w.writeNullable(o.number);
-        w.beginList(o.validators.size());
-        for (EthAddress validator : o.validators) {
-            w.writeNullable(validator);
-        }
-        w.end();
-        w.beginList(o.candidates.size());
-        for (EthAddress candidate : o.candidates) {
-            w.writeNullable(candidate);
-        }
-        w.end();
-        w.beginList(o.recents.size());
-        for (EthAddress recent : o.recents) {
-            w.writeNullable(recent);
-        }
-        w.end();
+        w.writeNullable(o.validators);
+        w.writeNullable(o.candidates);
+        w.writeNullable(o.recents);
         w.end();
     }
 
@@ -68,34 +56,16 @@ public class Snapshot {
         r.beginList();
         Hash hash = r.read(Hash.class);
         BigInteger number = r.readBigInteger();
-
-        r.beginList();
-        List<EthAddress> validators = new ArrayList<>();
-        while(r.hasNext()) {
-            validators.add(r.read(EthAddress.class));
-        }
-        r.end();
-
-        r.beginList();
-        List<EthAddress> candidates = new ArrayList<>();
-        while(r.hasNext()) {
-            candidates.add(r.read(EthAddress.class));
-        }
-        r.end();
-
-        r.beginList();
-        List<EthAddress> recents = new ArrayList<>();
-        while(r.hasNext()) {
-            recents.add(r.read(EthAddress.class));
-        }
-        r.end();
+        EthAddresses validators = r.readNullable(EthAddresses.class);
+        EthAddresses candidates = r.readNullable(EthAddresses.class);
+        EthAddresses recents = r.readNullable(EthAddresses.class);
         r.end();
         return new Snapshot(hash, number, validators, candidates, recents);
     }
 
     public boolean inturn(EthAddress validator) {
         BigInteger offset = number.add(BigInteger.ONE).mod(BigInteger.valueOf(validators.size()));
-        EthAddress[] vals = Arrays.copyOf(validators.toArray(), validators.size(), EthAddress[].class);
+        EthAddress[] vals = validators.toArray();
         ArrayUtil.sort(vals);
         return vals[offset.intValue()].equals(validator);
     }
@@ -106,9 +76,9 @@ public class Snapshot {
 
         Hash newHash = head.getHash();
         BigInteger newNumber = head.getNumber();
-        List<EthAddress> newValidators;
-        List<EthAddress> newCandidates;
-        List<EthAddress> newRecents = new ArrayList<>(recents);
+        EthAddresses newValidators;
+        EthAddresses newCandidates;
+        EthAddresses newRecents = new EthAddresses(recents);
         BigInteger epoch = Config.getAsBigInteger(Config.EPOCH);
 
         newValidators = newNumber.mod(epoch).equals(BigInteger.valueOf(validators.size() / 2))
@@ -116,7 +86,7 @@ public class Snapshot {
             : validators;
 
         newCandidates = newNumber.mod(epoch).equals(BigInteger.ZERO)
-            ? head.getValidators()
+            ? new EthAddresses(head.getValidators())
             : candidates;
 
         newRecents.add(head.getSigner());
@@ -135,15 +105,15 @@ public class Snapshot {
         return number;
     }
 
-    public List<EthAddress> getValidators() {
+    public EthAddresses getValidators() {
         return validators;
     }
 
-    public List<EthAddress> getCandidates() {
+    public EthAddresses getCandidates() {
         return candidates;
     }
 
-    public List<EthAddress> getRecents() {
+    public EthAddresses getRecents() {
         return recents;
     }
 

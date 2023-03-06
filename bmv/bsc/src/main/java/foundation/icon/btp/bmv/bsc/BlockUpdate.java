@@ -17,9 +17,9 @@ package foundation.icon.btp.bmv.bsc;
 
 import score.Context;
 import score.ObjectReader;
+import scorex.util.ArrayList;
 import scorex.util.Collections;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class BlockUpdate {

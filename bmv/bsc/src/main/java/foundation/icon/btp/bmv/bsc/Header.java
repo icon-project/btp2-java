@@ -250,28 +250,4 @@ public class Header {
         return this.mixDigest;
     }
 
-    @Override
-    public String toString() {
-        return "Header{" +
-                "parentHash=" + parentHash +
-                ", uncleHash=" + uncleHash +
-                ", coinbase=" + coinbase +
-                ", root=" + root +
-                ", txHash=" + txHash +
-                ", receiptHash=" + receiptHash +
-                ", bloom=" + Arrays.toString(bloom) +
-                ", difficulty=" + difficulty +
-                ", number=" + number +
-                ", gasLimit=" + gasLimit +
-                ", gasUsed=" + gasUsed +
-                ", time=" + time +
-                ", extra=" + Arrays.toString(extra) +
-                ", mixDigest=" + mixDigest +
-                ", nonce=" + Arrays.toString(nonce) +
-                ", signerCache=" + signerCache +
-                ", validatorsCache=" + validatorsCache +
-                ", hashCache=" + hashCache +
-                '}';
-    }
-
 }

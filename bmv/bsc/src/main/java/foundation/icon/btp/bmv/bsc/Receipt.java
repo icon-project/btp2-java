@@ -17,11 +17,10 @@ package foundation.icon.btp.bmv.bsc;
 
 import score.Context;
 import score.ObjectReader;
+import scorex.util.ArrayList;
+import scorex.util.Collections;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class Receipt {
@@ -59,15 +58,5 @@ public class Receipt {
 
     public List<EventLog> getLogs() {
         return logs;
-    }
-
-    @Override
-    public String toString() {
-        return "Receipt{" +
-                "postStatusOrState=" + Arrays.toString(postStatusOrState) +
-                ", cumulativeGasUsed=" + cumulativeGasUsed +
-                ", bloom=" + Arrays.toString(bloom) +
-                ", logs=" + logs +
-                '}';
     }
 }

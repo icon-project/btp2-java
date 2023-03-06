@@ -20,7 +20,6 @@ import score.Context;
 import score.ObjectReader;
 import scorex.util.ArrayList;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ReceiptProof {
@@ -62,13 +61,4 @@ public class ReceiptProof {
     public byte[][] getProof() {
         return proof;
     }
-
-    @Override
-    public String toString() {
-        return "ReceiptProof{" +
-                "key=" + StringUtil.bytesToHex(key) +
-                ", proof=" + Arrays.toString(proof) +
-                '}';
-    }
-
 }

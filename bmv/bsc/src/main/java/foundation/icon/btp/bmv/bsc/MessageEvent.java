@@ -61,13 +61,4 @@ public class MessageEvent {
     public byte[] getMessage() {
         return message;
     }
-
-    @Override
-    public String toString() {
-        return "MessageEvent{" +
-                "next=" + next +
-                ", sequence=" + sequence +
-                ", message=" + Arrays.toString(message) +
-                '}';
-    }
 }
