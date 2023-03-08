@@ -15,6 +15,7 @@
  */
 package foundation.icon.btp.bmv.bsc;
 
+import foundation.icon.score.util.ArrayUtil;
 import foundation.icon.score.util.StringUtil;
 import score.ObjectReader;
 import score.ObjectWriter;
@@ -26,17 +27,38 @@ public class EthAddress implements Comparable<EthAddress> {
 
     private byte[] data;
 
+    public EthAddress() {
+    }
+
     public EthAddress(byte[] data) {
         this.data = data;
     }
 
+    public EthAddress(String data) {
+        if (data.substring(0, 2).compareTo("0x") == 0) {
+            data = data.substring(2);
+        }
+        this.data = StringUtil.hexToBytes(data);
+    }
+
     public static EthAddress of(String data) {
+        if (data.substring(0, 2).compareTo("0x") == 0) {
+            data = data.substring(2);
+        }
         return EthAddress.of(StringUtil.hexToBytes(data));
     }
 
     public static EthAddress of(byte[] data) {
         if (data.length != ADDRESS_LEN) throw BMVException.unknown("invalid Address data length");
         return new EthAddress(data);
+    }
+
+    public void setEthAddress(byte[] data) {
+        this.data = data;
+    }
+
+    public byte[] getEthAddress() {
+        return data;
     }
 
     public static EthAddress readObject(ObjectReader r) {
@@ -69,5 +91,6 @@ public class EthAddress implements Comparable<EthAddress> {
     public int hashCode() {
         return StringUtil.toString(data).hashCode();
     }
+
 
 }

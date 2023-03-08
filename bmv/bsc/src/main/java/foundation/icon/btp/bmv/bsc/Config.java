@@ -20,6 +20,7 @@ import scorex.util.HashMap;
 import java.math.BigInteger;
 import java.util.Map;
 
+// TODO Use `VarDB` instead of global object
 public class Config {
     private enum Key {
         CHAIN_ID,
@@ -37,9 +38,6 @@ public class Config {
     }
 
     public static void setOnce(Key k, Object v) {
-        if (instance.props.containsKey(k)) {
-            throw new IllegalArgumentException("key exists");
-        }
         instance.props.put(k, v);
     }
 

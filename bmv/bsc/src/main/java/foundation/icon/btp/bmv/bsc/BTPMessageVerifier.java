@@ -18,26 +18,27 @@ package foundation.icon.btp.bmv.bsc;
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
-import score.*;
+import score.Context;
+import score.DictDB;
+import score.VarDB;
 import score.annotation.External;
 import scorex.util.ArrayList;
 import scorex.util.HashMap;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import static foundation.icon.btp.bmv.bsc.Header.*;
 
 public class BTPMessageVerifier implements BMV {
-    private VarDB<BlockTree> tree = Context.newVarDB("trie", BlockTree.class);
-    private VarDB<MerkleTreeAccumulator> mta = Context.newVarDB("mta", MerkleTreeAccumulator.class);
-    private DictDB<Hash, Header> heads = Context.newDictDB("heads", Header.class);
-    private DictDB<Hash, Snapshot> snapshots = Context.newDictDB("snapshots", Snapshot.class);
+    private final VarDB<BlockTree> tree = Context.newVarDB("tree", BlockTree.class);;
+    private final VarDB<MerkleTreeAccumulator> mta = Context.newVarDB("mta", MerkleTreeAccumulator.class);
+    private final DictDB<Hash, Header> heads = Context.newDictDB("heads", Header.class);
+    private final DictDB<Hash, Snapshot> snapshots = Context.newDictDB("snapshots", Snapshot.class);
 
     public BTPMessageVerifier(BigInteger chainId, BigInteger epoch, byte[] header,
-                              String recents, String validators) {
+                              EthAddress[] recents, EthAddress[] validators) {
 
         Config.setOnce(Config.CHAIN_ID, chainId);
         Config.setOnce(Config.EPOCH, epoch);
@@ -51,13 +52,11 @@ public class BTPMessageVerifier implements BMV {
         mta.setOffset(head.getNumber().longValue());
         mta.add(head.getHash().toBytes());
 
-        EthAddresses _validators = EthAddresses.fromString(validators);
-        EthAddresses _recents = EthAddresses.fromString(recents);
         if (head.getNumber().compareTo(BigInteger.ZERO) == 0) {
-            Context.require(_recents.size() == 1, "Wrong recent signers");
+            Context.require(recents.length == 1, "Wrong recent signers");
         } else {
 
-            Context.require(_recents.size() == _validators.size() / 2 + 1,
+            Context.require(recents.length == validators.length / 2 + 1,
                     "Wrong recent signers - validators/2+1");
         }
 
@@ -67,25 +66,27 @@ public class BTPMessageVerifier implements BMV {
         this.snapshots.set(head.getHash(), new Snapshot(
                 head.getHash(),
                 head.getNumber(),
-                new EthAddresses(_validators),
+                new EthAddresses(validators),
                 new EthAddresses(head.getValidators()),
-                new EthAddresses(_recents)));
+                new EthAddresses(recents)));
     }
 
     @External(readonly = true)
     public BMVStatus getStatus() {
         MerkleTreeAccumulator mta = this.mta.get();
-        BlockTree trie = this.tree.get();
-        Header head = heads.get(trie.getRoot());
+        BlockTree tree = this.tree.get();
+        Header head = heads.get(tree.getRoot());
         BMVStatus status = new BMVStatus();
         status.setHeight(head.getNumber().longValue());
-        status.setExtra((new BMVStatusExtra(mta.getOffset(), trie)).toBytes());
+        status.setExtra((new BMVStatusExtra(mta.getOffset(), tree)).toBytes());
         return status;
     }
 
+    // TODO check access authority
+    // TODO check _seq
     @External
     public byte[][] handleRelayMessage(String _bmc, String _prev, BigInteger _seq, byte[] _msg) {
-        BlockTree trie = this.tree.get();
+        BlockTree tree = this.tree.get();
         MerkleTreeAccumulator mta = this.mta.get();
         List<Header> confirmations = new ArrayList<>();
         List<MessageEvent> msgs = new ArrayList<>();
@@ -95,7 +96,7 @@ public class BTPMessageVerifier implements BMV {
         for (RelayMessage.TypePrefixedMessage tpm : rm.getMessages()) {
             Object msg = tpm.getMessage();
             if (msg instanceof BlockUpdate) {
-                confirmations.addAll(handleBlockUpdate((BlockUpdate) msg, trie, mta));
+                confirmations.addAll(handleBlockUpdate((BlockUpdate) msg, tree, mta));
             } else if (msg instanceof BlockProof) {
                 confirmations.addAll(handleBlockProof((BlockProof) msg, mta));
             } else if (msg instanceof MessageProof) {
@@ -105,7 +106,7 @@ public class BTPMessageVerifier implements BMV {
             }
         }
 
-        this.tree.set(trie);
+        this.tree.set(tree);
         this.mta.set(mta);
 
         int i = 0;
@@ -116,7 +117,7 @@ public class BTPMessageVerifier implements BMV {
         return ret;
     }
 
-    private List<Header> handleBlockUpdate(BlockUpdate bu, BlockTree trie, MerkleTreeAccumulator mta) {
+    private List<Header> handleBlockUpdate(BlockUpdate bu, BlockTree tree, MerkleTreeAccumulator mta) {
         List<Header> newHeads = bu.getHeaders();
         if (newHeads.isEmpty()) {
             return new ArrayList<>();
@@ -127,7 +128,7 @@ public class BTPMessageVerifier implements BMV {
 
         for (Header head : newHeads) {
             verify(head, parent);
-            trie.add(head);
+            tree.add(head);
             heads.set(head.getHash(), head);
             parent = head;
         }
@@ -138,12 +139,10 @@ public class BTPMessageVerifier implements BMV {
             Hash newRoot = confirmations.get(0).getHash();
             // TODO improve to ensure that root snapshot exists
             snapshot(newRoot);
-            trie.prune(newRoot, new BlockTree.OnRemoveListener() {
-                @Override
-                public void onRemove(Hash node) {
-                    heads.set(node, null);
-                    snapshots.set(node, null);
-                }
+            tree.prune(newRoot, node -> {
+                heads.set(node, null);
+                snapshots.set(node, null);
+                return null;
             });
             for (int i = confirmations.size()-1; i>=0; i--) {
                 mta.add(confirmations.get(i).getHash().toBytes());

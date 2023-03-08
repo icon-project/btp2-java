@@ -25,6 +25,9 @@ import java.util.List;
 public class EthAddresses {
     private List<EthAddress> addresses;
 
+    public EthAddresses(EthAddress[] addresses) {
+        this.addresses = new ArrayList<>(List.of(addresses));
+    }
     public EthAddresses(List<EthAddress> addresses) {
         this.addresses = addresses;
     }
@@ -87,5 +90,20 @@ public class EthAddresses {
             w.write(address);
         }
         w.end();
+    }
+
+    public static void sort(EthAddress[] a) {
+        int len = a.length;
+        for (int i = 0; i < len; i++) {
+            EthAddress v = a[i];
+            for (int j = i+1; j < len; j++) {
+                if (v.compareTo(a[j]) > 0) {
+                    EthAddress t = v;
+                    v = a[j];
+                    a[j] = t;
+                }
+            }
+            a[i] = v;
+        }
     }
 }
