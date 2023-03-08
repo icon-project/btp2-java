@@ -19,7 +19,6 @@ import score.ObjectReader;
 import scorex.util.ArrayList;
 import scorex.util.Collections;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class EventLog {

@@ -19,6 +19,8 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:okhttp:3.11.0'
     testImplementation 'foundation.icon:javaee-integration-test:0.9.0'
     testImplementation 'com.google.code.gson:gson:2.10'
+    testImplementation 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
 
 }
 
@@ -68,31 +70,5 @@ test {
             dependsOn optimizedJar
             systemProperty prefix + 'bmc-mock.scoreFilePath', tasks.getByPath(":test-lib:optimizedJarMockBMC").outputJarName
         }
-    }
-
-    options {
-        testLogging.showStandardStreams = true
-        systemProperty 'url', scoreTest.url
-        systemProperty 'nid', scoreTest.nid
-        systemProperty 'keyStore', scoreTest.default.keyStore
-        systemProperty 'keyPassword', scoreTest.default.resolvedKeyPassword
-//        systemProperty 'address', "cx0000000000000000000000000000000000000000"
-//        systemProperty 'isUpdate', "true"
-        dependsOn optimizedJar
-        systemProperty 'scoreFilePath', project.tasks.optimizedJar.outputJarName
-        project.extensions.deployJar.arguments.each {
-            arg -> systemProperty 'params.'+arg.name, arg.value
-        }
-
-        //for bsh-mock client
-        systemProperty 'bmc-mock.url', scoreTest.url
-        systemProperty 'bmc-mock.nid', scoreTest.nid
-        systemProperty 'bmc-mock.keyStore', scoreTest.default.keyStore
-        systemProperty 'bmc-mock.keyPassword', scoreTest.default.resolvedKeyPassword
-//        systemProperty 'address', "cx0000000000000000000000000000000000000000"
-//        systemProperty 'isUpdate', "true"
-        dependsOn ":test-lib:optimizedJarMockBMC"
-        systemProperty 'bmc-mock.scoreFilePath', tasks.getByPath(":test-lib:optimizedJarMockBMC").outputJarName
-        systemProperty 'bmc-mock.params._net', scoreTest.nid+'.icon'
     }
 }

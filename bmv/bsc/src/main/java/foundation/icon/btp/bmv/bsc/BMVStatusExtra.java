@@ -17,6 +17,7 @@ package foundation.icon.btp.bmv.bsc;
 
 import score.ByteArrayObjectWriter;
 import score.Context;
+import score.ObjectReader;
 
 public class BMVStatusExtra {
     // mta offset

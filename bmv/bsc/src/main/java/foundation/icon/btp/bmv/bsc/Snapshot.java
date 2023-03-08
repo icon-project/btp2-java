@@ -15,16 +15,11 @@
  */
 package foundation.icon.btp.bmv.bsc;
 
-import foundation.icon.score.util.ArrayUtil;
 import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
-import scorex.util.ArrayList;
-import scorex.util.Collections;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
 
 public class Snapshot {
     private Hash hash;
@@ -66,7 +61,7 @@ public class Snapshot {
     public boolean inturn(EthAddress validator) {
         BigInteger offset = number.add(BigInteger.ONE).mod(BigInteger.valueOf(validators.size()));
         EthAddress[] vals = validators.toArray();
-        ArrayUtil.sort(vals);
+        EthAddresses.sort(vals);
         return vals[offset.intValue()].equals(validator);
     }
 
