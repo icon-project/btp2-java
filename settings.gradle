@@ -8,6 +8,7 @@ include (
         'bmv:btpblock',
         'bmv:bridge',
         'bmv:bsc',
+        'bmv:ether2',
         'nativecoin',
         'xcall',
         'debug-bsh'
