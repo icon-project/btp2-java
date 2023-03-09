@@ -59,8 +59,8 @@ public class BTPException extends UserRevertException {
             }
             Type prev = null;
             for(Type v : values()) {
-                if (prev != null && code < prev.offset) {
-                    return v;
+                if (prev != null && code < v.offset) {
+                    return prev;
                 }
                 prev = v;
             }
