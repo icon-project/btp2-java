@@ -58,9 +58,10 @@ public class BMVUnitTest extends TestBase {
 
     @Test
     public void handleRelayMessage() {
+        byte[] next_bmc = nextForEvent(bmc);
         BigInteger seq = BigInteger.ZERO;
         String msg = "testMessage";
-        EventDataBTPMessage ed = new EventDataBTPMessage(bmc.toString(), seq.add(BigInteger.ONE), msg.getBytes());
+        EventDataBTPMessage ed = new EventDataBTPMessage(next_bmc, seq.add(BigInteger.ONE), msg.getBytes());
         BigInteger height = BigInteger.ONE;
         ReceiptProof rp = new ReceiptProof(0, List.of(ed), height);
         RelayMessage rm = new RelayMessage(new ArrayList<>(List.of(rp)));
@@ -72,6 +73,10 @@ public class BMVUnitTest extends TestBase {
         assertArrayEquals(msg.getBytes(), ret[0]);
         BMVStatus status = (BMVStatus) score.call("getStatus");
         assertEquals(height.longValue(), status.getHeight());
+    }
+
+    static byte[] nextForEvent(BTPAddress next) {
+        return Context.hash("keccak-256", next.toString().getBytes());
     }
 
     static byte[] toBytes(List<EventDataBTPMessage> events) {
@@ -112,7 +117,7 @@ public class BMVUnitTest extends TestBase {
     }
 
     static void assertEventDataBTPMessageEquals(EventDataBTPMessage o1, EventDataBTPMessage o2) {
-        assertEquals(o1.getNext_bmc(), o2.getNext_bmc());
+        assertArrayEquals(o1.getNext_bmc(), o2.getNext_bmc());
         assertEquals(o1.getSeq(), o2.getSeq());
         assertArrayEquals(o1.getMsg(), o2.getMsg());
     }
@@ -135,11 +140,11 @@ public class BMVUnitTest extends TestBase {
 
     @Test
     public void encodeRelayMessage() {
-        String next_bmc = bmc.toString();
+        byte[] next_bmc = nextForEvent(bmc);
         BigInteger seq = BigInteger.ZERO;
         byte[] msg = "testMessage".getBytes();
         EventDataBTPMessage ed = new EventDataBTPMessage(next_bmc, seq, msg);
-        assertEquals(next_bmc, ed.getNext_bmc());
+        assertArrayEquals(next_bmc, ed.getNext_bmc());
         assertEquals(seq, ed.getSeq());
         assertArrayEquals(msg, ed.getMsg());
 
