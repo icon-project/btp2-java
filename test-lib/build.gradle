@@ -2,6 +2,8 @@ version = '0.1.0'
 
 apply plugin: 'java-library'
 
+optimizedJar.enabled = false
+
 dependencies {
     //for mock package
     compileOnly("foundation.icon:javaee-api:$javaeeVersion")
