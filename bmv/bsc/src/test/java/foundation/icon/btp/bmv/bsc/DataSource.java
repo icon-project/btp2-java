@@ -36,6 +36,14 @@ public class DataSource {
         private BigInteger chainId;
         private List<EthAddress> recents;
         private List<EthAddress> validators;
+
+        public static byte[][] toBytesArray(List<EthAddress> o) {
+            byte[][] ret = new byte[o.size()][];
+            for (int i = 0; i < o.size(); i++) {
+                ret[i] = o.get(i).getEthAddress();
+            }
+            return ret;
+        }
     }
 
     @ToString

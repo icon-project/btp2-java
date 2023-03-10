@@ -25,7 +25,6 @@ import scorex.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
 
 public class BlockTree {
 
@@ -131,7 +130,7 @@ public class BlockTree {
         void onRemove(Hash node);
     }
 
-    public void prune(Hash until, Function<Hash, Void> lst) {
+    public void prune(Hash until, OnRemoveListener lst) {
         List<Hash> removals = new ArrayList<>() {{ add(root); }};
         while (removals.size() > 0) {
             List<Hash> buf = new ArrayList<>();
@@ -144,7 +143,7 @@ public class BlockTree {
                 }
                 nodes.remove(removal);
                 if (lst != null) {
-                    lst.apply(removal);
+                    lst.onRemove(removal);
                 }
             }
             removals = buf;
