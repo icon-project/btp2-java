@@ -32,6 +32,13 @@ public class EthAddresses {
         this.addresses = addresses;
     }
 
+    public EthAddresses(byte[][] addresses) {
+        this.addresses = new ArrayList<>();
+        for (int i = 0; i < addresses.length; i++) {
+            this.addresses.add(new EthAddress(StringUtil.bytesToHex(addresses[i])));
+        }
+    }
+
     public EthAddresses(EthAddresses o) {
         this.addresses = new ArrayList<>(o.addresses);
     }

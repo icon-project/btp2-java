@@ -22,8 +22,8 @@ public class BMVTest extends TestBase {
     public static Score deployBmv(DataSource.ConstructorParams params) throws Exception {
         return sm.deploy(sm.createAccount(), BTPMessageVerifier.class,
                 params.getChainId(), params.getEpoch(), StringUtil.hexToBytes(params.getHeader()),
-                params.getRecents().toArray(EthAddress[]::new),
-                params.getValidators().toArray(EthAddress[]::new));
+                DataSource.ConstructorParams.toBytesArray(params.getRecents()),
+                DataSource.ConstructorParams.toBytesArray(params.getValidators()));
     }
 
     public static void handleRelayMessageTest(DataSource.Case c, Score bmv, String prev) {

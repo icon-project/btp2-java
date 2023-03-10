@@ -103,20 +103,20 @@ public class Header {
 
     public static void writeObject(ObjectWriter w, Header o) {
         w.beginList(15);
-        w.writeNullable(o.parentHash);
-        w.writeNullable(o.uncleHash);
-        w.writeNullable(o.coinbase);
-        w.writeNullable(o.root);
-        w.writeNullable(o.txHash);
-        w.writeNullable(o.receiptHash);
+        w.write(o.parentHash);
+        w.write(o.uncleHash);
+        w.write(o.coinbase);
+        w.write(o.root);
+        w.write(o.txHash);
+        w.write(o.receiptHash);
         w.write(o.bloom);
-        w.writeNullable(o.difficulty);
-        w.writeNullable(o.number);
-        w.writeNullable(o.gasLimit);
-        w.writeNullable(o.gasUsed);
+        w.write(o.difficulty);
+        w.write(o.number);
+        w.write(o.gasLimit);
+        w.write(o.gasUsed);
         w.write(o.time);
         w.write(o.extra);
-        w.writeNullable(o.mixDigest);
+        w.write(o.mixDigest);
         w.write(o.nonce);
         w.end();
     }
@@ -133,7 +133,7 @@ public class Header {
     }
 
     public boolean isEpochBlock() {
-        return number.mod(Config.getAsBigInteger(Config.EPOCH)) == BigInteger.ZERO;
+        return number.mod(Config.getAsBigInteger(Config.EPOCH)).equals(BigInteger.ZERO);
     }
 
     public Hash getHash() {
@@ -170,21 +170,21 @@ public class Header {
     private byte[] getSealHash() {
         ByteArrayObjectWriter w = Context.newByteArrayObjectWriter("RLP");
         w.beginList(16);
-        w.writeNullable(Config.getAsBigInteger(Config.CHAIN_ID));
-        w.writeNullable(parentHash);
-        w.writeNullable(uncleHash);
-        w.writeNullable(coinbase);
-        w.writeNullable(root);
-        w.writeNullable(txHash);
-        w.writeNullable(receiptHash);
+        w.write(Config.getAsBigInteger(Config.CHAIN_ID));
+        w.write(parentHash);
+        w.write(uncleHash);
+        w.write(coinbase);
+        w.write(root);
+        w.write(txHash);
+        w.write(receiptHash);
         w.write(bloom);
-        w.writeNullable(difficulty);
-        w.writeNullable(number);
-        w.writeNullable(gasLimit);
-        w.writeNullable(gasUsed);
+        w.write(difficulty);
+        w.write(number);
+        w.write(gasLimit);
+        w.write(gasUsed);
         w.write(time);
         w.write(Arrays.copyOfRange(extra, 0, extra.length-65));
-        w.writeNullable(mixDigest);
+        w.write(mixDigest);
         w.write(nonce);
         w.end();
         return Context.hash("keccak-256", w.toByteArray());
