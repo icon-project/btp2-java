@@ -26,6 +26,7 @@ import foundation.icon.btp.test.MockBMCIntegrationTest;
 import foundation.icon.jsonrpc.model.TransactionResult;
 import foundation.icon.score.client.DefaultScoreClient;
 import org.junit.jupiter.api.Test;
+import score.Context;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
@@ -43,16 +44,16 @@ public class BMVIntegrationTest implements BTPIntegrationTest {
                     "_net", BMVUnitTest.prev.net(),
                     "_offset", BigInteger.ZERO));
 
-    static final BTPAddress bmc = new BTPAddress(BTPIntegrationTest.Faker.btpNetwork(),
-            MockBMCIntegrationTest.mockBMC._address().toString());
+    static final BTPAddress bmc = BTPAddress.valueOf(MockBMCIntegrationTest.mockBMC.getBtpAddress());
 
     static BMV bmv = new BMVScoreClient(bmvClient);
 
     @Test
     void handleRelayMessage() {
+        byte[] next_bmc = BMVUnitTest.nextForEvent(bmc);
         BigInteger seq = BigInteger.ZERO;
         String msg = "testMessage";
-        EventDataBTPMessage ed = new EventDataBTPMessage(bmc.toString(), seq.add(BigInteger.ONE), msg.getBytes());
+        EventDataBTPMessage ed = new EventDataBTPMessage(next_bmc, seq.add(BigInteger.ONE), msg.getBytes());
         BigInteger height = BigInteger.ONE;
         ReceiptProof rp = new ReceiptProof(0, List.of(ed), height);
         RelayMessage rm = new RelayMessage(new ArrayList<>(List.of(rp)));

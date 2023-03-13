@@ -26,6 +26,7 @@ import score.annotation.External;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 
 public class BTPMessageVerifier implements BMV {
@@ -45,7 +46,7 @@ public class BTPMessageVerifier implements BMV {
         BTPAddress curAddr = BTPAddress.valueOf(_bmc);
         BTPAddress prevAddr = BTPAddress.valueOf(_prev);
         checkAccessible(curAddr, prevAddr);
-
+        byte[] bmc = Context.hash("keccak-256", _bmc.getBytes());
         BigInteger next_seq = _seq.add(BigInteger.ONE);
         RelayMessage rm = RelayMessage.fromBytes(_msg);
         BigInteger height = varHeight.getOrDefault(BigInteger.ZERO);
@@ -59,7 +60,9 @@ public class BTPMessageVerifier implements BMV {
             }
             height = rp.getHeight();
             for (EventDataBTPMessage ev : rp.getEvents()) {
-                //skip compare ev.next_bmc == _bmc
+                if (!Arrays.equals(bmc, ev.getNext_bmc())) {
+                    continue;
+                }
                 int compare = ev.getSeq().compareTo(next_seq);
                 if (compare < 0) {
                     //ignore lower seq
