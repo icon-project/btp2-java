@@ -7,10 +7,13 @@ import com.iconloop.score.test.TestBase;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
 import foundation.icon.score.util.StringUtil;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -46,8 +49,8 @@ public class BMVTest extends TestBase {
         }
     }
 
-    public static class MainNetBMVTest extends TestBase {
-        private static DataSource data = DataSource.loadDataSource("mainnet.json");
+    public static class MainNetBMVTest {
+        private static final DataSource data = DataSource.loadDataSource("mainnet.json");
         @TestFactory
         public Collection<DynamicTest> handleRelayMessageTests() {
             DataSource.ConstructorParams params = data.getParams();
@@ -64,8 +67,8 @@ public class BMVTest extends TestBase {
         }
     }
 
-    public static class OneValidatorBMVTest extends TestBase {
-        private static DataSource data = DataSource.loadDataSource("privnet.json");;
+    public static class OneValidatorBMVTest {
+        private static final DataSource data = DataSource.loadDataSource("privnet.json");;
         private static final BTPAddress PREV_BMC = BTPAddress.parse("btp://0x1.eth/0xD2F04942FF92709ED9d41988D161710D18d7f1FE");
 
         @TestFactory
