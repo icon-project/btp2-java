@@ -156,8 +156,16 @@ public class BlockUpdate {
         var signingRoot = getSigningRoot(genesisValidatorsRoot);
         var committeeSig = syncAggregate.getSyncCommitteeSignature();
         var aggregatedKey = Context.aggregate(BLS_AGGREGATE_ALG, null, new byte[0]);
-        for (int i = 0; i < aggregateBits.length; i++)
-            if (aggregateBits[i]) aggregatedKey = Context.aggregate(BLS_AGGREGATE_ALG, aggregatedKey, syncCommitteePubs[i]);
+        var verified = 0;
+        for (int i = 0; i < aggregateBits.length; i++) {
+            if (aggregateBits[i]) {
+                aggregatedKey = Context.aggregate(BLS_AGGREGATE_ALG, aggregatedKey, syncCommitteePubs[i]);
+                verified++;
+            }
+        }
+        if (verified * 3 < 2 * aggregateBits.length) {
+            throw BMVException.unknown("not enough validator : " + verified);
+        }
         return Context.verifySignature(BLS_SIG_ALG, signingRoot, committeeSig, aggregatedKey);
     }
 
