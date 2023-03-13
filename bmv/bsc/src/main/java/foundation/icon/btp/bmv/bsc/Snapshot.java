@@ -39,11 +39,11 @@ public class Snapshot {
 
     public static void writeObject(ObjectWriter w, Snapshot o) {
         w.beginList(5);
-        w.writeNullable(o.hash);
-        w.writeNullable(o.number);
-        w.writeNullable(o.validators);
-        w.writeNullable(o.candidates);
-        w.writeNullable(o.recents);
+        w.write(o.hash);
+        w.write(o.number);
+        w.write(o.validators);
+        w.write(o.candidates);
+        w.write(o.recents);
         w.end();
     }
 
@@ -51,9 +51,9 @@ public class Snapshot {
         r.beginList();
         Hash hash = r.read(Hash.class);
         BigInteger number = r.readBigInteger();
-        EthAddresses validators = r.readNullable(EthAddresses.class);
-        EthAddresses candidates = r.readNullable(EthAddresses.class);
-        EthAddresses recents = r.readNullable(EthAddresses.class);
+        EthAddresses validators = r.read(EthAddresses.class);
+        EthAddresses candidates = r.read(EthAddresses.class);
+        EthAddresses recents = r.read(EthAddresses.class);
         r.end();
         return new Snapshot(hash, number, validators, candidates, recents);
     }

@@ -408,12 +408,12 @@ public class MerkleTreeAccumulator {
     }
 
     public static MerkleTreeAccumulator fromBytes(byte[] bytes) {
-        ObjectReader reader = Context.newByteArrayObjectReader("RLP", bytes);
+        ObjectReader reader = Context.newByteArrayObjectReader("RLPn", bytes);
         return MerkleTreeAccumulator.readObject(reader);
     }
 
     public byte[] toBytes() {
-        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLP");
+        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLPn");
         MerkleTreeAccumulator.writeObject(writer, this);
         return writer.toByteArray();
     }

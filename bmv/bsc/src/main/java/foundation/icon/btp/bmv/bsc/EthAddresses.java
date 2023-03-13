@@ -85,7 +85,7 @@ public class EthAddresses {
 
         List<EthAddress> addresses = new ArrayList<>();
         while(r.hasNext()) {
-            addresses.add(r.readNullable(EthAddress.class));
+            addresses.add(r.read(EthAddress.class));
         }
         r.end();
         return new EthAddresses(addresses);

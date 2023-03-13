@@ -33,7 +33,7 @@ public class BMVStatusExtra {
         ByteArrayObjectWriter w = Context.newByteArrayObjectWriter("RLP");
         w.beginList(2);
         w.write(offset);
-        w.writeNullable(tree);
+        w.write(tree);
         w.end();
         return w.toByteArray();
     }
