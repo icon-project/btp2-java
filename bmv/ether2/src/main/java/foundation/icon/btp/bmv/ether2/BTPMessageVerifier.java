@@ -42,6 +42,8 @@ public class BTPMessageVerifier implements BMV {
         properties.setCurrentSyncCommittee(SyncCommittee.deserialize(syncCommittee));
         properties.setFinalizedHeader(BeaconBlockHeader.deserialize(finalizedHeader));
         properties.setEtherBmc(etherBmc);
+        properties.setLastMsgSlot(BigInteger.ZERO);
+        properties.setLastMsgSeq(BigInteger.ZERO);
     }
 
     @External
@@ -59,12 +61,12 @@ public class BTPMessageVerifier implements BMV {
         for (RelayMessage.TypePrefixedMessage message : typePrefixedMessages) {
             Object msg = message.getMessage();
             if (msg instanceof BlockUpdate) {
-                verifyBlockUpdate((BlockUpdate) msg);
+                processBlockUpdate((BlockUpdate) msg);
             } else if (msg instanceof BlockProof) {
                 blockProof = (BlockProof) msg;
-                verifyBlockProof(blockProof);
+                processBlockProof(blockProof);
             } else if (msg instanceof MessageProof) {
-                var msgs = verifyMessage((MessageProof) msg, blockProof);
+                var msgs = processMessageProof((MessageProof) msg, blockProof);
                 for(byte[] m : msgs) {
                     msgList.add(m);
                 }
@@ -95,7 +97,7 @@ public class BTPMessageVerifier implements BMV {
         return propertiesDB.getOrDefault(BMVProperties.DEFAULT);
     }
 
-    private void verifyBlockUpdate(BlockUpdate blockUpdate) {
+    private void processBlockUpdate(BlockUpdate blockUpdate) {
         blockUpdate.verifyFinalizedHeader();
         var bmvProperties = getProperties();
 
@@ -105,19 +107,30 @@ public class BTPMessageVerifier implements BMV {
         var nextSyncCommittee = blockUpdate.getNextSyncCommittee();
         if (nextSyncCommittee != null) {
             blockUpdate.verifyNextSyncCommittee();
-            bmvProperties.setCurrentSyncCommittee(nextSyncCommittee);
         }
+        applyBlockUpdate(blockUpdate, bmvProperties);
+    }
 
+    private void applyBlockUpdate(BlockUpdate blockUpdate, BMVProperties bmvProperties) {
+        var nextSyncCommittee = bmvProperties.getNextSyncCommittee();
         var storeSlot = bmvProperties.getFinalizedHeader().getSlot();
         var updateFinalizedSlot = BeaconBlockHeader.deserialize(blockUpdate.getFinalizedHeader()).getSlot();
         var storePeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(storeSlot));
-        var updateSignaturePeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(updateFinalizedSlot));
-
-        bmvProperties.setFinalizedHeader(BeaconBlockHeader.deserialize(blockUpdate.getFinalizedHeader()));
+        var updateFinalizedPeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(updateFinalizedSlot));
+        if (nextSyncCommittee == null) {
+            if (updateFinalizedPeriod.compareTo(storePeriod) == 0) throw BMVException.unknown("invalid update period");
+            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
+        } else if (updateFinalizedPeriod.compareTo(storePeriod.add(BigInteger.ONE)) == 0) {
+            bmvProperties.setCurrentSyncCommittee(bmvProperties.getNextSyncCommittee());
+            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
+        }
+        if (updateFinalizedPeriod.compareTo(bmvProperties.getFinalizedHeader().getSlot()) > 0) {
+            bmvProperties.setFinalizedHeader(BeaconBlockHeader.deserialize(blockUpdate.getFinalizedHeader()));
+        }
         propertiesDB.set(bmvProperties);
     }
 
-    private void verifyBlockProof(BlockProof blockProof) {
+    private void processBlockProof(BlockProof blockProof) {
         var bmvProperties = getProperties();
         var finalizedHeader = bmvProperties.getFinalizedHeader();
         var attestingHeader = blockProof.getBeaconBlockHeader();
@@ -132,7 +145,7 @@ public class BTPMessageVerifier implements BMV {
         SszUtils.verify(finalizedHeader.getStateRoot(), blockProof.getProof());
     }
 
-    private byte[][] verifyMessage(MessageProof messageProof, BlockProof blockProof) {
+    private byte[][] processMessageProof(MessageProof messageProof, BlockProof blockProof) {
         var bmvProperties = getProperties();
         var beaconBlockHeader = blockProof.getBeaconBlockHeader();
         var stateRoot = beaconBlockHeader.getStateRoot();

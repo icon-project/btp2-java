@@ -126,7 +126,7 @@ public class BMVProperties {
         object.setSrcNetworkID(r.readByteArray());
         object.setGenesisValidatorsHash(r.readByteArray());
         object.setCurrentSyncCommittee(r.read(SyncCommittee.class));
-        object.setNextSyncCommittee(r.read(SyncCommittee.class));
+        object.setNextSyncCommittee(r.readNullable(SyncCommittee.class));
         object.setBmc(r.readAddress());
         object.setFinalizedHeader(r.read(BeaconBlockHeader.class));
         object.setEtherBmc(r.readByteArray());
@@ -141,7 +141,7 @@ public class BMVProperties {
         w.write(obj.srcNetworkID);
         w.write(obj.genesisValidatorsHash);
         w.write(obj.currentSyncCommittee);
-        w.write(obj.nextSyncCommittee);
+        w.writeNullable(obj.nextSyncCommittee);
         w.write(obj.bmc);
         w.write(obj.finalizedHeader);
         w.write(obj.etherBmc);
