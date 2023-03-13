@@ -243,8 +243,6 @@ public class BTPMessageVerifier implements BMV {
 
     private void verify(Header head, Header parent) {
         verify(head);
-
-        Context.require(Context.getBlockTimestamp() > head.getTime(), "Future block");
         verifyForkHashes(head);
 
         // verify cascading fields

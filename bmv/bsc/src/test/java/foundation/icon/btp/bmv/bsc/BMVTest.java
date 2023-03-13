@@ -20,7 +20,6 @@ public class BMVTest extends TestBase {
     static final BTPAddress BMC_BTP_ADDR = BTPAddress.parse("btp://0x1.icon/cx123");
 
     public static Score deployBmv(DataSource.ConstructorParams params) throws Exception {
-        System.out.println("DBG:) ChainID: " + params.toString());
         return sm.deploy(sm.createAccount(), BTPMessageVerifier.class,
                 params.getChainId(), params.getEpoch(), StringUtil.hexToBytes(params.getHeader()),
                 DataSource.ConstructorParams.toBytesArray(params.getRecents()),
