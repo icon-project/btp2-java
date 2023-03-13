@@ -1,4 +1,4 @@
-rootProject.name = 'javascore'
+rootProject.name = 'btp2-java'
 include (
         'score-util',
         'lib',
