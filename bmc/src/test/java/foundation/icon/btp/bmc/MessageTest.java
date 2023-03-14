@@ -132,7 +132,7 @@ public class MessageTest implements BMCIntegrationTest {
     }
 
     static Consumer<TransactionResult> btpEventChecker(
-            BTPMessage msg, BTPAddress next, BTPMessageCenter.Event event) {
+            BTPMessage msg, String next, BTPMessageCenter.Event event) {
         if (msg.getNsn().compareTo(BigInteger.ZERO) > 0) {
             return btpEventChecker(msg.getSrc(), msg.getNsn(), next, event);
         } else {
@@ -142,11 +142,16 @@ public class MessageTest implements BMCIntegrationTest {
 
     static Consumer<TransactionResult> btpEventChecker(
             String src, BigInteger nsn, BTPAddress next, BTPMessageCenter.Event event) {
+        return btpEventChecker(src, nsn, next == null ? null : next.net(), event);
+    }
+
+    static Consumer<TransactionResult> btpEventChecker(
+            String src, BigInteger nsn, String next, BTPMessageCenter.Event event) {
         return BMCIntegrationTest.btpEvent(
                 (l) -> assertTrue(l.stream().anyMatch((el) ->
                         el.get_src().equals(src) &&
                                 el.get_nsn().equals(nsn) &&
-                                el.get_next().equals(next == null ? "" : next.toString()) &&
+                                el.get_next().equals(next == null ? "" : next) &&
                                 el.get_event().equals(event.name())
                 )));
     }
@@ -336,7 +341,7 @@ public class MessageTest implements BMCIntegrationTest {
     static Consumer<TransactionResult> routeChecker(
             final BTPAddress next, final BTPMessage msg) {
         return routeChecker(next, msg, (v) -> v).andThen(
-                btpEventChecker(msg, next, BTPMessageCenter.Event.ROUTE));
+                btpEventChecker(msg, next.net(), BTPMessageCenter.Event.ROUTE));
     }
 
     static Consumer<TransactionResult> routeChecker(
