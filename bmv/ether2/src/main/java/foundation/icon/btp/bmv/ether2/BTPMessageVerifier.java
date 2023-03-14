@@ -101,7 +101,7 @@ public class BTPMessageVerifier implements BMV {
         blockUpdate.verifyFinalizedHeader();
         var bmvProperties = getProperties();
 
-        if (!blockUpdate.verifySyncAggregate(bmvProperties.getCurrentSyncCommittee().getBlsPublicKeys(), bmvProperties.getGenesisValidatorsHash()))
+        if (!blockUpdate.verifySyncAggregate(bmvProperties.getCurrentSyncCommittee().getBlsPublicKeys(), bmvProperties.getGenesisValidatorsHash(), blockUpdate.getSignatureSlot()))
             throw BMVException.unknown("invalid signature");
 
         var nextSyncCommittee = blockUpdate.getNextSyncCommittee();

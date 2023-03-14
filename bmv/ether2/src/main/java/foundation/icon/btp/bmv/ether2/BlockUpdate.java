@@ -16,6 +16,8 @@
 package foundation.icon.btp.bmv.ether2;
 
 import foundation.icon.score.util.StringUtil;
+import jdk.jshell.execution.Util;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import score.Context;
 import score.ObjectReader;
 import scorex.util.ArrayList;
@@ -31,7 +33,11 @@ public class BlockUpdate {
     private BigInteger signatureSlot;
     private byte[] nextSyncCommittee;
     private byte[][] nextSyncCommitteeBranch;
+    private static final BigInteger ALTAIR_FORK_EPOCH = BigInteger.valueOf(74240);
+    private static final BigInteger BELLATRIX_FORK_EPOCH = BigInteger.valueOf(144896);
     private static final byte[] BELLATRIX_FORK_VERSION = StringUtil.hexToBytes("02000000");
+    private static final byte[] ALTAIR_FORK_VERSION = StringUtil.hexToBytes("01000000");
+    private static final byte[] GENESIS_FORK_VERSION = StringUtil.hexToBytes("00000000");
     private static final byte[] DOMAIN_SYNC_COMMITTEE = StringUtil.hexToBytes("07000000");
     private static final String BLS_AGGREGATE_ALG = "bls12-381-g1";
     private static final String BLS_SIG_ALG = "bls12-381-g2";
@@ -131,29 +137,38 @@ public class BlockUpdate {
         return BlockUpdate.readObject(reader);
     }
 
-    byte[] getSigningRoot(byte[] genesisValidatorsRoot) {
-        var domain = computeDomain(genesisValidatorsRoot);
+    byte[] getSigningRoot(byte[] genesisValidatorsRoot, BigInteger signatureSlot) {
+        var domain = computeDomain(genesisValidatorsRoot, signatureSlot);
         var hashTree = BeaconBlockHeader.deserialize(attestedHeader).getHashTreeRoot();
         return SszUtils.concatAndHash(hashTree, domain);
     }
 
-    private static byte[] computeDomain(byte[] genesisValidatorsRoot) {
-        var forkDataRoot = computeForkDataRoot(genesisValidatorsRoot);
+    private static byte[] computeDomain(byte[] genesisValidatorsRoot, BigInteger signatureSlot) {
+        var forkDataRoot = computeForkDataRoot(genesisValidatorsRoot, signatureSlot);
         var leaf2 = new byte[28];
         System.arraycopy(forkDataRoot, 0, leaf2, 0, 28);
         return SszUtils.concat(DOMAIN_SYNC_COMMITTEE, leaf2);
     }
 
-    private static byte[] computeForkDataRoot(byte[] genesisValidatorsRoot) {
+    private static byte[] computeForkDataRoot(byte[] genesisValidatorsRoot, BigInteger signatureSlot) {
         var leaf1 = new byte[Constants.HASH_LENGTH];
-        System.arraycopy(BELLATRIX_FORK_VERSION, 0, leaf1, 0, BELLATRIX_FORK_VERSION.length);
+        var version = BlockUpdate.computeForkVersion(Utils.computeEpoch(signatureSlot));
+        System.arraycopy(version, 0, leaf1, 0, BELLATRIX_FORK_VERSION.length);
         return SszUtils.concatAndHash(leaf1, genesisValidatorsRoot);
     }
 
-    boolean verifySyncAggregate(byte[][] syncCommitteePubs, byte[] genesisValidatorsRoot) {
+    private static byte[] computeForkVersion(BigInteger epoch) {
+        if (epoch.compareTo(BELLATRIX_FORK_EPOCH) > 0)
+            return BELLATRIX_FORK_VERSION;
+        if (epoch.compareTo(ALTAIR_FORK_EPOCH) > 0)
+            return ALTAIR_FORK_VERSION;
+        return GENESIS_FORK_VERSION;
+    }
+
+    boolean verifySyncAggregate(byte[][] syncCommitteePubs, byte[] genesisValidatorsRoot, BigInteger signatureSlot) {
         var syncAggregate = getSyncAggregate();
         var aggregateBits = syncAggregate.getSyncCommitteeBits();
-        var signingRoot = getSigningRoot(genesisValidatorsRoot);
+        var signingRoot = getSigningRoot(genesisValidatorsRoot, signatureSlot);
         var committeeSig = syncAggregate.getSyncCommitteeSignature();
         var aggregatedKey = Context.aggregate(BLS_AGGREGATE_ALG, null, new byte[0]);
         var verified = 0;
