@@ -559,11 +559,13 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
             try {
                 if (btpAddr.net().equals(msg.getDst())) {
                     handleMessage(msg);
-                    emitBTPEvent(msg, null, Event.RECEIVE);
+                    emitBTPEvent(msg,
+                            msg.getSn().compareTo(BigInteger.ZERO) > 0 ? msg.getSrc() : null,
+                            Event.RECEIVE);
                 } else {
                     BTPAddress next = resolveNext(msg.getDst());
                     sendMessage(next, msg.toBytes());
-                    emitBTPEvent(msg, next, Event.ROUTE);
+                    emitBTPEvent(msg, next.net(), Event.ROUTE);
                 }
             } catch (BTPException e) {
                 if (msg.getSn().compareTo(BigInteger.ZERO) > 0) {
@@ -787,7 +789,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
             event = Event.SEND;
         }
         sendMessage(next, btpMsg.toBytes());
-        emitBTPEvent(btpMsg, next, event);
+        emitBTPEvent(btpMsg, next.net(), event);
         return btpMsg.getNsn();
     }
 
@@ -834,7 +836,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
         btpMsg.setNsn(msg.getNsn().negate());
         btpMsg.setFeeInfo(feeInfo);
         sendMessage(prev, btpMsg.toBytes());
-        emitBTPEvent(msg, prev, Event.ERROR);
+        emitBTPEvent(msg, prev.net(), Event.ERROR);
     }
 
     private void sendMessage(BTPAddress next, byte[] serializedMsg) {
@@ -870,7 +872,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
         btpMsg.setSn(BigInteger.ZERO);
         btpMsg.setPayload(payload);
         btpMsg.setNsn(nextNetworkSn());
-        emitBTPEvent(btpMsg, next, Event.SEND);
+        emitBTPEvent(btpMsg, next.net(), Event.SEND);
         sendMessage(next, btpMsg.toBytes());
     }
 
@@ -889,9 +891,9 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
     public void Message(String _next, BigInteger _seq, byte[] _msg) {
     }
 
-    private void emitBTPEvent(BTPMessage msg, BTPAddress next, Event event) {
+    private void emitBTPEvent(BTPMessage msg, String next, Event event) {
         BigInteger nsn = msg.getNsn();
-        String _next = next == null ? "" : next.toString();
+        String _next = next == null ? "" : next;
         if (nsn.compareTo(BigInteger.ZERO) < 0) {
             BTPEvent(msg.getDst(), nsn.negate(), _next, event.name());
         } else {
