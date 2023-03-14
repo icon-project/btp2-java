@@ -324,7 +324,9 @@ public class MessageTest implements BMCIntegrationTest {
             assertEquals(msg.getSvc(), el.get_svc());
             assertEquals(msg.getSn(), el.get_sn());
             assertArrayEquals(msg.getPayload(), el.get_msg());
-        }).andThen(btpEventChecker(msg, null, BTPMessageCenter.Event.RECEIVE));
+        }).andThen(btpEventChecker(msg,
+                msg.getSn().signum() == 1 ? msg.getSrc() : null,
+                BTPMessageCenter.Event.RECEIVE));
     }
 
     static Consumer<TransactionResult> sendMessageChecker(

@@ -559,7 +559,9 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
             try {
                 if (btpAddr.net().equals(msg.getDst())) {
                     handleMessage(msg);
-                    emitBTPEvent(msg, null, Event.RECEIVE);
+                    emitBTPEvent(msg,
+                            msg.getSn().compareTo(BigInteger.ZERO) > 0 ? msg.getSrc() : null,
+                            Event.RECEIVE);
                 } else {
                     BTPAddress next = resolveNext(msg.getDst());
                     sendMessage(next, msg.toBytes());
