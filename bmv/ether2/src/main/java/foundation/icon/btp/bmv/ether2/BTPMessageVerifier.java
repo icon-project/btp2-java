@@ -44,6 +44,7 @@ public class BTPMessageVerifier implements BMV {
         properties.setEtherBmc(etherBmc);
         properties.setLastMsgSlot(BigInteger.ZERO);
         properties.setLastMsgSeq(BigInteger.ZERO);
+        propertiesDB.set(properties);
     }
 
     @External
@@ -91,6 +92,13 @@ public class BTPMessageVerifier implements BMV {
                 properties.getLastMsgSeq(),
                 properties.getLastMsgSlot()).toBytes());
         return s;
+    }
+
+    @External
+    public void setEtherBMC(byte[] etherBMC) {
+        var bmvProperties = getProperties();
+        bmvProperties.setEtherBmc(etherBMC);
+        propertiesDB.set(bmvProperties);
     }
 
     BMVProperties getProperties() {
