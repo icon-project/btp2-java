@@ -19,6 +19,7 @@ import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
 import foundation.icon.score.util.StringUtil;
+import jnr.ffi.StructLayout;
 import score.Address;
 import score.Context;
 import score.VarDB;
@@ -186,17 +187,17 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private byte[] messageFromData(byte[] data) {
-        var params = abiDecode(StringUtil.bytesToHex(data), eventSignature);
+        var params = abiDecode(StringUtil.bytesToHex(data));
         return (byte[])params.get(2);
     }
 
-    private static List<Object> abiDecode(String eventData, String eventSig) {
-        String[] inputTypes = eventSig.substring(eventSig.indexOf('(') + 1, eventSig.indexOf(')')).split(",");
+    private List<Object> abiDecode(String eventData) {
+        String[] inputTypes = {"string", "uint256", "bytes"};
         List<Object> decoded = new ArrayList<>();
 
         int offset = 0;
         for (String inputType : inputTypes) {
-            switch (inputType.trim()) {
+            switch (inputType) {
                 case "bytes":
                     int byteLength = Integer.parseInt(eventData.substring(offset, offset + 64), 16);
                     int byteStart = (byteLength * 2) + 64 + offset;
