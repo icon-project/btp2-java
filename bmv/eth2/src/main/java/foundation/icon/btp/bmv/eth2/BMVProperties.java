@@ -32,9 +32,9 @@ public class BMVProperties {
     private byte[] srcNetworkID;
     private byte[] genesisValidatorsHash;
 
-    private SyncCommittee currentSyncCommittee;
+    private byte[] currentSyncCommittee;
 
-    private SyncCommittee nextSyncCommittee;
+    private byte[] nextSyncCommittee;
     private Address bmc;
     private BeaconBlockHeader finalizedHeader;
     private byte[] etherBmc;
@@ -58,19 +58,19 @@ public class BMVProperties {
         this.bmc = bmc;
     }
 
-    SyncCommittee getCurrentSyncCommittee() {
+    byte[] getCurrentSyncCommittee() {
         return currentSyncCommittee;
     }
 
-    void setCurrentSyncCommittee(SyncCommittee syncCommittee) {
+    void setCurrentSyncCommittee(byte[] syncCommittee) {
         this.currentSyncCommittee = syncCommittee;
     }
 
-    public SyncCommittee getNextSyncCommittee() {
+    public byte[] getNextSyncCommittee() {
         return nextSyncCommittee;
     }
 
-    public void setNextSyncCommittee(SyncCommittee nextSyncCommittee) {
+    public void setNextSyncCommittee(byte[] nextSyncCommittee) {
         this.nextSyncCommittee = nextSyncCommittee;
     }
 
@@ -125,8 +125,8 @@ public class BMVProperties {
         var object = new BMVProperties();
         object.setSrcNetworkID(r.readByteArray());
         object.setGenesisValidatorsHash(r.readByteArray());
-        object.setCurrentSyncCommittee(r.read(SyncCommittee.class));
-        object.setNextSyncCommittee(r.readNullable(SyncCommittee.class));
+        object.setCurrentSyncCommittee(r.readByteArray());
+        object.setNextSyncCommittee(r.readNullable(byte[].class));
         object.setBmc(r.readAddress());
         object.setFinalizedHeader(r.read(BeaconBlockHeader.class));
         object.setEtherBmc(r.readByteArray());

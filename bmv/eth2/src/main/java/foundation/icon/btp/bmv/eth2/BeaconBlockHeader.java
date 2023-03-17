@@ -38,12 +38,44 @@ public class BeaconBlockHeader {
         this.bodyRoot = bodyRoot;
     }
 
-    BigInteger getSlot() {
+    public BigInteger getSlot() {
         return slot;
     }
 
-    byte[] getStateRoot() {
+    public void setSlot(BigInteger slot) {
+        this.slot = slot;
+    }
+
+    public byte[] getStateRoot() {
         return stateRoot;
+    }
+
+    public void setStateRoot(byte[] stateRoot) {
+        this.stateRoot = stateRoot;
+    }
+
+    public BigInteger getValidatorIndex() {
+        return validatorIndex;
+    }
+
+    public void setValidatorIndex(BigInteger validatorIndex) {
+        this.validatorIndex = validatorIndex;
+    }
+
+    public byte[] getParentRoot() {
+        return parentRoot;
+    }
+
+    public void setParentRoot(byte[] parentRoot) {
+        this.parentRoot = parentRoot;
+    }
+
+    public byte[] getBodyRoot() {
+        return bodyRoot;
+    }
+
+    public void setBodyRoot(byte[] bodyRoot) {
+        this.bodyRoot = bodyRoot;
     }
 
     byte[] getHashTreeRoot() {

@@ -47,9 +47,4 @@ public class BTPMessageVerifierScoreTest extends TestBase {
         txHandler.transfer(ownerWallet.getAddress(), amount);
         ensureIcxBalance(txHandler, ownerWallet.getAddress(), BigInteger.ZERO, amount);
     }
-
-    @Test
-    void hashTree() throws Exception {
-        bmvScore = BMVScore.mustDeploy(txHandler, ownerWallet);
-    }
 }

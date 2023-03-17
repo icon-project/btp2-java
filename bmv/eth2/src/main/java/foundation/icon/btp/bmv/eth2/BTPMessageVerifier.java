@@ -19,7 +19,6 @@ import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
 import foundation.icon.score.util.StringUtil;
-import jnr.ffi.StructLayout;
 import score.Address;
 import score.Context;
 import score.VarDB;
@@ -40,7 +39,7 @@ public class BTPMessageVerifier implements BMV {
         properties.setSrcNetworkID(srcNetworkID.getBytes());
         properties.setBmc(bmc);
         properties.setGenesisValidatorsHash(genesisValidatorsHash);
-        properties.setCurrentSyncCommittee(SyncCommittee.deserialize(syncCommittee));
+        properties.setCurrentSyncCommittee(syncCommittee);
         properties.setFinalizedHeader(BeaconBlockHeader.deserialize(finalizedHeader));
         properties.setEtherBmc(etherBmc);
         properties.setLastMsgSlot(BigInteger.ZERO);
@@ -110,7 +109,8 @@ public class BTPMessageVerifier implements BMV {
         blockUpdate.verifyFinalizedHeader();
         var bmvProperties = getProperties();
 
-        if (!blockUpdate.verifySyncAggregate(bmvProperties.getCurrentSyncCommittee().getBlsPublicKeys(), bmvProperties.getGenesisValidatorsHash(), blockUpdate.getSignatureSlot()))
+        var currentSyncCommittee = SyncCommittee.deserialize(bmvProperties.getCurrentSyncCommittee());
+        if (!blockUpdate.verifySyncAggregate(currentSyncCommittee.getBlsPublicKeys(), bmvProperties.getGenesisValidatorsHash(), blockUpdate.getSignatureSlot()))
             throw BMVException.unknown("invalid signature");
 
         var nextSyncCommittee = blockUpdate.getNextSyncCommittee();
@@ -128,10 +128,10 @@ public class BTPMessageVerifier implements BMV {
         var updateFinalizedPeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(updateFinalizedSlot));
         if (nextSyncCommittee == null) {
             if (updateFinalizedPeriod.compareTo(storePeriod) == 0) throw BMVException.unknown("invalid update period");
-            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
+            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee().toBytes());
         } else if (updateFinalizedPeriod.compareTo(storePeriod.add(BigInteger.ONE)) == 0) {
             bmvProperties.setCurrentSyncCommittee(bmvProperties.getNextSyncCommittee());
-            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
+            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee().toBytes());
         }
         if (updateFinalizedPeriod.compareTo(bmvProperties.getFinalizedHeader().getSlot()) > 0) {
             bmvProperties.setFinalizedHeader(BeaconBlockHeader.deserialize(blockUpdate.getFinalizedHeader()));

@@ -16,6 +16,8 @@
 package foundation.icon.btp.bmv.eth2;
 
 
+import score.ByteArrayObjectWriter;
+import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
 import scorex.util.ArrayList;
@@ -25,12 +27,12 @@ public class SyncCommittee {
     private byte[] aggregatePubKey;
     private static final int BLS_PUBLIC_KEY_LENGTH = 48;
 
-    public SyncCommittee(byte[][] blsPublicKey, byte[] aggregatePubKey) {
-        this.blsPublicKeys = blsPublicKey;
+    public SyncCommittee(byte[][] blsPublicKeys, byte[] aggregatePubKey) {
+        this.blsPublicKeys = blsPublicKeys;
         this.aggregatePubKey = aggregatePubKey;
     }
 
-    byte[][] getBlsPublicKeys() {
+    public byte[][] getBlsPublicKeys() {
         return blsPublicKeys;
     }
 
@@ -88,5 +90,11 @@ public class SyncCommittee {
         w.end();
         w.write(syncCommittee.aggregatePubKey);
         w.end();
+    }
+
+    public byte[] toBytes() {
+        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLPn");
+        SyncCommittee.writeObject(writer, this);
+        return writer.toByteArray();
     }
 }
