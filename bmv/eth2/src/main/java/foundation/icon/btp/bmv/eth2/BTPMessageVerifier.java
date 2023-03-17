@@ -87,8 +87,9 @@ public class BTPMessageVerifier implements BMV {
     public BMVStatus getStatus() {
         var properties = getProperties();
         BMVStatus s = new BMVStatus();
+        var finalizedHeaderSlot = properties.getFinalizedHeader().getSlot();
+        s.setHeight(finalizedHeaderSlot.longValue());
         s.setExtra(new BMVStatusExtra(
-                properties.getFinalizedHeader().getSlot(),
                 properties.getLastMsgSeq(),
                 properties.getLastMsgSlot()).toBytes());
         return s;

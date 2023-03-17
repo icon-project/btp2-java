@@ -24,20 +24,11 @@ import score.ObjectWriter;
 import java.math.BigInteger;
 
 public class BMVStatusExtra {
-    private BigInteger finalizedBlockSlot;
     private BigInteger lastMessageSequence;
 
     private BigInteger lastMessageSlot;
 
     public BMVStatusExtra() {
-    }
-
-    public BigInteger getFinalizedBlockSlot() {
-        return finalizedBlockSlot;
-    }
-
-    public void setFinalizedBlockSlot(BigInteger finalizedBlockSlot) {
-        this.finalizedBlockSlot = finalizedBlockSlot;
     }
 
     public BigInteger getLastMessageSequence() {
@@ -56,8 +47,7 @@ public class BMVStatusExtra {
         this.lastMessageSlot = lastMessageSlot;
     }
 
-    public BMVStatusExtra(BigInteger finalizedBlockSlot, BigInteger lastMessageSequence, BigInteger lastMessageSlot) {
-        this.finalizedBlockSlot = finalizedBlockSlot;
+    public BMVStatusExtra(BigInteger lastMessageSequence, BigInteger lastMessageSlot) {
         this.lastMessageSequence = lastMessageSequence;
         this.lastMessageSlot = lastMessageSlot;
     }
@@ -65,7 +55,6 @@ public class BMVStatusExtra {
     public static BMVStatusExtra readObject(ObjectReader r) {
         var extra = new BMVStatusExtra();
         r.beginList();
-        extra.setFinalizedBlockSlot(r.readBigInteger());
         extra.setLastMessageSequence(r.readBigInteger());
         extra.setLastMessageSlot(r.readBigInteger());
         r.end();
@@ -73,8 +62,7 @@ public class BMVStatusExtra {
     }
 
     public static void writeObject(ObjectWriter writer, BMVStatusExtra extra) {
-        writer.beginList(3);
-        writer.write(extra.getFinalizedBlockSlot());
+        writer.beginList(2);
         writer.write(extra.getLastMessageSequence());
         writer.write(extra.getLastMessageSlot());
         writer.end();
