@@ -36,14 +36,13 @@ public class BTPMessageVerifier implements BMV {
     private final String eventSignature = "Message(string,uint256,bytes)";
     private final byte[] eventSignatureTopic = Context.hash("keccak-256", eventSignature.getBytes());
 
-    public BTPMessageVerifier(String srcNetworkID, byte[] genesisValidatorsHash, byte[] syncCommittee, Address bmc, byte[] finalizedHeader, byte[] etherBmc) {
+    public BTPMessageVerifier(String srcNetworkID, byte[] genesisValidatorsHash, byte[] syncCommittee, Address bmc, byte[] finalizedHeader) {
         var properties = getProperties();
         properties.setSrcNetworkID(srcNetworkID.getBytes());
         properties.setBmc(bmc);
         properties.setGenesisValidatorsHash(genesisValidatorsHash);
         properties.setCurrentSyncCommittee(syncCommittee);
         properties.setFinalizedHeader(BeaconBlockHeader.deserialize(finalizedHeader));
-        properties.setEtherBmc(etherBmc);
         properties.setLastMsgSlot(BigInteger.ZERO);
         properties.setLastMsgSeq(BigInteger.ZERO);
         propertiesDB.set(properties);
@@ -73,7 +72,7 @@ public class BTPMessageVerifier implements BMV {
                 processBlockProof(blockProof);
             } else if (msg instanceof MessageProof) {
                 logger.println("handleRelayMessage, MessageProof : " + msg);
-                var msgs = processMessageProof((MessageProof) msg, blockProof);
+                var msgs = processMessageProof((MessageProof) msg, blockProof, _bmc);
                 for(byte[] m : msgs) {
                     msgList.add(m);
                 }
@@ -99,13 +98,6 @@ public class BTPMessageVerifier implements BMV {
                 properties.getLastMsgSeq(),
                 properties.getLastMsgSlot()).toBytes());
         return s;
-    }
-
-    @External
-    public void setEtherBMC(byte[] etherBMC) {
-        var bmvProperties = getProperties();
-        bmvProperties.setEtherBmc(etherBMC);
-        propertiesDB.set(bmvProperties);
     }
 
     BMVProperties getProperties() {
@@ -168,7 +160,7 @@ public class BTPMessageVerifier implements BMV {
         SszUtils.verify(finalizedHeader.getStateRoot(), blockProof.getProof());
     }
 
-    private byte[][] processMessageProof(MessageProof messageProof, BlockProof blockProof) {
+    private byte[][] processMessageProof(MessageProof messageProof, BlockProof blockProof, String _bmc) {
         logger.println("processMessageProof, ", "messageProof : ", messageProof, ", BlockProof", blockProof);
         var bmvProperties = getProperties();
         var beaconBlockHeader = blockProof.getBeaconBlockHeader();
@@ -185,10 +177,13 @@ public class BTPMessageVerifier implements BMV {
             var receipt = Receipt.fromBytes(value);
             logger.println("processMessageProof, ", "receipt : ", receipt);
             for (Log log : receipt.getLogs()) {
-                var topic = log.getTopics()[0];
-                if (Arrays.equals(log.getAddress(), bmvProperties.getEtherBmc()) && Arrays.equals(topic, eventSignatureTopic)) {
+                var topics = log.getTopics();
+                var topic = topics[0];
+                var nextHash = topics[1];
+                var bmcBtpAddress = BTPAddress.valueOf(_bmc);
+                if (Arrays.equals(nextHash, Context.hash("keccak-256", bmcBtpAddress.toString().getBytes())) && Arrays.equals(topic, eventSignatureTopic)) {
                     logger.println("processMessageProof, ", "add message. log : ", log);
-                    var msg = messageFromData(log.getData());
+                    var msg = log.getData();
                     messageList.add(msg);
                 }
             }
@@ -204,44 +199,6 @@ public class BTPMessageVerifier implements BMV {
             return messages;
         }
         return messages;
-    }
-
-    private byte[] messageFromData(byte[] data) {
-        var params = abiDecode(StringUtil.bytesToHex(data));
-        return (byte[])params.get(2);
-    }
-
-    private List<Object> abiDecode(String eventData) {
-        String[] inputTypes = {"string", "uint256", "bytes"};
-        List<Object> decoded = new ArrayList<>();
-
-        int offset = 0;
-        for (String inputType : inputTypes) {
-            switch (inputType) {
-                case "bytes":
-                    int byteLength = Integer.parseInt(eventData.substring(offset, offset + 64), 16);
-                    int byteStart = (byteLength * 2) + 64 + offset;
-                    byte[] bytes = StringUtil.hexToBytes(eventData.substring(byteStart, byteStart + (byteLength * 2)));
-                    decoded.add(bytes);
-                    offset += (byteLength * 2) + 64;
-                    break;
-                case "string":
-                    int stringLength = Integer.parseInt(eventData.substring(offset, offset + 64), 16);
-                    int stringStart = (stringLength * 2) + 64 + offset;
-                    String string = new String(StringUtil.hexToBytes(eventData.substring(stringStart, stringStart + (stringLength * 2))));
-                    decoded.add(string);
-                    offset += (stringLength * 2) + 64;
-                    break;
-                case "uint256":
-                    BigInteger uint256 = new BigInteger(eventData.substring(offset, offset + 64), 16);
-                    decoded.add(uint256.toByteArray());
-                    offset += 64;
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid input type: " + inputType);
-            }
-        }
-        return decoded;
     }
 
     private void checkAccessible(BTPAddress curAddr, BTPAddress fromAddress) {

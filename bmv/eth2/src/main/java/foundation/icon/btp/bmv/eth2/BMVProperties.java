@@ -37,7 +37,6 @@ public class BMVProperties {
     private byte[] nextSyncCommittee;
     private Address bmc;
     private BeaconBlockHeader finalizedHeader;
-    private byte[] etherBmc;
 
     private BigInteger lastMsgSeq;
     private BigInteger lastMsgSlot;
@@ -90,14 +89,6 @@ public class BMVProperties {
         this.finalizedHeader = finalizedHeader;
     }
 
-    public byte[] getEtherBmc() {
-        return etherBmc;
-    }
-
-    public void setEtherBmc(byte[] etherBmc) {
-        this.etherBmc = etherBmc;
-    }
-
     public BigInteger getLastMsgSlot() {
         return lastMsgSlot;
     }
@@ -129,7 +120,6 @@ public class BMVProperties {
         object.setNextSyncCommittee(r.readNullable(byte[].class));
         object.setBmc(r.readAddress());
         object.setFinalizedHeader(r.read(BeaconBlockHeader.class));
-        object.setEtherBmc(r.readByteArray());
         object.setLastMsgSlot(r.readBigInteger());
         object.setLastMsgSeq(r.readBigInteger());
         r.end();
@@ -137,14 +127,13 @@ public class BMVProperties {
     }
 
     public static void writeObject(ObjectWriter w, BMVProperties obj) {
-        w.beginList(9);
+        w.beginList(8);
         w.write(obj.srcNetworkID);
         w.write(obj.genesisValidatorsHash);
         w.write(obj.currentSyncCommittee);
         w.writeNullable(obj.nextSyncCommittee);
         w.write(obj.bmc);
         w.write(obj.finalizedHeader);
-        w.write(obj.etherBmc);
         w.write(obj.lastMsgSlot);
         w.write(obj.lastMsgSeq);
         w.end();
