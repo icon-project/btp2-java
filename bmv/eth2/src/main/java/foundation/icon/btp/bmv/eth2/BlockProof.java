@@ -15,6 +15,7 @@
  */
 package foundation.icon.btp.bmv.eth2;
 
+import foundation.icon.score.util.StringUtil;
 import score.Context;
 import score.ObjectReader;
 
@@ -45,5 +46,13 @@ public class BlockProof {
     public static MessageProof fromBytes(byte[] bytes) {
         ObjectReader reader = Context.newByteArrayObjectReader("RLPn", bytes);
         return MessageProof.readObject(reader);
+    }
+
+    @Override
+    public String toString() {
+        return "BlockProof{" +
+                "header=" + StringUtil.toString(header) +
+                ", proof=" + proof +
+                '}';
     }
 }

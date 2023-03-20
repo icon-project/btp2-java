@@ -16,6 +16,7 @@
 
 package foundation.icon.btp.bmv.eth2;
 
+import foundation.icon.score.util.Logger;
 import foundation.icon.score.util.StringUtil;
 import score.ByteArrayObjectWriter;
 import score.Context;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class RelayMessage {
+    private static final Logger logger = Logger.getLogger(RelayMessage.class);
     private TypePrefixedMessage[] messages;
 
     public RelayMessage() {}
@@ -102,6 +104,7 @@ public class RelayMessage {
 
         public Object getMessage() {
             try {
+                logger.println("getMessage, type = " + type);
                 if (type == BLOCK_UPDATE) {
                     return BlockUpdate.fromBytes(payload);
                 } else if (type == BLOCK_PROOF) {

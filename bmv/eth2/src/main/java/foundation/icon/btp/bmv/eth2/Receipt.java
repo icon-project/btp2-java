@@ -16,6 +16,7 @@
 
 package foundation.icon.btp.bmv.eth2;
 
+import foundation.icon.score.util.StringUtil;
 import score.Context;
 import score.ObjectReader;
 import scorex.util.ArrayList;
@@ -80,5 +81,22 @@ public class Receipt {
     static Receipt fromBytes(byte[] bytes) {
         ObjectReader reader = Context.newByteArrayObjectReader("RLPn", bytes);
         return Receipt.readObject(reader);
+    }
+
+    @Override
+    public String toString() {
+        return "Receipt{" +
+                "type=" + type +
+                ", postState=" + StringUtil.toString(postState) +
+                ", status=" + status +
+                ", cumulativeGasUsed=" + cumulativeGasUsed +
+                ", bloom=" + StringUtil.toString(bloom) +
+                ", logs=" + StringUtil.toString(logs) +
+                ", txHash=" + StringUtil.toString(txHash) +
+                ", contractAddress=" + StringUtil.toString(contractAddress) +
+                ", gasUsed=" + gasUsed +
+                ", blockHash=" + StringUtil.toString(blockHash) +
+                ", txIndex=" + txIndex +
+                '}';
     }
 }

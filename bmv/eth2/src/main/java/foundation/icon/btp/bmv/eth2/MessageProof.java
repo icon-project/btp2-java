@@ -15,6 +15,7 @@
  */
 package foundation.icon.btp.bmv.eth2;
 
+import foundation.icon.score.util.StringUtil;
 import score.Context;
 import score.ObjectReader;
 import scorex.util.ArrayList;
@@ -63,5 +64,14 @@ public class MessageProof {
     public static MessageProof fromBytes(byte[] bytes) {
         ObjectReader reader = Context.newByteArrayObjectReader("RLPn", bytes);
         return MessageProof.readObject(reader);
+    }
+
+    @Override
+    public String toString() {
+        return "MessageProof{" +
+                "slot=" + slot +
+                ", receiptRootProof=" + receiptRootProof +
+                ", receiptProofs=" + StringUtil.toString(receiptProofs) +
+                '}';
     }
 }

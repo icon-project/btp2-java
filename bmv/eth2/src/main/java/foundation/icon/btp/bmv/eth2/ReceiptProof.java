@@ -15,6 +15,7 @@
  */
 package foundation.icon.btp.bmv.eth2;
 
+import foundation.icon.score.util.StringUtil;
 import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
@@ -82,5 +83,14 @@ public class ReceiptProof {
         r.end();
         r.end();
         return new ReceiptProof(key, proof, indices);
+    }
+
+    @Override
+    public String toString() {
+        return "ReceiptProof{" +
+                "key=" + StringUtil.toString(key) +
+                ", proof=" + StringUtil.toString(proof) +
+                ", logIndices=" + StringUtil.toString(logIndices) +
+                '}';
     }
 }

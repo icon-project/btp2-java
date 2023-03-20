@@ -16,6 +16,7 @@
 package foundation.icon.btp.bmv.eth2;
 
 
+import foundation.icon.score.util.StringUtil;
 import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
@@ -34,6 +35,10 @@ public class SyncCommittee {
 
     public byte[][] getBlsPublicKeys() {
         return blsPublicKeys;
+    }
+
+    public byte[] getAggregatePubKey() {
+        return aggregatePubKey;
     }
 
     static SyncCommittee deserialize(byte[] data) {
@@ -96,5 +101,13 @@ public class SyncCommittee {
         ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLPn");
         SyncCommittee.writeObject(writer, this);
         return writer.toByteArray();
+    }
+
+    @Override
+    public String toString() {
+        return "SyncCommittee{" +
+                "blsPublicKeys=" + StringUtil.toString(blsPublicKeys) +
+                ", aggregatePubKey=" + StringUtil.toString(aggregatePubKey) +
+                '}';
     }
 }

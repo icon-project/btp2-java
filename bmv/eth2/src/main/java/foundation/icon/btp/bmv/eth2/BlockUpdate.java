@@ -119,6 +119,7 @@ public class BlockUpdate {
         var signatureSlot = r.readBigInteger();
         var nextSyncCommittee = r.readNullable(byte[].class);
         List<byte[]> committeeBranchList = new ArrayList<>();
+        r.beginList();
         while(r.hasNext())
             committeeBranchList.add(r.readByteArray());
         r.end();
@@ -182,4 +183,16 @@ public class BlockUpdate {
         return Context.verifySignature(BLS_SIG_ALG, signingRoot, committeeSig, aggregatedKey);
     }
 
+    @Override
+    public String toString() {
+        return "BlockUpdate{" +
+                "attestedHeader=" + StringUtil.toString(attestedHeader) +
+                ", finalizedHeader=" + StringUtil.toString(finalizedHeader) +
+                ", finalizedHeaderBranch=" + StringUtil.toString(finalizedHeaderBranch) +
+                ", syncAggregate=" + StringUtil.toString(syncAggregate) +
+                ", signatureSlot=" + signatureSlot +
+                ", nextSyncCommittee=" + StringUtil.toString(nextSyncCommittee) +
+                ", nextSyncCommitteeBranch=" + StringUtil.toString(nextSyncCommitteeBranch) +
+                '}';
+    }
 }

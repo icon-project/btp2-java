@@ -18,6 +18,7 @@ package foundation.icon.btp.bmv.eth2;
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
+import foundation.icon.score.util.Logger;
 import foundation.icon.score.util.StringUtil;
 import score.Address;
 import score.Context;
@@ -30,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BTPMessageVerifier implements BMV {
+    private static final Logger logger = Logger.getLogger(BTPMessageVerifier.class);
     private final VarDB<BMVProperties> propertiesDB = Context.newVarDB("properties", BMVProperties.class);
     private final String eventSignature = "Message(string,uint256,bytes)";
     private final byte[] eventSignatureTopic = Context.hash("keccak-256", eventSignature.getBytes());
@@ -49,6 +51,7 @@ public class BTPMessageVerifier implements BMV {
 
     @External
     public byte[][] handleRelayMessage(String _bmc, String _prev, BigInteger _seq, byte[] _msg) {
+        logger.println("handleRelayMessage, msg : ", StringUtil.toString(_msg));
         BTPAddress curAddr = BTPAddress.valueOf(_bmc);
         BTPAddress prevAddr = BTPAddress.valueOf(_prev);
         checkAccessible(curAddr, prevAddr);
@@ -62,11 +65,14 @@ public class BTPMessageVerifier implements BMV {
         for (RelayMessage.TypePrefixedMessage message : typePrefixedMessages) {
             Object msg = message.getMessage();
             if (msg instanceof BlockUpdate) {
+                logger.println("handleRelayMessage, blockUpdate : " + msg);
                 processBlockUpdate((BlockUpdate) msg);
             } else if (msg instanceof BlockProof) {
+                logger.println("handleRelayMessage, blockProof : " + msg);
                 blockProof = (BlockProof) msg;
                 processBlockProof(blockProof);
             } else if (msg instanceof MessageProof) {
+                logger.println("handleRelayMessage, MessageProof : " + msg);
                 var msgs = processMessageProof((MessageProof) msg, blockProof);
                 for(byte[] m : msgs) {
                     msgList.add(m);
@@ -111,12 +117,15 @@ public class BTPMessageVerifier implements BMV {
         var bmvProperties = getProperties();
 
         var currentSyncCommittee = SyncCommittee.deserialize(bmvProperties.getCurrentSyncCommittee());
+        logger.println("processBlockUpdate, ", "verify syncAggregate");
         if (!blockUpdate.verifySyncAggregate(currentSyncCommittee.getBlsPublicKeys(), bmvProperties.getGenesisValidatorsHash(), blockUpdate.getSignatureSlot()))
             throw BMVException.unknown("invalid signature");
 
         var nextSyncCommittee = blockUpdate.getNextSyncCommittee();
-        if (nextSyncCommittee != null)
+        if (nextSyncCommittee != null) {
+            logger.println("processBlockUpdate, ", "verify nextSyncCommittee aggregatedKey : " + StringUtil.toString(nextSyncCommittee.getAggregatePubKey()));
             blockUpdate.verifyNextSyncCommittee();
+        }
 
         applyBlockUpdate(blockUpdate, bmvProperties);
     }
@@ -128,19 +137,23 @@ public class BTPMessageVerifier implements BMV {
         var storePeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(storeSlot));
         var updateFinalizedPeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(updateFinalizedSlot));
         if (nextSyncCommittee == null) {
-            if (updateFinalizedPeriod.compareTo(storePeriod) == 0) throw BMVException.unknown("invalid update period");
+            logger.println("applyBlockUpdate, ", " assert period. finalizedPeriod : ", updateFinalizedPeriod, ", storedPeriod : ", storePeriod);
+            if (updateFinalizedPeriod.compareTo(storePeriod) != 0) throw BMVException.unknown("invalid update period");
             bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee().toBytes());
         } else if (updateFinalizedPeriod.compareTo(storePeriod.add(BigInteger.ONE)) == 0) {
+            logger.println("applyBlockUpdate, ", "set current/next sync committee");
             bmvProperties.setCurrentSyncCommittee(bmvProperties.getNextSyncCommittee());
             bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee().toBytes());
         }
         if (updateFinalizedPeriod.compareTo(bmvProperties.getFinalizedHeader().getSlot()) > 0) {
+            logger.println("applyBlockUpdate, ", "set current/next sync committee");
             bmvProperties.setFinalizedHeader(BeaconBlockHeader.deserialize(blockUpdate.getFinalizedHeader()));
         }
         propertiesDB.set(bmvProperties);
     }
 
     private void processBlockProof(BlockProof blockProof) {
+        logger.println("processBlockProof, ", blockProof);
         var bmvProperties = getProperties();
         var finalizedHeader = bmvProperties.getFinalizedHeader();
         var attestingHeader = blockProof.getBeaconBlockHeader();
@@ -156,19 +169,25 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private byte[][] processMessageProof(MessageProof messageProof, BlockProof blockProof) {
+        logger.println("processMessageProof, ", "messageProof : ", messageProof, ", BlockProof", blockProof);
         var bmvProperties = getProperties();
         var beaconBlockHeader = blockProof.getBeaconBlockHeader();
         var stateRoot = beaconBlockHeader.getStateRoot();
         var receiptRootProof = messageProof.getReceiptRootProof();
+        logger.println("processMessageProof, ", "stateRoot", stateRoot, ", receiptRootProof : ", receiptRootProof);
         SszUtils.verify(stateRoot, receiptRootProof);
         var receiptsRoot = receiptRootProof.getLeaf();
+        logger.println("processMessageProof, ", "receiptsRoot : ", receiptsRoot);
         var messageList = new ArrayList<byte[]>();
         for (ReceiptProof rp : messageProof.getReceiptProofs()) {
+            logger.println("processMessageProof, ", "mpt prove", ", receiptProof key : ", rp.getKey());
             var value = MerklePatriciaTree.prove(receiptsRoot, rp.getKey(), rp.getProofs());
             var receipt = Receipt.fromBytes(value);
+            logger.println("processMessageProof, ", "receipt : ", receipt);
             for (Log log : receipt.getLogs()) {
                 var topic = log.getTopics()[0];
                 if (Arrays.equals(log.getAddress(), bmvProperties.getEtherBmc()) && Arrays.equals(topic, eventSignatureTopic)) {
+                    logger.println("processMessageProof, ", "add message. log : ", log);
                     var msg = messageFromData(log.getData());
                     messageList.add(msg);
                 }

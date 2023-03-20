@@ -16,6 +16,7 @@
 
 package foundation.icon.btp.bmv.eth2;
 
+import foundation.icon.score.util.StringUtil;
 import score.ObjectReader;
 import scorex.util.ArrayList;
 
@@ -75,5 +76,20 @@ public class Log {
         var removed = r.readBoolean();
         r.end();
         return new Log(address, topics, data, blockNum, txHash, txIndex, blockHash, index, removed);
+    }
+
+    @Override
+    public String toString() {
+        return "Log{" +
+                "address=" + StringUtil.toString(address) +
+                ", topics=" + StringUtil.toString(topics) +
+                ", data=" + StringUtil.toString(data) +
+                ", blockNumber=" + blockNumber +
+                ", txHash=" + StringUtil.toString(txHash) +
+                ", txIndex=" + txIndex +
+                ", blockHash=" + StringUtil.toString(blockHash) +
+                ", index=" + index +
+                ", removed=" + removed +
+                '}';
     }
 }

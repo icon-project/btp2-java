@@ -16,6 +16,7 @@
 
 package foundation.icon.btp.bmv.eth2;
 
+import foundation.icon.score.util.StringUtil;
 import score.ObjectReader;
 import scorex.util.ArrayList;
 
@@ -59,4 +60,12 @@ public class Proof {
         return new Proof(index, leaf, hashes);
     }
 
+    @Override
+    public String toString() {
+        return "Proof{" +
+                "index=" + index +
+                ", leaf=" + StringUtil.toString(leaf) +
+                ", hashes=" + StringUtil.toString(hashes) +
+                '}';
+    }
 }
