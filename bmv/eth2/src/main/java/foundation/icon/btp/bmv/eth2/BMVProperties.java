@@ -73,6 +73,11 @@ public class BMVProperties {
         this.nextSyncCommittee = nextSyncCommittee;
     }
 
+    public void setNextSyncCommittee(SyncCommittee nextSyncCommittee) {
+        byte[] value = nextSyncCommittee != null ? nextSyncCommittee.toBytes() : null;
+        setNextSyncCommittee(value);
+    }
+
     byte[] getGenesisValidatorsHash() {
         return genesisValidatorsHash;
     }

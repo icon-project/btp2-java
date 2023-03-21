@@ -123,21 +123,21 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private void applyBlockUpdate(BlockUpdate blockUpdate, BMVProperties bmvProperties) {
-        var nextSyncCommittee = bmvProperties.getNextSyncCommittee();
+        var storedNextSyncCommittee = bmvProperties.getNextSyncCommittee();
         var lightClientHeader = bmvProperties.getFinalizedHeader();
         var beaconBlockHeader = lightClientHeader.getBeacon();
         var storeSlot = beaconBlockHeader.getSlot();
         var updateFinalizedSlot = LightClientHeader.deserialize(blockUpdate.getFinalizedHeader()).getBeacon().getSlot();
         var storePeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(storeSlot));
         var updateFinalizedPeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(updateFinalizedSlot));
-        if (nextSyncCommittee == null) {
+        if (storedNextSyncCommittee == null) {
             logger.println("applyBlockUpdate, ", " assert period. finalizedPeriod : ", updateFinalizedPeriod, ", storedPeriod : ", storePeriod);
             if (updateFinalizedPeriod.compareTo(storePeriod) != 0) throw BMVException.unknown("invalid update period");
-            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee().toBytes());
+            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
         } else if (updateFinalizedPeriod.compareTo(storePeriod.add(BigInteger.ONE)) == 0) {
             logger.println("applyBlockUpdate, ", "set current/next sync committee");
             bmvProperties.setCurrentSyncCommittee(bmvProperties.getNextSyncCommittee());
-            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee().toBytes());
+            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
         }
         if (updateFinalizedPeriod.compareTo(storeSlot) > 0) {
             logger.println("applyBlockUpdate, ", "set current/next sync committee");
