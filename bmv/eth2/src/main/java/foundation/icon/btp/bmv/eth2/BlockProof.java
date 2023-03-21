@@ -28,8 +28,8 @@ public class BlockProof {
         this.proof = proof;
     }
 
-    BeaconBlockHeader getBeaconBlockHeader() {
-        return BeaconBlockHeader.deserialize(header);
+    LightClientHeader getLightClientHeader() {
+        return LightClientHeader.deserialize(header);
     }
 
     Proof getProof() {

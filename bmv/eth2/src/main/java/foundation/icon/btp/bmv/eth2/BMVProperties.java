@@ -36,7 +36,7 @@ public class BMVProperties {
 
     private byte[] nextSyncCommittee;
     private Address bmc;
-    private BeaconBlockHeader finalizedHeader;
+    private LightClientHeader finalizedHeader;
 
     private BigInteger lastMsgSeq;
     private BigInteger lastMsgSlot;
@@ -81,11 +81,11 @@ public class BMVProperties {
         this.genesisValidatorsHash = genesisValidatorsHash;
     }
 
-    BeaconBlockHeader getFinalizedHeader() {
+    LightClientHeader getFinalizedHeader() {
         return finalizedHeader;
     }
 
-    void setFinalizedHeader(BeaconBlockHeader finalizedHeader) {
+    void setFinalizedHeader(LightClientHeader finalizedHeader) {
         this.finalizedHeader = finalizedHeader;
     }
 
@@ -119,7 +119,7 @@ public class BMVProperties {
         object.setCurrentSyncCommittee(r.readByteArray());
         object.setNextSyncCommittee(r.readNullable(byte[].class));
         object.setBmc(r.readAddress());
-        object.setFinalizedHeader(r.read(BeaconBlockHeader.class));
+        object.setFinalizedHeader(r.read(LightClientHeader.class));
         object.setLastMsgSlot(r.readBigInteger());
         object.setLastMsgSeq(r.readBigInteger());
         r.end();

@@ -72,21 +72,21 @@ public class BlockUpdate {
     }
 
     void verifyFinalizedHeader() {
-        var finalizedHeader = BeaconBlockHeader.deserialize(this.finalizedHeader);
-        var attestedHeader = BeaconBlockHeader.deserialize(this.attestedHeader);
+        var finalizedHeader = LightClientHeader.deserialize(this.finalizedHeader);
+        var attestedHeader = LightClientHeader.deserialize(this.attestedHeader);
         var finalizeHeaderDepth = 6;
         var finalizeHeaderIndex = 41;
         SszUtils.validateMerkleBranch(
-                finalizedHeader.getHashTreeRoot(),
+                finalizedHeader.getBeacon().getHashTreeRoot(),
                 finalizedHeaderBranch,
                 finalizeHeaderDepth,
                 finalizeHeaderIndex,
-                attestedHeader.getStateRoot()
+                attestedHeader.getBeacon().getStateRoot()
         );
     }
 
     void verifyNextSyncCommittee() {
-        var attestedHeader = BeaconBlockHeader.deserialize(this.attestedHeader);
+        var attestedHeader = LightClientHeader.deserialize(this.attestedHeader);
         int nextSyncCommitteeDepth = 5;
         int nextSyncCommitteeIndex = 23;
         SszUtils.validateMerkleBranch(
@@ -94,7 +94,7 @@ public class BlockUpdate {
                 nextSyncCommitteeBranch,
                 nextSyncCommitteeDepth,
                 nextSyncCommitteeIndex,
-                attestedHeader.getStateRoot()
+                attestedHeader.getBeacon().getStateRoot()
         );
     }
 
@@ -138,7 +138,8 @@ public class BlockUpdate {
 
     byte[] getSigningRoot(byte[] genesisValidatorsRoot, BigInteger signatureSlot) {
         var domain = computeDomain(genesisValidatorsRoot, signatureSlot);
-        var hashTree = BeaconBlockHeader.deserialize(attestedHeader).getHashTreeRoot();
+        var beacon = LightClientHeader.deserialize(attestedHeader).getBeacon();
+        var hashTree = beacon.getHashTreeRoot();
         return SszUtils.concatAndHash(hashTree, domain);
     }
 
