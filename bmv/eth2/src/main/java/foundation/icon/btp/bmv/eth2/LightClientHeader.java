@@ -34,7 +34,11 @@ public class LightClientHeader {
     }
 
     public static LightClientHeader deserialize(byte[] data) {
-        var beacon = BeaconBlockHeader.deserialize(data);
+        var beaconBytesLength = 112;
+        var beaconBytes = new byte[beaconBytesLength];
+        var offset = 4;
+        System.arraycopy(data, offset, beaconBytes, 0, beaconBytesLength);
+        var beacon = BeaconBlockHeader.deserialize(beaconBytes);
         return new LightClientHeader(beacon);
     }
 
