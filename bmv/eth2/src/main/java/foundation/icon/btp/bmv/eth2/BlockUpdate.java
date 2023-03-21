@@ -31,11 +31,14 @@ public class BlockUpdate {
     private BigInteger signatureSlot;
     private byte[] nextSyncCommittee;
     private byte[][] nextSyncCommitteeBranch;
-    private static final BigInteger ALTAIR_FORK_EPOCH = BigInteger.valueOf(74240);
-    private static final BigInteger BELLATRIX_FORK_EPOCH = BigInteger.valueOf(144896);
-    private static final byte[] BELLATRIX_FORK_VERSION = StringUtil.hexToBytes("02000000");
-    private static final byte[] ALTAIR_FORK_VERSION = StringUtil.hexToBytes("01000000");
-    private static final byte[] GENESIS_FORK_VERSION = StringUtil.hexToBytes("00000000");
+    //TODO : sync epoch with eth mainnet.
+    private static final BigInteger ALTAIR_FORK_EPOCH = BigInteger.valueOf(50);
+    private static final BigInteger BELLATRIX_FORK_EPOCH = BigInteger.valueOf(100);
+    private static final BigInteger CAPELLA_FORK_EPOCH = BigInteger.valueOf(56832);
+    private static final byte[] CAPELLA_FORK_VERSION = StringUtil.hexToBytes("90000072");
+    private static final byte[] BELLATRIX_FORK_VERSION = StringUtil.hexToBytes("90000071");
+    private static final byte[] ALTAIR_FORK_VERSION = StringUtil.hexToBytes("90000070");
+    private static final byte[] GENESIS_FORK_VERSION = StringUtil.hexToBytes("90000069");
     private static final byte[] DOMAIN_SYNC_COMMITTEE = StringUtil.hexToBytes("07000000");
     private static final String BLS_AGGREGATE_ALG = "bls12-381-g1";
     private static final String BLS_SIG_ALG = "bls12-381-g2";
@@ -158,14 +161,16 @@ public class BlockUpdate {
     }
 
     private static byte[] computeForkVersion(BigInteger epoch) {
-        if (epoch.compareTo(BELLATRIX_FORK_EPOCH) > 0)
+        if (epoch.compareTo(CAPELLA_FORK_EPOCH) >= 0)
+            return CAPELLA_FORK_VERSION;
+        if (epoch.compareTo(BELLATRIX_FORK_EPOCH) >= 0)
             return BELLATRIX_FORK_VERSION;
-        if (epoch.compareTo(ALTAIR_FORK_EPOCH) > 0)
+        if (epoch.compareTo(ALTAIR_FORK_EPOCH) >= 0)
             return ALTAIR_FORK_VERSION;
         return GENESIS_FORK_VERSION;
     }
 
-    boolean verifySyncAggregate(byte[][] syncCommitteePubs, byte[] genesisValidatorsRoot, BigInteger signatureSlot) {
+    boolean verifySyncAggregate(byte[][] syncCommitteePubs, byte[] genesisValidatorsRoot) {
         var syncAggregate = getSyncAggregate();
         var aggregateBits = syncAggregate.getSyncCommitteeBits();
         var signingRoot = getSigningRoot(genesisValidatorsRoot, signatureSlot);
