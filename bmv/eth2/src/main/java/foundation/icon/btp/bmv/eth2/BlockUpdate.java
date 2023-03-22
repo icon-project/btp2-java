@@ -21,6 +21,7 @@ import score.ObjectReader;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 
 public class BlockUpdate {
@@ -31,14 +32,6 @@ public class BlockUpdate {
     private BigInteger signatureSlot;
     private byte[] nextSyncCommittee;
     private byte[][] nextSyncCommitteeBranch;
-    //TODO : sync epoch with eth mainnet.
-    private static final BigInteger ALTAIR_FORK_EPOCH = BigInteger.valueOf(50);
-    private static final BigInteger BELLATRIX_FORK_EPOCH = BigInteger.valueOf(100);
-    private static final BigInteger CAPELLA_FORK_EPOCH = BigInteger.valueOf(56832);
-    private static final byte[] CAPELLA_FORK_VERSION = StringUtil.hexToBytes("90000072");
-    private static final byte[] BELLATRIX_FORK_VERSION = StringUtil.hexToBytes("90000071");
-    private static final byte[] ALTAIR_FORK_VERSION = StringUtil.hexToBytes("90000070");
-    private static final byte[] GENESIS_FORK_VERSION = StringUtil.hexToBytes("90000069");
     private static final byte[] DOMAIN_SYNC_COMMITTEE = StringUtil.hexToBytes("07000000");
     private static final String BLS_AGGREGATE_ALG = "bls12-381-g1";
     private static final String BLS_SIG_ALG = "bls12-381-g2";
@@ -155,19 +148,30 @@ public class BlockUpdate {
 
     private static byte[] computeForkDataRoot(byte[] genesisValidatorsRoot, BigInteger signatureSlot) {
         var leaf1 = new byte[Constants.HASH_LENGTH];
-        var version = BlockUpdate.computeForkVersion(Utils.computeEpoch(signatureSlot));
-        System.arraycopy(version, 0, leaf1, 0, BELLATRIX_FORK_VERSION.length);
+        var version = BlockUpdate.computeForkVersion(Utils.computeEpoch(signatureSlot), genesisValidatorsRoot);
+        System.arraycopy(version, 0, leaf1, 0, Constants.SEPOLIA_BELLATRIX_VERSION.length);
         return SszUtils.concatAndHash(leaf1, genesisValidatorsRoot);
     }
 
-    private static byte[] computeForkVersion(BigInteger epoch) {
-        if (epoch.compareTo(CAPELLA_FORK_EPOCH) >= 0)
-            return CAPELLA_FORK_VERSION;
-        if (epoch.compareTo(BELLATRIX_FORK_EPOCH) >= 0)
-            return BELLATRIX_FORK_VERSION;
-        if (epoch.compareTo(ALTAIR_FORK_EPOCH) >= 0)
-            return ALTAIR_FORK_VERSION;
-        return GENESIS_FORK_VERSION;
+    private static byte[] computeForkVersion(BigInteger epoch, byte[] genesisValidatorsRoot) {
+        if (Arrays.equals(genesisValidatorsRoot, Constants.MAINNET_GENESIS_VALIDATORS_ROOT)) {
+            if (epoch.compareTo(Constants.MAINNET_CAPELLA_EPOCH) >= 0)
+                return Constants.MAINNET_CAPELLA_VERSION;
+            if (epoch.compareTo(Constants.MAINNET_BELLATRIX_EPOCH) >= 0)
+                return Constants.MAINNET_BELLATRIX_VERSION;
+            if (epoch.compareTo(Constants.MAINNET_ALTAIR_EPOCH) >= 0)
+                return Constants.MAINNET_ALTAIR_VERSION;
+            return Constants.MAINNET_GENESIS_VERSION;
+        } else if (Arrays.equals(genesisValidatorsRoot, Constants.SEPOLIA_GENESIS_VALIDATORS_ROOT)) {
+            if (epoch.compareTo(Constants.SEPOLIA_CAPELLA_EPOCH) >= 0)
+                return Constants.SEPOLIA_CAPELLA_VERSION;
+            if (epoch.compareTo(Constants.SEPOLIA_BELLATRIX_EPOCH) >= 0)
+                return Constants.SEPOLIA_BELLATRIX_VERSION;
+            if (epoch.compareTo(Constants.SEPOLIA_ALTAIR_EPOCH) >= 0)
+                return Constants.SEPOLIA_ALTAIR_VERSION;
+            return Constants.SEPOLIA_GENESIS_VERSION;
+        }
+        throw BMVException.unknown("invalid genesisValidatorsRoot");
     }
 
     boolean verifySyncAggregate(byte[][] syncCommitteePubs, byte[] genesisValidatorsRoot) {
