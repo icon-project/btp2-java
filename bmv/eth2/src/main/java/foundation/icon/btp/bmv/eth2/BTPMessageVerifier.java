@@ -139,8 +139,8 @@ public class BTPMessageVerifier implements BMV {
             bmvProperties.setCurrentSyncCommittee(bmvProperties.getNextSyncCommittee());
             bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
         }
-        if (updateFinalizedPeriod.compareTo(storeSlot) > 0) {
-            logger.println("applyBlockUpdate, ", "set current/next sync committee");
+        if (updateFinalizedSlot.compareTo(storeSlot) > 0) {
+            logger.println("applyBlockUpdate, ", "set finalized header");
             bmvProperties.setFinalizedHeader(LightClientHeader.deserialize(blockUpdate.getFinalizedHeader()));
         }
         propertiesDB.set(bmvProperties);
