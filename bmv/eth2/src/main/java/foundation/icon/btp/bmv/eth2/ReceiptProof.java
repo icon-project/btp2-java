@@ -27,12 +27,10 @@ import java.util.List;
 public class ReceiptProof {
     private byte[] key;
     private byte[] proof;
-    private BigInteger[] logIndices;
 
-    public ReceiptProof(byte[] key, byte[] proof, BigInteger[] logIndices) {
+    public ReceiptProof(byte[] key, byte[] proof) {
         this.key = key;
         this.proof = proof;
-        this.logIndices = logIndices;
     }
 
     byte[] getKey() {
@@ -70,19 +68,8 @@ public class ReceiptProof {
         r.beginList();
         var key = r.readByteArray();
         var proof = r.readByteArray();
-        r.beginList();
-        BigInteger[] indices;
-        List<BigInteger> indexList = new ArrayList<>();
-        while(r.hasNext()) {
-            indexList.add(r.readBigInteger());
-        }
-        indices = new BigInteger[indexList.size()];
-        for(int i = 0; i < indexList.size(); i++) {
-            indices[i] = indexList.get(i);
-        }
         r.end();
-        r.end();
-        return new ReceiptProof(key, proof, indices);
+        return new ReceiptProof(key, proof);
     }
 
     @Override
@@ -90,7 +77,6 @@ public class ReceiptProof {
         return "ReceiptProof{" +
                 "key=" + StringUtil.toString(key) +
                 ", proof=" + StringUtil.toString(proof) +
-                ", logIndices=" + StringUtil.toString(logIndices) +
                 '}';
     }
 }
