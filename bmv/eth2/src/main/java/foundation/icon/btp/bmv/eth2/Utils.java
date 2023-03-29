@@ -25,7 +25,7 @@ public class Utils {
         return slot.divide(SLOTS_PER_EPOCH);
     }
 
-    static BigInteger computeSyncCommitteePeriod(BigInteger epoch) {
-        return epoch.divide(EPOCHS_PER_SYNC_COMMITTEE_PERIOD);
+    static BigInteger computeSyncCommitteePeriod(BigInteger slot) {
+        return computeEpoch(slot).divide(EPOCHS_PER_SYNC_COMMITTEE_PERIOD);
     }
 }

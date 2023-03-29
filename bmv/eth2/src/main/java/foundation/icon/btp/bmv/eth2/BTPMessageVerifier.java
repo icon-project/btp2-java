@@ -149,18 +149,23 @@ public class BTPMessageVerifier implements BMV {
     private void processBlockProof(BlockProof blockProof) {
         logger.println("processBlockProof, ", blockProof);
         var bmvProperties = getProperties();
-        var finalizedHeader = bmvProperties.getFinalizedHeader();
+        var storedFinalizedHeader = bmvProperties.getFinalizedHeader();
         var attestingHeader = blockProof.getLightClientHeader();
         var attestingBeacon = attestingHeader.getBeacon();
-        var finalizedSlot = finalizedHeader.getBeacon().getSlot();
+        var storedFinalizedSlot = storedFinalizedHeader.getBeacon().getSlot();
         var blockProofSlot = attestingBeacon.getSlot();
-        if (finalizedSlot.compareTo(blockProofSlot) < 0)
-            throw BMVException.invalidBlockProofSlot(blockProofSlot.toString());
+        if (storedFinalizedSlot.compareTo(blockProofSlot) < 0)
+            throw BMVException.unknown(blockProofSlot.toString());
+        var storedBlockProofSlot = bmvProperties.getBpHeader().getBeacon().getSlot();
+        if (blockProofSlot.compareTo(storedBlockProofSlot) < 0)
+            throw BMVException.invalidBlockWitnessOld(blockProofSlot.toString());
         var hashTree = attestingBeacon.getHashTreeRoot();
         var proofLeaf = blockProof.getProof().getLeaf();
         if (!Arrays.equals(proofLeaf, hashTree))
             throw BMVException.unknown("invalid hashTree");
-        SszUtils.verify(finalizedHeader.getBeacon().getStateRoot(), blockProof.getProof());
+        SszUtils.verify(storedFinalizedHeader.getBeacon().getStateRoot(), blockProof.getProof());
+        bmvProperties.setBpHeader(blockProof.getLightClientHeader());
+        propertiesDB.set(bmvProperties);
     }
 
     private byte[][] processMessageProof(MessageProof messageProof, BlockProof blockProof, String _bmc) {

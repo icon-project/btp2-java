@@ -58,6 +58,10 @@ public class BlockUpdate {
         return finalizedHeader;
     }
 
+    public byte[] getAttestedHeader() {
+        return attestedHeader;
+    }
+
     SyncAggregate getSyncAggregate() {
         return SyncAggregate.deserialize(syncAggregate);
     }
