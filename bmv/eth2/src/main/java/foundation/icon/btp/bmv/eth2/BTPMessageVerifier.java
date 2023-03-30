@@ -105,74 +105,100 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private void processBlockUpdate(BlockUpdate blockUpdate) {
-        blockUpdate.verifyFinalizedHeader();
-        var bmvProperties = getProperties();
+        var properties = getProperties();
+        validateBlockUpdate(blockUpdate, properties);
+        applyBlockUpdate(blockUpdate, properties);
+    }
 
-        var currentSyncCommittee = SyncCommittee.deserialize(bmvProperties.getCurrentSyncCommittee());
-        logger.println("processBlockUpdate, ", "verify syncAggregate");
-        if (!blockUpdate.verifySyncAggregate(currentSyncCommittee.getBlsPublicKeys(), bmvProperties.getGenesisValidatorsHash()))
-            throw BMVException.unknown("invalid signature");
+    private void validateBlockUpdate(BlockUpdate blockUpdate, BMVProperties properties) {
+        var attestedBeacon = LightClientHeader.deserialize(blockUpdate.getAttestedHeader()).getBeacon();
+        var finalizedBeacon = LightClientHeader.deserialize(blockUpdate.getFinalizedHeader()).getBeacon();
+        var signatureSlot = blockUpdate.getSignatureSlot();
+        var attestedSlot = attestedBeacon.getSlot();
+        var finalizedSlot = finalizedBeacon.getSlot();
+        if (signatureSlot.compareTo(attestedSlot) <= 0) throw BMVException.unknown("signature slot( + " + signatureSlot + ") must be after attested Slot(" + attestedSlot + ")");
+        if (attestedSlot.compareTo(finalizedSlot) < 0) throw BMVException.unknown("attested slot (" + attestedSlot + ") must be after finalized slot(" + finalizedSlot + ")");
+
+        var storedFinalizedBeacon = properties.getFinalizedHeader().getBeacon();
+        var storedSlot = storedFinalizedBeacon.getSlot();
+        var storedPeriod = Utils.computeSyncCommitteePeriod(storedSlot);
+        var signaturePeriod = Utils.computeSyncCommitteePeriod(signatureSlot);
+
+        if (properties.getNextSyncCommittee() != null)
+            if (signaturePeriod.compareTo(storedPeriod) != 0 && signaturePeriod.compareTo(storedPeriod.add(BigInteger.ONE)) != 0)
+                throw BMVException.notVerifiable(storedSlot.toString());
+        else
+            if (signaturePeriod.compareTo(storedPeriod) != 0)
+                throw BMVException.notVerifiable(storedSlot.toString());
+
+        blockUpdate.verifyFinalizedHeader();
 
         var nextSyncCommittee = blockUpdate.getNextSyncCommittee();
         if (nextSyncCommittee != null) {
-            logger.println("processBlockUpdate, ", "verify nextSyncCommittee aggregatedKey : " + StringUtil.toString(nextSyncCommittee.getAggregatePubKey()));
+            logger.println("validateBlockUpdate, ", "verify nextSyncCommittee aggregatedKey : " + StringUtil.toString(nextSyncCommittee.getAggregatePubKey()));
             blockUpdate.verifyNextSyncCommittee();
         }
 
-        applyBlockUpdate(blockUpdate, bmvProperties);
+        SyncCommittee syncCommittee;
+        if (signaturePeriod.compareTo(storedPeriod) == 0)
+            syncCommittee = SyncCommittee.deserialize(properties.getCurrentSyncCommittee());
+        else
+            syncCommittee = SyncCommittee.deserialize(properties.getNextSyncCommittee());
+        logger.println("validateBlockUpdate, ", "verify syncAggregate");
+        if (!blockUpdate.verifySyncAggregate(syncCommittee.getBlsPublicKeys(), properties.getGenesisValidatorsHash()))
+            throw BMVException.unknown("invalid signature");
     }
 
-    private void applyBlockUpdate(BlockUpdate blockUpdate, BMVProperties bmvProperties) {
-        var storedNextSyncCommittee = bmvProperties.getNextSyncCommittee();
-        var lightClientHeader = bmvProperties.getFinalizedHeader();
-        var beaconBlockHeader = lightClientHeader.getBeacon();
-        var storeSlot = beaconBlockHeader.getSlot();
-        var updateFinalizedSlot = LightClientHeader.deserialize(blockUpdate.getFinalizedHeader()).getBeacon().getSlot();
-        var storePeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(storeSlot));
-        var updateFinalizedPeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(updateFinalizedSlot));
+    private void applyBlockUpdate(BlockUpdate blockUpdate, BMVProperties properties) {
+        var storedNextSyncCommittee = properties.getNextSyncCommittee();
+        var storedBeacon = properties.getFinalizedHeader().getBeacon();
+        var storedSlot = storedBeacon.getSlot();
+        var finalizedSlot = LightClientHeader.deserialize(blockUpdate.getFinalizedHeader()).getBeacon().getSlot();
+        var storedPeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(storedSlot));
+        var finalizedPeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(finalizedSlot));
+
         if (storedNextSyncCommittee == null) {
-            logger.println("applyBlockUpdate, ", " assert period. finalizedPeriod : ", updateFinalizedPeriod, ", storedPeriod : ", storePeriod);
-            if (updateFinalizedPeriod.compareTo(storePeriod) != 0) throw BMVException.unknown("invalid update period");
-            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
-        } else if (updateFinalizedPeriod.compareTo(storePeriod.add(BigInteger.ONE)) == 0) {
+            logger.println("applyBlockUpdate, ", " assert period. finalizedPeriod : ", finalizedPeriod, ", storedPeriod : ", storedPeriod);
+            if (finalizedPeriod.compareTo(storedPeriod) != 0) throw BMVException.unknown("invalid update period");
+            properties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
+        } else if (finalizedPeriod.compareTo(storedPeriod.add(BigInteger.ONE)) == 0) {
             logger.println("applyBlockUpdate, ", "set current/next sync committee");
-            bmvProperties.setCurrentSyncCommittee(bmvProperties.getNextSyncCommittee());
-            bmvProperties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
+            properties.setCurrentSyncCommittee(properties.getNextSyncCommittee());
+            properties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
         }
-        if (updateFinalizedSlot.compareTo(storeSlot) > 0) {
+
+        if (finalizedSlot.compareTo(storedSlot) > 0) {
             logger.println("applyBlockUpdate, ", "set finalized header");
-            bmvProperties.setFinalizedHeader(LightClientHeader.deserialize(blockUpdate.getFinalizedHeader()));
+            properties.setFinalizedHeader(LightClientHeader.deserialize(blockUpdate.getFinalizedHeader()));
         }
-        propertiesDB.set(bmvProperties);
+        propertiesDB.set(properties);
     }
 
     private void processBlockProof(BlockProof blockProof) {
         logger.println("processBlockProof, ", blockProof);
-        var bmvProperties = getProperties();
-        var storedFinalizedHeader = bmvProperties.getFinalizedHeader();
-        var attestingHeader = blockProof.getLightClientHeader();
-        var attestingBeacon = attestingHeader.getBeacon();
-        var storedFinalizedSlot = storedFinalizedHeader.getBeacon().getSlot();
+        var properties = getProperties();
+        var storedBeacon = properties.getFinalizedHeader().getBeacon();
+        var attestingBeacon = blockProof.getLightClientHeader().getBeacon();
+        var storedFinalizedSlot = storedBeacon.getSlot();
         var blockProofSlot = attestingBeacon.getSlot();
         if (storedFinalizedSlot.compareTo(blockProofSlot) < 0)
             throw BMVException.unknown(blockProofSlot.toString());
-        var storedBlockProofSlot = bmvProperties.getBpHeader().getBeacon().getSlot();
+        var storedBlockProofSlot = properties.getBpHeader().getBeacon().getSlot();
         if (blockProofSlot.compareTo(storedBlockProofSlot) < 0)
             throw BMVException.invalidBlockWitnessOld(blockProofSlot.toString());
         var hashTree = attestingBeacon.getHashTreeRoot();
         var proofLeaf = blockProof.getProof().getLeaf();
         if (!Arrays.equals(proofLeaf, hashTree))
             throw BMVException.unknown("invalid hashTree");
-        SszUtils.verify(storedFinalizedHeader.getBeacon().getStateRoot(), blockProof.getProof());
-        bmvProperties.setBpHeader(blockProof.getLightClientHeader());
-        propertiesDB.set(bmvProperties);
+        SszUtils.verify(storedBeacon.getStateRoot(), blockProof.getProof());
+        properties.setBpHeader(blockProof.getLightClientHeader());
+        propertiesDB.set(properties);
     }
 
     private byte[][] processMessageProof(MessageProof messageProof, BlockProof blockProof, String _bmc) {
         logger.println("processMessageProof, ", "messageProof : ", messageProof, ", BlockProof", blockProof);
-        var bmvProperties = getProperties();
-        var lightClientHeader = blockProof.getLightClientHeader();
-        var beaconBlockHeader = lightClientHeader.getBeacon();
+        var properties = getProperties();
+        var beaconBlockHeader = blockProof.getLightClientHeader().getBeacon();
         var stateRoot = beaconBlockHeader.getStateRoot();
         var receiptRootProof = messageProof.getReceiptRootProof();
         logger.println("processMessageProof, ", "stateRoot", stateRoot, ", receiptRootProof : ", receiptRootProof);
@@ -202,9 +228,9 @@ public class BTPMessageVerifier implements BMV {
         if (cnt != 0) {
             for (int i = 0; i < cnt; i++)
                 messages[i] = messageList.get(i);
-            bmvProperties.setLastMsgSeq(bmvProperties.getLastMsgSeq().add(BigInteger.valueOf(cnt)));
-            bmvProperties.setLastMsgSlot(beaconBlockHeader.getSlot());
-            propertiesDB.set(bmvProperties);
+            properties.setLastMsgSeq(properties.getLastMsgSeq().add(BigInteger.valueOf(cnt)));
+            properties.setLastMsgSlot(beaconBlockHeader.getSlot());
+            propertiesDB.set(properties);
             return messages;
         }
         return messages;
