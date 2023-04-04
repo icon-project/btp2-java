@@ -203,6 +203,10 @@ public class BTPMessageVerifier implements BMV {
                     continue;
                 }
 
+                if (!MessageEvent.SIGNATURE.equals(log.getSignature())) {
+                    continue;
+                }
+
                 MessageEvent msg = MessageEvent.of(bmc, log);
                 if (!msg.getNext().equals(bmc)) {
                     continue;
