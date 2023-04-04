@@ -16,6 +16,10 @@ dependencies {
     testImplementation 'foundation.icon:icon-sdk:2.0.0'
     testImplementation 'com.squareup.okhttp3:okhttp:3.11.0'
     testImplementation 'foundation.icon:javaee-integration-test:0.9.0'
+
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    testImplementation 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
 }
 
 optimizedJar {
