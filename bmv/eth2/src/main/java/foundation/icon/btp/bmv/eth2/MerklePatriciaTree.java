@@ -174,7 +174,7 @@ public class MerklePatriciaTree {
         }
 
         static byte[] hash(byte[] bytes) {
-            return Context.hash("keccak-256",bytes);
+            return Context.hash("sha-256",bytes);
         }
 
         private boolean isHash() {
