@@ -5,6 +5,7 @@ include (
         'bmv:bsc',
         'bmv:btpblock',
         'bmv:icon',
+        'dapp-sample',
         'lib',
         'nativecoin',
         'score-util',
