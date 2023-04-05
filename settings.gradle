@@ -1,14 +1,13 @@
 rootProject.name = 'btp2-java'
 include (
-        'score-util',
-        'lib',
-        'test-lib',
         'bmc',
-        'bmv:icon',
-        'bmv:btpblock',
         'bmv:bridge',
         'bmv:bsc',
+        'bmv:btpblock',
+        'bmv:icon',
+        'lib',
         'nativecoin',
+        'score-util',
+        'test-lib',
         'xcall',
-        'debug-bsh'
 )
