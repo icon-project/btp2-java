@@ -80,10 +80,6 @@ task optimizedJarMockGov(type: OptimizedJar) {
 
 deployJar {
     endpoints {
-        gangnam {
-            uri = 'https://gicon.net.solidwallet.io/api/v3'
-            nid = 7
-        }
         local {
             uri = scoreTest.url
             nid = scoreTest.parseNid(scoreTest.nid)
