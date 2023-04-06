@@ -2,7 +2,6 @@ version = '0.1.0'
 
 dependencies {
     compileOnly("foundation.icon:javaee-api:$javaeeVersion")
-    implementation("org.web3j:core:4.8.1")
     implementation("foundation.icon:javaee-scorex:$scorexVersion")
     implementation project(':score-util')
     implementation project(':lib')
@@ -35,10 +34,6 @@ optimizedJar {
 
 deployJar {
     endpoints {
-        gangnam {
-            uri = 'https://gicon.net.solidwallet.io/api/v3'
-            nid = 7
-        }
         local {
             uri = scoreTest.url
             nid = scoreTest.parseNid(scoreTest.nid)
