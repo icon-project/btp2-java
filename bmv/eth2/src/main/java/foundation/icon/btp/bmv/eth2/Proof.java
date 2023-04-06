@@ -50,8 +50,10 @@ public class Proof {
         var index = r.readBigInteger();
         var leaf = r.readByteArray();
         var hashList = new ArrayList<byte[]>();
+        r.beginList();
         while(r.hasNext())
             hashList.add(r.readByteArray());
+        r.end();
         var hashesLength = hashList.size();
         var hashes = new byte[hashesLength][];
         for (int i = 0; i < hashesLength; i++)

@@ -43,9 +43,9 @@ public class BlockProof {
         return blockProof;
     }
 
-    public static MessageProof fromBytes(byte[] bytes) {
+    public static BlockProof fromBytes(byte[] bytes) {
         ObjectReader reader = Context.newByteArrayObjectReader("RLPn", bytes);
-        return MessageProof.readObject(reader);
+        return BlockProof.readObject(reader);
     }
 
     @Override

@@ -50,9 +50,10 @@ public class MessageProof {
         var slot = r.readBigInteger();
         var proof = r.read(Proof.class);
         var receiptsProofList = new ArrayList<ReceiptProof>();
-
+        r.beginList();
         while(r.hasNext())
             receiptsProofList.add(r.read(ReceiptProof.class));
+        r.end();
         var receiptsProofLen = receiptsProofList.size();
         var receiptsProofs = new ReceiptProof[receiptsProofLen];
         for (int i = 0; i < receiptsProofLen; i++)

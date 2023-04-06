@@ -62,8 +62,10 @@ public class Receipt {
         var cumulativeGasUsed = r.readBigInteger();
         var bloom = r.readByteArray();
         var logList = new ArrayList<Log>();
+        r.beginList();
         while(r.hasNext())
             logList.add(r.read(Log.class));
+        r.end();
         var logsLength = logList.size();
         var logs = new Log[logsLength];
         for (int i = 0; i < logsLength; i++)

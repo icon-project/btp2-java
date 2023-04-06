@@ -61,8 +61,10 @@ public class Log {
         r.beginList();
         var address = r.readByteArray();
         var topicList = new ArrayList<byte[]>();
+        r.beginList();
         while(r.hasNext())
             topicList.add(r.readByteArray());
+        r.end();
         var topicLength = topicList.size();
         var topics = new byte[topicLength][];
         for (int i = 0; i < topicLength; i++)
