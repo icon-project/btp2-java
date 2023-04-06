@@ -12,18 +12,20 @@ dependencies {
     implementation project(':lib')
 
     //for test package
-    implementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
-    implementation("org.junit.jupiter:junit-jupiter-params:5.7.2")
-    runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+    compileOnly("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
 
     annotationProcessor("foundation.icon:javaee-score-client:$scoreClientVersion")
     compileOnly("foundation.icon:javaee-score-client:$scoreClientVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.github.javafaker:javafaker:1.0.2")
 
     testImplementation("foundation.icon:javaee-unittest:$javaeeUnittestVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+
     testAnnotationProcessor("foundation.icon:javaee-score-client:$scoreClientVersion")
     testImplementation("foundation.icon:javaee-score-client:$scoreClientVersion")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 }
 
 import foundation.icon.gradle.plugins.javaee.task.OptimizedJar
