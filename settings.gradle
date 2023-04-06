@@ -4,6 +4,7 @@ include (
         'bmv:bridge',
         'bmv:bsc',
         'bmv:btpblock',
+        'bmv:eth2',
         'bmv:icon',
         'dapp-sample',
         'lib',
