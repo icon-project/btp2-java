@@ -13,9 +13,9 @@ dependencies {
     compileOnly("foundation.icon:javaee-score-client:$scoreClientVersion")
     annotationProcessor("foundation.icon:javaee-score-client:$scoreClientVersion")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.7.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$jupiterVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     testImplementation("foundation.icon:javaee-unittest:$javaeeUnittestVersion")
 }
 

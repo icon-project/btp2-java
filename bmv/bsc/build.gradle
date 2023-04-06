@@ -6,8 +6,8 @@ dependencies {
     implementation project(':score-util')
     implementation project(':lib')
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
 
     testImplementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     testImplementation("foundation.icon:javaee-unittest:$javaeeUnittestVersion")
@@ -31,10 +31,6 @@ optimizedJar {
 
 deployJar {
     endpoints {
-        gangnam {
-            uri = 'https://gicon.net.solidwallet.io/api/v3'
-            nid = 7
-        }
         local {
             uri = scoreTest.url
             nid = scoreTest.parseNid(scoreTest.nid)

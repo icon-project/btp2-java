@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'foundation.icon:gradle-javaee-plugin:0.8.2'
+        classpath 'foundation.icon:gradle-javaee-plugin:0.8.3'
     }
 }
 
@@ -36,6 +36,7 @@ subprojects {
         javaeeUnittestVersion = getProperty("javaee-unittest.version")
         scoreClientVersion = getProperty("score-client.version")
         iconsdkVersion = getProperty("iconsdk.version")
+        jupiterVersion = getProperty("jupiter.version")
         jacksonVersion = getProperty("jackson.version")
         debugJar = Boolean.parseBoolean(getProperty("debugJar").toString())
         integrationTest = Boolean.parseBoolean(getProperty("integrationTest").toString())

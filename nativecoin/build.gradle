@@ -5,14 +5,14 @@ dependencies {
     implementation("foundation.icon:javaee-scorex:$scorexVersion")
     implementation project(':score-util')
     implementation project(':lib')
-    implementation("com.github.sink772:javaee-tokens:0.6.0")
+    implementation("com.github.sink772:javaee-tokens:0.6.3")
 
     //for generate ScoreClient
     compileOnly("foundation.icon:javaee-score-client:$scoreClientVersion")
     annotationProcessor("foundation.icon:javaee-score-client:$scoreClientVersion")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
 
     testImplementation("foundation.icon:javaee-unittest:$javaeeUnittestVersion")
     testImplementation project(':test-lib')
@@ -22,8 +22,9 @@ dependencies {
 }
 
 optimizedJar {
+    dependsOn(project(':lib').jar)
+    dependsOn(project(':score-util').jar)
     mainClassName = 'foundation.icon.btp.nativecoin.NativeCoinService'
-//    archivesBaseName = 'nativecoin'
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     } { exclude "score/*" }
@@ -33,6 +34,8 @@ optimizedJar {
 import foundation.icon.gradle.plugins.javaee.task.OptimizedJar
 
 task optimizedJarIRC31(type: OptimizedJar) {
+    dependsOn(project(':lib').jar)
+    dependsOn(project(':score-util').jar)
     mainClassName = 'foundation.icon.btp.nativecoin.irc31.OwnerBasedIRC31Supplier'
     archiveName("irc31-" + archiveVersion.get() + "." + archiveExtension.get());
     from { sourceSets.main.output }
@@ -44,10 +47,6 @@ task optimizedJarIRC31(type: OptimizedJar) {
 
 deployJar {
     endpoints {
-        gangnam {
-            uri = 'https://gicon.net.solidwallet.io/api/v3'
-            nid = 7
-        }
         local {
             uri = scoreTest.url
             nid = scoreTest.parseNid(scoreTest.nid)

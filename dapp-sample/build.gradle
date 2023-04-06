@@ -2,25 +2,24 @@ version = '0.1.0'
 
 dependencies {
     compileOnly("foundation.icon:javaee-api:$javaeeVersion")
-    implementation("foundation.icon:javaee-scorex:$scorexVersion")
-    implementation project(':score-util')
-    implementation project(':lib')
+    implementation project(':xcall')
 
+    annotationProcessor("foundation.icon:javaee-score-client:$scoreClientVersion")
+    compileOnly("foundation.icon:javaee-score-client:$scoreClientVersion")
+
+    testImplementation("foundation.icon:javaee-unittest:$javaeeUnittestVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
-
-    testImplementation("org.mockito:mockito-core:3.3.3")
 }
 
 optimizedJar {
     dependsOn(project(':lib').jar)
     dependsOn(project(':score-util').jar)
-    mainClassName = 'foundation.icon.btp.bmv.icon.BTPMessageVerifier'
-    archivesBaseName = 'bmv-icon'
+    mainClassName = 'foundation.icon.btp.xcall.sample.DAppProxySample'
+    archiveFileName = "dapp-sample-" + archiveVersion.get() + ".jar"
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    } { exclude "score/*" }
-    enableDebug = debugJar
+    }
 }
 
 deployJar {
@@ -32,19 +31,8 @@ deployJar {
     }
     keystore = scoreTest.default.keyStore
     password = scoreTest.default.resolvedKeyPassword
-    parameters {[
-            arg('_bmc', 'cx?'),
-            arg('_net', '0x?.icon'),
-            arg('_validators', 'hx?'),
-            arg('_offset', '0x?')
-        ]
-    }
 }
 
 test {
-    useJUnitPlatform {
-        if (!integrationTest) {
-            excludeTags("integration")
-        }
-    }
+    useJUnitPlatform()
 }

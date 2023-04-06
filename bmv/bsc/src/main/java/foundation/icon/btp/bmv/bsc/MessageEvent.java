@@ -24,7 +24,7 @@ import java.util.Arrays;
 public class MessageEvent {
     // pre-calculated btp message event signature
     // keccak256("Message(string,uint256,bytes)")
-    private static final Hash SIG = Hash.of("37be353f216cf7e33639101fd610c542e6a0c0109173fa1c1d8b04d34edb7c1b");
+    public static final Hash SIGNATURE = Hash.of("37be353f216cf7e33639101fd610c542e6a0c0109173fa1c1d8b04d34edb7c1b");
 
     private BTPAddress next;
     private BigInteger sequence;
@@ -37,7 +37,7 @@ public class MessageEvent {
     }
 
     public static MessageEvent of(BTPAddress next, EventLog log) {
-        Context.require(SIG.equals(log.getSignature()), "Invalid Message event signature");
+        Context.require(SIGNATURE.equals(log.getSignature()), "Invalid Message event signature");
         Context.require(Arrays.equals(Context.hash("keccak-256", next.toString().getBytes()), log.getTopics().get(1)), "Mismatch next bmc");
 
         // TODO smell...
