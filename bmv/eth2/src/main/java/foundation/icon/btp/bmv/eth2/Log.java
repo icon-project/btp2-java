@@ -26,23 +26,10 @@ public class Log {
     private byte[] address;
     private byte[][] topics;
     private byte[] data;
-    private BigInteger blockNumber;
-    private byte[] txHash;
-    private BigInteger txIndex;
-    private byte[] blockHash;
-    private BigInteger index;
-    private boolean removed;
-
-    public Log(byte[] address, byte[][] topics, byte[] data, BigInteger blockNumber, byte[] txHash, BigInteger txIndex, byte[] blockHash, BigInteger index, boolean removed) {
+    public Log(byte[] address, byte[][] topics, byte[] data) {
         this.address = address;
         this.topics = topics;
         this.data = data;
-        this.blockNumber = blockNumber;
-        this.txHash = txHash;
-        this.txIndex = txIndex;
-        this.blockHash = blockHash;
-        this.index = index;
-        this.removed = removed;
     }
 
     public byte[] getAddress() {
@@ -70,14 +57,8 @@ public class Log {
         for (int i = 0; i < topicLength; i++)
             topics[i] = topicList.get(i);
         var data = r.readByteArray();
-        var blockNum = r.readBigInteger();
-        var txHash = r.readByteArray();
-        var txIndex = r.readBigInteger();
-        var blockHash = r.readByteArray();
-        var index = r.readBigInteger();
-        var removed = r.readBoolean();
         r.end();
-        return new Log(address, topics, data, blockNum, txHash, txIndex, blockHash, index, removed);
+        return new Log(address, topics, data);
     }
 
     @Override
@@ -86,12 +67,6 @@ public class Log {
                 "address=" + StringUtil.toString(address) +
                 ", topics=" + StringUtil.toString(topics) +
                 ", data=" + StringUtil.toString(data) +
-                ", blockNumber=" + blockNumber +
-                ", txHash=" + StringUtil.toString(txHash) +
-                ", txIndex=" + txIndex +
-                ", blockHash=" + StringUtil.toString(blockHash) +
-                ", index=" + index +
-                ", removed=" + removed +
                 '}';
     }
 }

@@ -22,32 +22,19 @@ import score.ObjectReader;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 public class Receipt {
-    private BigInteger type;
-    private byte[] postState;
-    private BigInteger status;
+    private byte[] postStatusOrState;
     private BigInteger cumulativeGasUsed;
     private byte[] bloom;
     private Log[] logs;
-    private byte[] txHash;
-    private byte[] contractAddress;
-    private BigInteger gasUsed;
-    private byte[] blockHash;
-    private BigInteger txIndex;
 
-    public Receipt(BigInteger type, byte[] postState, BigInteger status, BigInteger cumulativeGasUsed, byte[] bloom, Log[] logs, byte[] txHash, byte[] contractAddress, BigInteger gasUsed, byte[] blockHash, BigInteger txIndex) {
-        this.type = type;
-        this.postState = postState;
-        this.status = status;
+    public Receipt(byte[] postStatusOrState, BigInteger cumulativeGasUsed, byte[] bloom, Log[] logs) {
+        this.postStatusOrState = postStatusOrState;
         this.cumulativeGasUsed = cumulativeGasUsed;
         this.bloom = bloom;
         this.logs = logs;
-        this.txHash = txHash;
-        this.contractAddress = contractAddress;
-        this.gasUsed = gasUsed;
-        this.blockHash = blockHash;
-        this.txIndex = txIndex;
     }
 
     Log[] getLogs() {
@@ -56,9 +43,7 @@ public class Receipt {
 
     public static Receipt readObject(ObjectReader r) {
         r.beginList();
-        var type = r.readBigInteger();
-        var postState = r.readByteArray();
-        var status = r.readBigInteger();
+        var postStatusOrState = r.readByteArray();
         var cumulativeGasUsed = r.readBigInteger();
         var bloom = r.readByteArray();
         var logList = new ArrayList<Log>();
@@ -70,14 +55,8 @@ public class Receipt {
         var logs = new Log[logsLength];
         for (int i = 0; i < logsLength; i++)
             logs[i] = logList.get(i);
-        var txHash = r.readByteArray();
-        var contractAddress = r.readByteArray();
-        var gasUsed = r.readBigInteger();
-        var blockHash = r.readByteArray();
-        var txIndex = r.readBigInteger();
         r.end();
-        return new Receipt(
-          type, postState, status, cumulativeGasUsed, bloom, logs, txHash, contractAddress, gasUsed, blockHash, txIndex);
+        return new Receipt(postStatusOrState, cumulativeGasUsed, bloom, logs);
     }
 
     static Receipt fromBytes(byte[] bytes) {
@@ -88,17 +67,10 @@ public class Receipt {
     @Override
     public String toString() {
         return "Receipt{" +
-                "type=" + type +
-                ", postState=" + StringUtil.toString(postState) +
-                ", status=" + status +
+                "postStatusOrState=" + StringUtil.toString(postStatusOrState) +
                 ", cumulativeGasUsed=" + cumulativeGasUsed +
                 ", bloom=" + StringUtil.toString(bloom) +
                 ", logs=" + StringUtil.toString(logs) +
-                ", txHash=" + StringUtil.toString(txHash) +
-                ", contractAddress=" + StringUtil.toString(contractAddress) +
-                ", gasUsed=" + gasUsed +
-                ", blockHash=" + StringUtil.toString(blockHash) +
-                ", txIndex=" + txIndex +
                 '}';
     }
 }
