@@ -44,6 +44,16 @@ public class Log {
         return data;
     }
 
+    public byte[] getMessage() {
+        var data = getData();
+        byte[] dsz = new byte[32];
+        System.arraycopy(data, 32, dsz, 0, 32);
+        int msz = new BigInteger(dsz).intValue();
+        byte[] message = new byte[msz];
+        System.arraycopy(data, 64, message, 0, msz);
+        return message;
+    }
+
     public static Log readObject(ObjectReader r) {
         r.beginList();
         var address = r.readByteArray();

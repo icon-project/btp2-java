@@ -33,6 +33,7 @@ public class DataSource {
         private String srcNetworkID;
         private String genesisValidatorsHash;
         private String syncCommittee;
+        private String bmc;
         private String finalizedHeader;
     }
 

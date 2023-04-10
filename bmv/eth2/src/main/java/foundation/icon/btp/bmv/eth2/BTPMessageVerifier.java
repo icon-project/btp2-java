@@ -215,12 +215,13 @@ public class BTPMessageVerifier implements BMV {
             logger.println("processMessageProof, ", "receipt : ", receipt);
             for (Log log : receipt.getLogs()) {
                 var topics = log.getTopics();
-                var topic = topics[0];
+                var signature = topics[0];
+                if (!Arrays.equals(signature, eventSignatureTopic)) continue;
                 var nextHash = topics[1];
-                logger.println("processMessageProof, ", "topic : ", StringUtil.bytesToHex(topic), ", nextHash : ", StringUtil.bytesToHex(nextHash));
-                if (Arrays.equals(nextHash, Context.hash("keccak-256", _bmc.getBytes())) && Arrays.equals(topic, eventSignatureTopic)) {
+                logger.println("processMessageProof, ", "topic : ", StringUtil.bytesToHex(signature), ", nextHash : ", StringUtil.bytesToHex(nextHash));
+                if (Arrays.equals(nextHash, Context.hash("keccak-256", _bmc.getBytes()))) {
                     logger.println("processMessageProof, ", "add message. log : ", log);
-                    var msg = log.getData();
+                    var msg = log.getMessage();
                     messageList.add(msg);
                 }
             }
