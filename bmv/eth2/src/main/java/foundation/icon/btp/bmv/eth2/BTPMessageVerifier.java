@@ -34,7 +34,7 @@ public class BTPMessageVerifier implements BMV {
     private static final Logger logger = Logger.getLogger(BTPMessageVerifier.class);
     private final VarDB<BMVProperties> propertiesDB = Context.newVarDB("properties", BMVProperties.class);
     private final String eventSignature = "Message(string,uint256,bytes)";
-    private final byte[] eventSignatureTopic = Context.hash("sha-256", eventSignature.getBytes());
+    private final byte[] eventSignatureTopic = Context.hash("keccak-256", eventSignature.getBytes());
 
     public BTPMessageVerifier(String srcNetworkID, byte[] genesisValidatorsHash, byte[] syncCommittee, Address bmc, byte[] finalizedHeader) {
         var properties = getProperties();
@@ -219,7 +219,7 @@ public class BTPMessageVerifier implements BMV {
                 var nextHash = topics[1];
                 logger.println("processMessageProof, ", "topic : ", StringUtil.bytesToHex(topic), ", nextHash : ", StringUtil.bytesToHex(nextHash));
                 var bmcBtpAddress = BTPAddress.valueOf(_bmc);
-                if (Arrays.equals(nextHash, Context.hash("sha-256", bmcBtpAddress.toString().getBytes())) && Arrays.equals(topic, eventSignatureTopic)) {
+                if (Arrays.equals(nextHash, Context.hash("keccak-256", bmcBtpAddress.toString().getBytes())) && Arrays.equals(topic, eventSignatureTopic)) {
                     logger.println("processMessageProof, ", "add message. log : ", log);
                     var msg = log.getData();
                     messageList.add(msg);
