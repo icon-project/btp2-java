@@ -183,9 +183,11 @@ public class BTPMessageVerifier implements BMV {
         var blockProofSlot = attestingBeacon.getSlot();
         if (storedFinalizedSlot.compareTo(blockProofSlot) < 0)
             throw BMVException.unknown(blockProofSlot.toString());
-        var storedBlockProofSlot = properties.getBpHeader().getBeacon().getSlot();
-        if (blockProofSlot.compareTo(storedBlockProofSlot) < 0)
-            throw BMVException.invalidBlockWitnessOld(blockProofSlot.toString());
+        if (properties.getBpHeader() != null) {
+            var storedBlockProofSlot = properties.getBpHeader().getBeacon().getSlot();
+            if (blockProofSlot.compareTo(storedBlockProofSlot) < 0)
+                throw BMVException.invalidBlockWitnessOld(blockProofSlot.toString());
+        }
         var hashTree = attestingBeacon.getHashTreeRoot();
         var proofLeaf = blockProof.getProof().getLeaf();
         if (!Arrays.equals(proofLeaf, hashTree))
