@@ -90,7 +90,7 @@ public class BlockUpdate {
         int nextSyncCommitteeDepth = 5;
         int nextSyncCommitteeIndex = 23;
         SszUtils.validateMerkleBranch(
-                nextSyncCommittee,
+                SyncCommittee.deserialize(nextSyncCommittee).getHashTreeRoot(),
                 nextSyncCommitteeBranch,
                 nextSyncCommitteeDepth,
                 nextSyncCommitteeIndex,
