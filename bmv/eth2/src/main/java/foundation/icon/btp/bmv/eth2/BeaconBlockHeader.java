@@ -16,6 +16,7 @@
 
 package foundation.icon.btp.bmv.eth2;
 
+import foundation.icon.score.util.StringUtil;
 import score.ObjectReader;
 import score.ObjectWriter;
 
@@ -134,5 +135,16 @@ public class BeaconBlockHeader {
         w.write(b.stateRoot);
         w.write(b.bodyRoot);
         w.end();
+    }
+
+    @Override
+    public String toString() {
+        return "BeaconBlockHeader{" +
+                "slot=" + slot +
+                ", validatorIndex=" + validatorIndex +
+                ", parentRoot=" + StringUtil.toString(parentRoot) +
+                ", stateRoot=" + StringUtil.toString(stateRoot) +
+                ", bodyRoot=" + StringUtil.toString(bodyRoot) +
+                '}';
     }
 }
