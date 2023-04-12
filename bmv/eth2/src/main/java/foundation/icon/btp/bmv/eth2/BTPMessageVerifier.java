@@ -63,16 +63,16 @@ public class BTPMessageVerifier implements BMV {
         List<byte[]> msgList = new ArrayList<>();
         for (RelayMessage.TypePrefixedMessage message : typePrefixedMessages) {
             Object msg = message.getMessage();
-            if (msg instanceof BlockUpdate) {
-                logger.println("handleRelayMessage, blockUpdate : " + msg);
-                processBlockUpdate((BlockUpdate) msg);
-            } else if (msg instanceof BlockProof) {
+//            if (msg instanceof BlockUpdate) {
+//                logger.println("handleRelayMessage, blockUpdate : " + msg);
+//                processBlockUpdate((BlockUpdate) msg);
+            if (msg instanceof BlockProof) {
                 logger.println("handleRelayMessage, blockProof : " + msg);
                 blockProof = (BlockProof) msg;
-                processBlockProof(blockProof);
+//                processBlockProof(blockProof);
             } else if (msg instanceof MessageProof) {
                 logger.println("handleRelayMessage, MessageProof : " + msg);
-                var msgs = processMessageProof((MessageProof) msg, blockProof, _bmc);
+                var msgs = processMessageProof((MessageProof) msg, blockProof, _prev, _bmc);
                 for(byte[] m : msgs) {
                     msgList.add(m);
                 }
@@ -197,9 +197,10 @@ public class BTPMessageVerifier implements BMV {
         propertiesDB.set(properties);
     }
 
-    private byte[][] processMessageProof(MessageProof messageProof, BlockProof blockProof, String _bmc) {
+    private byte[][] processMessageProof(MessageProof messageProof, BlockProof blockProof, String prev, String _bmc) {
         logger.println("processMessageProof, ", "messageProof : ", messageProof, ", BlockProof", blockProof);
         var properties = getProperties();
+        var seq = properties.getLastMsgSeq();
         var beaconBlockHeader = blockProof.getLightClientHeader().getBeacon();
         var stateRoot = beaconBlockHeader.getStateRoot();
         var receiptRootProof = messageProof.getReceiptRootProof();
@@ -216,14 +217,14 @@ public class BTPMessageVerifier implements BMV {
             for (Log log : receipt.getLogs()) {
                 var topics = log.getTopics();
                 var signature = topics[0];
+                logger.println("processMessageProof, ", "topic : ", StringUtil.bytesToHex(signature));
                 if (!Arrays.equals(signature, eventSignatureTopic)) continue;
-                var nextHash = topics[1];
-                logger.println("processMessageProof, ", "topic : ", StringUtil.bytesToHex(signature), ", nextHash : ", StringUtil.bytesToHex(nextHash));
-                if (Arrays.equals(nextHash, Context.hash("keccak-256", _bmc.getBytes()))) {
-                    logger.println("processMessageProof, ", "add message. log : ", log);
-                    var msg = log.getMessage();
-                    messageList.add(msg);
-                }
+                var msgSeq = new BigInteger(topics[2]);
+                seq = seq.add(BigInteger.ONE);
+                logger.println("processMessageProof, ", "seq : ", seq, ", seq in msg : ", msgSeq);
+                if (seq.compareTo(msgSeq) != 0) throw BMVException.unknown("invalid message sequence");
+                var msg = log.getMessage();
+                messageList.add(msg);
             }
         }
         var cnt = messageList.size();
@@ -231,10 +232,9 @@ public class BTPMessageVerifier implements BMV {
         if (cnt != 0) {
             for (int i = 0; i < cnt; i++)
                 messages[i] = messageList.get(i);
-            properties.setLastMsgSeq(properties.getLastMsgSeq().add(BigInteger.valueOf(cnt)));
+            properties.setLastMsgSeq(seq);
             properties.setLastMsgSlot(beaconBlockHeader.getSlot());
             propertiesDB.set(properties);
-            return messages;
         }
         return messages;
     }
