@@ -63,13 +63,13 @@ public class BTPMessageVerifier implements BMV {
         List<byte[]> msgList = new ArrayList<>();
         for (RelayMessage.TypePrefixedMessage message : typePrefixedMessages) {
             Object msg = message.getMessage();
-//            if (msg instanceof BlockUpdate) {
-//                logger.println("handleRelayMessage, blockUpdate : " + msg);
-//                processBlockUpdate((BlockUpdate) msg);
-            if (msg instanceof BlockProof) {
+            if (msg instanceof BlockUpdate) {
+                logger.println("handleRelayMessage, blockUpdate : " + msg);
+                processBlockUpdate((BlockUpdate) msg);
+            } else if (msg instanceof BlockProof) {
                 logger.println("handleRelayMessage, blockProof : " + msg);
                 blockProof = (BlockProof) msg;
-//                processBlockProof(blockProof);
+                processBlockProof(blockProof);
             } else if (msg instanceof MessageProof) {
                 logger.println("handleRelayMessage, MessageProof : " + msg);
                 var msgs = processMessageProof((MessageProof) msg, blockProof, _prev, _bmc);
