@@ -233,7 +233,7 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private void verify(Header head) {
-        Context.require(head.getNumber().compareTo(BigInteger.ZERO) > 0, "Unknown block");
+        Context.require(head.getNumber().compareTo(BigInteger.ZERO) >= 0, "Unknown block");
         Context.require(head.getUncleHash().equals(UNCLE_HASH), "Invalid uncle hash");
         if (head.getNumber().compareTo(BigInteger.ZERO) != 0) {
             Context.require(head.getDifficulty().compareTo(BigInteger.ZERO) != 0, "Invalid difficulty");
