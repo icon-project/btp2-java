@@ -18,6 +18,7 @@ package foundation.icon.btp.bmv.bsc;
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
+import score.Address;
 import score.Context;
 import score.DictDB;
 import score.VarDB;
@@ -32,12 +33,13 @@ import java.util.Map;
 import static foundation.icon.btp.bmv.bsc.Header.*;
 
 public class BTPMessageVerifier implements BMV {
-    private final VarDB<BlockTree> tree = Context.newVarDB("tree", BlockTree.class);;
+    private final VarDB<Address> bmc = Context.newVarDB("bmc", Address.class);
+    private final VarDB<BlockTree> tree = Context.newVarDB("tree", BlockTree.class);
     private final VarDB<MerkleTreeAccumulator> mta = Context.newVarDB("mta", MerkleTreeAccumulator.class);
     private final DictDB<byte[], Header> heads = Context.newDictDB("heads", Header.class);
     private final DictDB<byte[], Snapshot> snapshots = Context.newDictDB("snapshots", Snapshot.class);
 
-    public BTPMessageVerifier(BigInteger chainId, BigInteger epoch, byte[] header,
+    public BTPMessageVerifier(Address bmc, BigInteger chainId, BigInteger epoch, byte[] header,
                               byte[][] recents, byte[][] validators) {
 
         Config.setOnce(Config.CHAIN_ID, chainId);
@@ -46,7 +48,6 @@ public class BTPMessageVerifier implements BMV {
         Header head = Header.fromBytes(header);
         Context.require(head.isEpochBlock(), "No epoch block");
         verify(head);
-
 
         MerkleTreeAccumulator mta = new MerkleTreeAccumulator();
         mta.setHeight(head.getNumber().longValue());
@@ -61,6 +62,7 @@ public class BTPMessageVerifier implements BMV {
                     "Wrong recent signers - validators/2+1");
         }
 
+        this.bmc.set(bmc);
         this.tree.set(new BlockTree(head.getHash()));
         this.mta.set(mta);
         this.heads.set(head.getHash().toBytes(), head);
@@ -83,10 +85,10 @@ public class BTPMessageVerifier implements BMV {
         return status;
     }
 
-    // TODO check access authority
-    // TODO check _seq
     @External
     public byte[][] handleRelayMessage(String _bmc, String _prev, BigInteger _seq, byte[] _msg) {
+        checkAccessible();
+
         BlockTree tree = this.tree.get();
         MerkleTreeAccumulator mta = this.mta.get();
         List<Header> confirmations = new ArrayList<>();
@@ -158,13 +160,16 @@ public class BTPMessageVerifier implements BMV {
     private List<Header> handleBlockProof(BlockProof bp, MerkleTreeAccumulator mta) {
         Header head = bp.getHeader();
         if (head.getNumber().compareTo(BigInteger.valueOf(mta.getHeight())) > 0) {
-            throw BMVException.unknown("Invalid block proof height");
+            throw BMVException.unknown("Invalid block proof height - " +
+                    "avail: " + mta.getHeight() + " input: " + head.getNumber());
         }
 
         try {
             mta.verify(bp.getWitness(), head.getHash().toBytes(),
                     head.getNumber().longValue()+1, bp.getHeight().intValue());
-        } catch (Exception e) {
+        } catch (MTAException.InvalidWitnessOldException e) {
+            throw BMVException.invalidBlockWitnessOld(e.getMessage());
+        } catch (MTAException e) {
             throw BMVException.unknown(e.getMessage());
         }
 
@@ -212,8 +217,12 @@ public class BTPMessageVerifier implements BMV {
                     continue;
                 }
 
-                if (msg.getSequence().compareTo(seq) != 0) {
-                    BMVException.unknown("Invalid sequence");
+                if (msg.getSequence().compareTo(seq) < 0) {
+                    continue;
+                }
+
+                if (msg.getSequence().compareTo(seq) > 0) {
+                    BMVException.notVerifiable("expected:" + seq + " actual:" + msg.getSequence());
                 }
 
                 seq = seq.add(BigInteger.ONE);
@@ -371,6 +380,12 @@ public class BTPMessageVerifier implements BMV {
         // if (head.getNumber().compareTo(Config.getAsBigInteger(Config.RAMANUJAN_BLOCK)) <= 0) {
         //     Context.require(head.getTime() >= parent.getTime() + Config.getAsBigInteger(Config.PERIOD).longValue() + backOffTime(snap, head.getCoinbase()), "Future block");
         // }
+    }
+
+    private void checkAccessible() {
+        if (!Context.getCaller().equals(this.bmc.get())) {
+            throw BMVException.unknown("invalid caller bmc");
+        }
     }
 
 }

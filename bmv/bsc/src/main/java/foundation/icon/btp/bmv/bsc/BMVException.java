@@ -39,11 +39,16 @@ public class BMVException extends BTPException.BMV {
         return new BMVException(Code.AlreadyVerified, message);
     }
 
+    public static BMVException invalidBlockWitnessOld(String message) {
+        return new BMVException(Code.InvalidBlockWitnessOld, message);
+    }
+
     //BTPException.BMV => 25 ~ 39
     public enum Code implements Coded{
         Unknown(0),
         NotVerifiable(1),
-        AlreadyVerified(2);
+        AlreadyVerified(2),
+        InvalidBlockWitnessOld(3);
 
         final int code;
         Code(int code){ this.code = code; }

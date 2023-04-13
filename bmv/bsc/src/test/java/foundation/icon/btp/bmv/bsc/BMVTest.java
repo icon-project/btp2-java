@@ -24,7 +24,7 @@ public class BMVTest extends TestBase {
 
     public static Score deployBmv(DataSource.ConstructorParams params) throws Exception {
         return sm.deploy(sm.createAccount(), BTPMessageVerifier.class,
-                params.getChainId(), params.getEpoch(), StringUtil.hexToBytes(params.getHeader()),
+                BMC.getAddress(), params.getChainId(), params.getEpoch(), StringUtil.hexToBytes(params.getHeader()),
                 DataSource.ConstructorParams.toBytesArray(params.getRecents()),
                 DataSource.ConstructorParams.toBytesArray(params.getValidators()));
     }
