@@ -17,6 +17,7 @@
 package foundation.icon.btp.bmv.eth2.score;
 
 import foundation.icon.icx.Wallet;
+import foundation.icon.icx.data.Address;
 import foundation.icon.icx.transport.jsonrpc.RpcObject;
 import foundation.icon.icx.transport.jsonrpc.RpcValue;
 import foundation.icon.test.Log;
@@ -24,7 +25,6 @@ import foundation.icon.test.ResultTimeoutException;
 import foundation.icon.test.TransactionFailureException;
 import foundation.icon.test.TransactionHandler;
 import foundation.icon.test.score.Score;
-import score.Address;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -41,8 +41,7 @@ public class BMVScore extends Score {
             byte[] validatorHash,
             byte[] syncCommittee,
             Address bmc,
-            byte[] finalized,
-            byte[] etherBmc
+            byte[] finalized
     )
             throws ResultTimeoutException, TransactionFailureException, IOException {
         LOG.infoEntering("deploy", "bmv");
@@ -52,7 +51,6 @@ public class BMVScore extends Score {
                 .put("syncCommittee", new RpcValue(syncCommittee))
                 .put("bmc", new RpcValue(bmc.toString()))
                 .put("finalizedHeader", new RpcValue(finalized))
-                .put("etherBmc", new RpcValue(etherBmc))
                 .build();
         Score score = txHandler.deploy(wallet, getFilePath("bmv-eth2"), params, BigInteger.valueOf(2000000000));
         LOG.info("scoreAddr = " + score.getAddress());

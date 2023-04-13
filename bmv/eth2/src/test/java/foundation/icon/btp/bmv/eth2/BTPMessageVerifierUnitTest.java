@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class BTPMessageVerifierUnitTest extends TestBase {
     static final ServiceManager sm = getServiceManager();
     static final Account BMC = sm.createAccount(Integer.MAX_VALUE);
-    static final BTPAddress BMC_BTP_ADDRESS = new BTPAddress(BTPIntegrationTest.Faker.btpNetwork(), BMC.getAddress().toString());
 
     public static Score deployBmv(DataSource.ConstructorParams params) throws Exception {
         return sm.deploy(sm.createAccount(), BTPMessageVerifier.class,
@@ -43,19 +42,17 @@ public class BTPMessageVerifierUnitTest extends TestBase {
             byte[][] ret = (byte[][]) sm.call(bmcAccount, BigInteger.ZERO, bmv.getAddress(), "handleRelayMessage",
                     bmcBtpAddress.toString(), prev, seq, relayMsg);
 
-//            if (messages.size() > 0) {
-//                assertEquals(messages.size(), ret.length);
-//                for (int i = 0; i < messages.size(); i++)
-//                    assertEquals(messages.get(i), new String(ret[i]));
-//                seq = seq.add(BigInteger.valueOf(ret.length));
-//            }
+            if (messages.size() > 0) {
+                assertEquals(messages.size(), ret.length);
+                seq = seq.add(BigInteger.valueOf(ret.length));
+            }
             BMVStatus status = bmv.call(BMVStatus.class, "getStatus");
             assertEquals(p.getStatus().getHeight(), status.getHeight());
         }
     }
     public static class Sepolia {
         private static final DataSource data = DataSource.loadDataSource("sepolia.json");
-        private static final BTPAddress PREV_BMC = BTPAddress.parse("btp://aa36a7.eth/0xd2f04942ff92709ed9d41988d161710d18d7f1fe");
+        private static final String PREV_BMC = "btp://aa36a7.eth/0xd2f04942ff92709ed9d41988d161710d18d7f1fe";
         private static final String NET = "0x42.icon";
         @TestFactory
         public Collection<DynamicTest> handleRelayMessageTests() {
@@ -65,7 +62,7 @@ public class BTPMessageVerifierUnitTest extends TestBase {
                 t.add(DynamicTest.dynamicTest(c.getDescription(),
                         () -> {
                             Score bmv = deployBmv(params);
-                            handleRelayMessageTest(c, bmv, NET, params.getBmc(), PREV_BMC.toString());
+                            handleRelayMessageTest(c, bmv, NET, params.getBmc(), PREV_BMC);
                         }
                 ));
             }
