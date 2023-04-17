@@ -256,7 +256,6 @@ public class BTPMessageVerifier implements BMV {
 
     private void verify(Header head, Header parent) {
         verify(head);
-        verifyForkHashes(head);
 
         // verify cascading fields
         if (head.getNumber().equals(BigInteger.ZERO)) {
@@ -354,32 +353,21 @@ public class BTPMessageVerifier implements BMV {
         return cnt;
     }
 
-    private void verifyForkHashes(Header head) {
-        // TODO
-
-        // BSC Mainnet: {
-        //     EIP150_BLOCK: 0,
-        //     EIP150_HASH: "0x0000000000000000000000000000000000000000000000000000000000000000"
-        // }
-
-        // if (head.getNumber().compareTo(Config.getAsBigInteger(Config.EIP150_BLOCK)) == 0) {
-        //     Context.require(
-        //             head.getHash().equals(new Hash(Config.getAsByteArray(Config.EIP150_HASH))),
-        //             "homestead gas reprice fork");
-        // }
-    }
-
+    // BSC Mainnet: {
+    //     RAMANUJAN_BLOCK: 0,
+    //     PERIOD: 3
+    // }
+    private static final BigInteger RAMANUJAN_BLOCK = BigInteger.ZERO;
+    private static final long PERIOD = 3L;
+    private static final long MIN_BACKOFF_TIME = 1L;
     private void verifyForRamanujanFork(Snapshot snap, Header head, Header parent) {
-        // TODO
-
-        // BSC Mainnet: {
-        //     RAMANUJAN_BLOCK: 0,
-        //     PERIOD: 3
-        // }
-
-        // if (head.getNumber().compareTo(Config.getAsBigInteger(Config.RAMANUJAN_BLOCK)) <= 0) {
-        //     Context.require(head.getTime() >= parent.getTime() + Config.getAsBigInteger(Config.PERIOD).longValue() + backOffTime(snap, head.getCoinbase()), "Future block");
-        // }
+        if (RAMANUJAN_BLOCK.compareTo(head.getNumber()) <= 0) {
+            long diffTime = PERIOD;
+            if (!snap.inturn(head.getCoinbase())) {
+                diffTime += MIN_BACKOFF_TIME;
+            }
+            Context.require(head.getTime() >= parent.getTime() + diffTime, "Future block");
+        }
     }
 
     private void checkAccessible() {
