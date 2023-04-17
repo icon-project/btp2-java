@@ -24,6 +24,7 @@ import java.math.BigInteger;
 import java.util.List;
 
 public class Receipt {
+    public static final int StatusFailed = 0;
     private byte[] postStatusOrState;
     private BigInteger cumulativeGasUsed;
     private byte[] bloom;
@@ -54,6 +55,10 @@ public class Receipt {
 
     public static Receipt fromBytes(byte[] bytes) {
         return Receipt.readObject(Context.newByteArrayObjectReader("RLP", bytes));
+    }
+
+    public int getStatus() {
+        return new BigInteger(postStatusOrState).intValue();
     }
 
     public List<EventLog> getLogs() {

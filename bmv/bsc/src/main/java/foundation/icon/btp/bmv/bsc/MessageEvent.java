@@ -39,14 +39,11 @@ public class MessageEvent {
     public static MessageEvent of(BTPAddress next, EventLog log) {
         Context.require(SIGNATURE.equals(log.getSignature()), "Invalid Message event signature");
         Context.require(Arrays.equals(Context.hash("keccak-256", next.toString().getBytes()), log.getTopics().get(1)), "Mismatch next bmc");
-
-        // TODO smell...
         byte[] dsz = new byte[32];
         System.arraycopy(log.getData(), 32, dsz, 0, 32);
         int msz = new BigInteger(dsz).intValue();
         byte[] message = new byte[msz];
         System.arraycopy(log.getData(), 64, message, 0, msz);
-
         return new MessageEvent(next, new BigInteger(log.getTopics().get(2)), message);
     }
 

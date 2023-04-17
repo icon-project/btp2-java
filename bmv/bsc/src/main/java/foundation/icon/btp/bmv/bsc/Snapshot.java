@@ -61,6 +61,7 @@ public class Snapshot {
     public boolean inturn(EthAddress validator) {
         BigInteger offset = number.add(BigInteger.ONE).mod(BigInteger.valueOf(validators.size()));
         EthAddress[] vals = validators.toArray();
+        // TODO review whether sort for validators is always required
         EthAddresses.sort(vals);
         return vals[offset.intValue()].equals(validator);
     }

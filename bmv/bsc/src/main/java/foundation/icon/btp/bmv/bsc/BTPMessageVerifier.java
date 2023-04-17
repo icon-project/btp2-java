@@ -101,7 +101,7 @@ public class BTPMessageVerifier implements BMV {
             if (msg instanceof BlockUpdate) {
                 confirmations.addAll(handleBlockUpdate((BlockUpdate) msg, tree, mta));
             } else if (msg instanceof BlockProof) {
-                confirmations.addAll(handleBlockProof((BlockProof) msg, mta));
+                confirmations.add(handleBlockProof((BlockProof) msg, mta));
             } else if (msg instanceof MessageProof) {
                 msgs.addAll(handleMessageProof((MessageProof) msg, confirmations,
                             seq.add(BigInteger.valueOf(msgs.size())),
@@ -157,7 +157,7 @@ public class BTPMessageVerifier implements BMV {
         return confirmations;
     }
 
-    private List<Header> handleBlockProof(BlockProof bp, MerkleTreeAccumulator mta) {
+    private Header handleBlockProof(BlockProof bp, MerkleTreeAccumulator mta) {
         Header head = bp.getHeader();
         if (head.getNumber().compareTo(BigInteger.valueOf(mta.getHeight())) > 0) {
             throw BMVException.unknown("Invalid block proof height - " +
@@ -173,7 +173,7 @@ public class BTPMessageVerifier implements BMV {
             throw BMVException.unknown(e.getMessage());
         }
 
-        return new ArrayList<>() {{ add(head); }};
+        return head;
     }
 
     private List<MessageEvent> handleMessageProof(MessageProof mp, List<Header> confirmations,
@@ -203,6 +203,7 @@ public class BTPMessageVerifier implements BMV {
             }
 
             receipt = Receipt.fromBytes(receiptBytes);
+            Context.require(receipt.getStatus() != Receipt.StatusFailed, "Failed receipt");
             for (EventLog log : receipt.getLogs()) {
                 if (!log.getAddress().equals(prev)) {
                     continue;
@@ -302,12 +303,9 @@ public class BTPMessageVerifier implements BMV {
                 } else {
                     confirmations.clear();
                 }
-            } else if(!confirmations.isEmpty()) {
+            } else if(!confirmations.isEmpty() ||
+                    countBy(validators, newValidators) > newValidators.size() * 2 / 3) {
                 confirmations.add(head);
-            } else {
-                if (countBy(validators, newValidators) > newValidators.size() * 2 / 3) {
-                    confirmations.add(head);
-                }
             }
 
             head = heads.get(head.getParentHash().toBytes());
