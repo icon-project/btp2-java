@@ -250,4 +250,16 @@ public class Header {
         return this.mixDigest;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof Header)) {
+            return false;
+        }
+        Header other = (Header) o;
+        return this.getHash().equals(other.getHash());
+    }
+
 }

@@ -112,6 +112,42 @@ public class BlockTree {
         return root;
     }
 
+    public List<Hash> getStem(Hash id) {
+        List<Hash> ret = new ArrayList<>();
+        if (!this.nodes.containsKey(id)) {
+            return ret;
+        }
+
+        Hash target = id;
+        while (!target.equals(this.root)) {
+            for (Hash key : this.nodes.keySet()) {
+                List<Hash> children = this.nodes.get(key);
+                if (children.contains(target)) {
+                    ret.add(target);
+                    target = key;
+                    break;
+                }
+            }
+        }
+        ret.add(this.root);
+
+        // sorted by root to leaf
+        for (int i = 0; i < ret.size()/2; i++) {
+            Hash tmp = ret.get(i);
+            ret.set(i, ret.get(ret.size()-1-i));
+            ret.set(ret.size()-1-i, tmp);
+        }
+        return ret;
+    }
+
+    public void add(Hash parent, Hash node) {
+        Context.require(!this.nodes.containsKey(node), "already exist node");
+        Context.require(this.nodes.containsKey(parent), "no such parent node");
+        List<Hash> descendants = this.nodes.get(parent);
+        descendants.add(node);
+        this.nodes.put(node, new ArrayList<>());
+    }
+
     public void add(Header head) {
         if (nodes.containsKey(head.getHash())) {
             return;
