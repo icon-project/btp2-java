@@ -22,10 +22,12 @@ import score.ObjectReader;
 public class BlockProof {
     private byte[] header;
     private Proof proof;
+    private Proof historicalProof;
 
-    public BlockProof(byte[] header, Proof proof) {
+    public BlockProof(byte[] header, Proof proof, Proof historicalProof) {
         this.header = header;
         this.proof = proof;
+        this.historicalProof = historicalProof;
     }
 
     LightClientHeader getLightClientHeader() {
@@ -36,9 +38,13 @@ public class BlockProof {
         return proof;
     }
 
+    Proof getHistoricalProof() {
+        return historicalProof;
+    }
+
     public static BlockProof readObject(ObjectReader r) {
         r.beginList();
-        var blockProof = new BlockProof(r.readByteArray(), r.read(Proof.class));
+        var blockProof = new BlockProof(r.readByteArray(), r.read(Proof.class), r.readNullable(Proof.class));
         r.end();
         return blockProof;
     }
@@ -53,6 +59,7 @@ public class BlockProof {
         return "BlockProof{" +
                 "header=" + StringUtil.toString(header) +
                 ", proof=" + proof +
+                ", historicalProof=" + historicalProof +
                 '}';
     }
 }

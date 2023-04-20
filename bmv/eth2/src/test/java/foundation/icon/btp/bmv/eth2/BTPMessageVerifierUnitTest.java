@@ -1,12 +1,10 @@
 package foundation.icon.btp.bmv.eth2;
 
-import com.iconloop.score.test.Account;
 import com.iconloop.score.test.Score;
 import com.iconloop.score.test.ServiceManager;
 import com.iconloop.score.test.TestBase;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
-import foundation.icon.btp.test.BTPIntegrationTest;
 import foundation.icon.score.util.StringUtil;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -21,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BTPMessageVerifierUnitTest extends TestBase {
     static final ServiceManager sm = getServiceManager();
-    static final Account BMC = sm.createAccount(Integer.MAX_VALUE);
 
     public static Score deployBmv(DataSource.ConstructorParams params) throws Exception {
         return sm.deploy(sm.createAccount(), BTPMessageVerifier.class,

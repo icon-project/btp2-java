@@ -35,7 +35,6 @@ public class BMVProperties {
     private byte[] nextSyncCommittee;
     private Address bmc;
     private LightClientHeader finalizedHeader;
-    private LightClientHeader bpHeader;
     private BigInteger lastMsgSeq;
     private BigInteger lastMsgSlot;
 
@@ -92,14 +91,6 @@ public class BMVProperties {
         this.finalizedHeader = finalizedHeader;
     }
 
-    public LightClientHeader getBpHeader() {
-        return bpHeader;
-    }
-
-    public void setBpHeader(LightClientHeader bpHeader) {
-        this.bpHeader = bpHeader;
-    }
-
     public BigInteger getLastMsgSlot() {
         return lastMsgSlot;
     }
@@ -131,7 +122,6 @@ public class BMVProperties {
         object.setNextSyncCommittee(r.readNullable(byte[].class));
         object.setBmc(r.readAddress());
         object.setFinalizedHeader(r.read(LightClientHeader.class));
-        object.setBpHeader(r.readNullable(LightClientHeader.class));
         object.setLastMsgSlot(r.readBigInteger());
         object.setLastMsgSeq(r.readBigInteger());
         r.end();
@@ -146,7 +136,6 @@ public class BMVProperties {
         w.writeNullable(obj.nextSyncCommittee);
         w.write(obj.bmc);
         w.write(obj.finalizedHeader);
-        w.writeNullable(obj.bpHeader);
         w.write(obj.lastMsgSlot);
         w.write(obj.lastMsgSeq);
         w.end();

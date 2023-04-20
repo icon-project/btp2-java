@@ -3,7 +3,6 @@ package foundation.icon.btp.bmv.eth2;
 import foundation.icon.score.util.StringUtil;
 import org.junit.jupiter.api.Test;
 import score.UserRevertException;
-import score.UserRevertedException;
 
 import java.math.BigInteger;
 
