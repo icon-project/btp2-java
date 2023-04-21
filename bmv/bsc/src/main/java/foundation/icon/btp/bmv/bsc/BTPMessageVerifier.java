@@ -366,10 +366,11 @@ public class BTPMessageVerifier implements BMV {
     private void verifyForRamanujanFork(Snapshot snap, Header head, Header parent) {
         if (RAMANUJAN_BLOCK.compareTo(head.getNumber()) <= 0) {
             long diffTime = PERIOD;
-            if (!snap.inturn(head.getCoinbase())) {
-                diffTime += MIN_BACKOFF_TIME;
-            }
-            Context.require(head.getTime() >= parent.getTime() + diffTime, "Future block");
+            // TODO review ramanujan fork
+            // if (!snap.inturn(head.getCoinbase())) {
+            //     diffTime += MIN_BACKOFF_TIME;
+            // }
+            Context.require(head.getTime() >= parent.getTime() + diffTime, "Future block - number("+head.getNumber()+")");
         }
     }
 
