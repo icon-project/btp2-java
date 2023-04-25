@@ -61,21 +61,18 @@ public class Snapshot {
     public boolean inturn(EthAddress validator) {
         BigInteger offset = number.add(BigInteger.ONE).mod(BigInteger.valueOf(validators.size()));
         EthAddress[] vals = validators.toArray();
-        // TODO review whether sort for validators is always required
-        EthAddresses.sort(vals);
         return vals[offset.intValue()].equals(validator);
     }
 
-    public Snapshot apply(Header head) {
+    public Snapshot apply(ChainConfig config, Header head) {
         Context.require(head != null && number.add(BigInteger.ONE).equals(head.getNumber()) &&
                 hash.equals(head.getParentHash()), "Inconsistent header");
-
         Hash newHash = head.getHash();
         BigInteger newNumber = head.getNumber();
         EthAddresses newValidators;
         EthAddresses newCandidates;
         EthAddresses newRecents = new EthAddresses(recents);
-        BigInteger epoch = Config.getAsBigInteger(Config.EPOCH);
+        BigInteger epoch = BigInteger.valueOf(config.Epoch);
 
         newValidators = newNumber.mod(epoch).equals(BigInteger.valueOf(validators.size() / 2))
             ? candidates
@@ -85,9 +82,14 @@ public class Snapshot {
             ? new EthAddresses(head.getValidators())
             : candidates;
 
-        newRecents.add(head.getSigner());
+        newRecents.add(head.getCoinbase());
         if (newRecents.size() > newValidators.size() / 2) {
-            newRecents = newRecents.subList(newRecents.size() - newValidators.size() / 2, newRecents.size());
+            // TODO Use `subList` instead of `remove` for saving step costs,
+            // but the latest javaee-scorex:0.5.3 contains subList bug
+            // newRecents = newRecents.subList(newRecents.size() - newValidators.size() / 2, newRecents.size());
+            for (int i = 0; i < newRecents.size() - newValidators.size()/2; i++) {
+                newRecents.remove(i);
+            }
         }
 
         return new Snapshot(newHash, newNumber, newValidators, newCandidates, newRecents);

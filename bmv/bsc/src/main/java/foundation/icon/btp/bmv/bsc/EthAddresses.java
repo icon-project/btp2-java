@@ -16,6 +16,7 @@
 package foundation.icon.btp.bmv.bsc;
 
 import foundation.icon.score.util.StringUtil;
+import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
 import scorex.util.ArrayList;
@@ -72,12 +73,23 @@ public class EthAddresses {
         addresses.add(newAddress);
     }
 
+    public EthAddress remove(int i) {
+        return addresses.remove(i);
+    }
+
     public EthAddresses subList(int from, int to) {
         return new EthAddresses(addresses.subList(from, to));
     }
 
     public int size() {
         return addresses.size();
+    }
+
+    @Override
+    public String toString() {
+        return "EthAddresses{" +
+                "addresses=" + addresses +
+                '}';
     }
 
     public static EthAddresses readObject(ObjectReader r) {
@@ -111,6 +123,21 @@ public class EthAddresses {
                 }
             }
             a[i] = v;
+        }
+    }
+
+    public static void sort(List<EthAddress> a) {
+        int len = a.size();
+        for (int i = 0; i < len; i++) {
+            EthAddress v = a.get(i);
+            for (int j = i+1; j < len; j++) {
+                if (v.compareTo(a.get(j)) > 0) {
+                    EthAddress t = v;
+                    v = a.get(j);
+                    a.set(j, t);
+                }
+            }
+            a.set(i, v);
         }
     }
 }

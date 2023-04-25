@@ -53,8 +53,6 @@ public class Header {
     private byte[] nonce;
 
     // caches
-    private EthAddress signerCache;
-    private List<EthAddress> validatorsCache;
     private Hash hashCache;
 
     public Header(Hash parentHash, Hash uncleHash, EthAddress coinbase, Hash root,
@@ -132,10 +130,6 @@ public class Header {
         return w.toByteArray();
     }
 
-    public boolean isEpochBlock() {
-        return number.mod(Config.getAsBigInteger(Config.EPOCH)).equals(BigInteger.ZERO);
-    }
-
     public Hash getHash() {
         if (hashCache == null) {
             hashCache = Hash.of(Context.hash("keccak-256", toBytes()));
@@ -144,33 +138,29 @@ public class Header {
     }
 
     public List<EthAddress> getValidators() {
-        Context.require(isEpochBlock(), "Not epoch block");
-        if (validatorsCache == null) {
-            byte[] signersBytes = Arrays.copyOfRange(extra, EXTRA_VANITY, extra.length - EXTRA_SEAL);
-            int n = signersBytes.length / EthAddress.ADDRESS_LEN;
-            validatorsCache = new ArrayList<>();
-            for (int i = 0; i < n; i++) {
-                validatorsCache.add(new EthAddress(Arrays.copyOfRange(signersBytes, i * EthAddress.ADDRESS_LEN, (i+1) * EthAddress.ADDRESS_LEN)));
-            }
+        Context.require(extra.length > EXTRA_VANITY + EXTRA_SEAL, "No validators bytes");
+        byte[] signersBytes = Arrays.copyOfRange(extra, EXTRA_VANITY, extra.length - EXTRA_SEAL);
+        int n = signersBytes.length / EthAddress.ADDRESS_LEN;
+        List<EthAddress> vals = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            vals.add(new EthAddress(Arrays.copyOfRange(signersBytes, i * EthAddress.ADDRESS_LEN, (i+1) * EthAddress.ADDRESS_LEN)));
         }
-        return validatorsCache;
+        EthAddresses.sort(vals);
+        return vals;
     }
 
-    public EthAddress getSigner() {
-        if (signerCache == null) {
-            assert(extra.length >= EXTRA_SEAL);
-            byte[] signature = Arrays.copyOfRange(extra, extra.length - EXTRA_SEAL, extra.length);
-            byte[] pubkey = Context.recoverKey("ecdsa-secp256k1", getSealHash(), signature, false);
-            byte[] pubhash  = Context.hash("keccak-256", Arrays.copyOfRange(pubkey, 1, pubkey.length));
-            signerCache = new EthAddress(Arrays.copyOfRange(pubhash, 12, pubhash.length));
-        }
-        return signerCache;
+    public EthAddress getSigner(BigInteger cid) {
+        Context.require(extra.length >= EXTRA_SEAL, "Invalid seal bytes");
+        byte[] signature = Arrays.copyOfRange(extra, extra.length - EXTRA_SEAL, extra.length);
+        byte[] pubkey = Context.recoverKey("ecdsa-secp256k1", getSealHash(cid), signature, false);
+        byte[] pubhash  = Context.hash("keccak-256", Arrays.copyOfRange(pubkey, 1, pubkey.length));
+        return new EthAddress(Arrays.copyOfRange(pubhash, 12, pubhash.length));
     }
 
-    private byte[] getSealHash() {
+    private byte[] getSealHash(BigInteger cid) {
         ByteArrayObjectWriter w = Context.newByteArrayObjectWriter("RLP");
         w.beginList(16);
-        w.write(Config.getAsBigInteger(Config.CHAIN_ID));
+        w.write(cid);
         w.write(parentHash);
         w.write(uncleHash);
         w.write(coinbase);
