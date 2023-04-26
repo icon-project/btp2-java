@@ -84,9 +84,6 @@ public class Snapshot {
 
         newRecents.add(head.getCoinbase());
         if (newRecents.size() > newValidators.size() / 2) {
-            // TODO Use `subList` instead of `remove` for saving step costs,
-            // but the latest javaee-scorex:0.5.3 contains subList bug
-            // newRecents = newRecents.subList(newRecents.size() - newValidators.size() / 2, newRecents.size());
             for (int i = 0; i < newRecents.size() - newValidators.size()/2; i++) {
                 newRecents.remove(i);
             }

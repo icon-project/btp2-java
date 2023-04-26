@@ -40,7 +40,7 @@ public class BTPMessageVerifier implements BMV {
     private final VarDB<MerkleTreeAccumulator> mta = Context.newVarDB("mta", MerkleTreeAccumulator.class);
     private final DictDB<byte[], Header> heads = Context.newDictDB("heads", Header.class);
 
-    public BTPMessageVerifier(Address bmc, BigInteger chainId, BigInteger epoch, byte[] header,
+    public BTPMessageVerifier(Address bmc, BigInteger chainId, byte[] header,
                               byte[][] recents, byte[][] validators) {
 
         ChainConfig config = ChainConfig.fromChainID(chainId);
