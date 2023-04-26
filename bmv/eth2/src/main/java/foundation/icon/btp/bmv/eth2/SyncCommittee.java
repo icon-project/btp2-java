@@ -17,10 +17,7 @@ package foundation.icon.btp.bmv.eth2;
 
 
 import foundation.icon.score.util.StringUtil;
-import score.ByteArrayObjectWriter;
-import score.Context;
 import score.ObjectReader;
-import score.ObjectWriter;
 import scorex.util.ArrayList;
 
 public class SyncCommittee {
@@ -51,6 +48,18 @@ public class SyncCommittee {
         }
         System.arraycopy(data, pos, aggregatedPubkey, 0, BLS_PUBLIC_KEY_LENGTH);
         return new SyncCommittee(publicKeys, aggregatedPubkey);
+    }
+
+    static byte[] serialize(SyncCommittee syncCommittee) {
+        byte[] data = new byte[(Constants.SYNC_COMMITTEE_COUNT + 1) * BLS_PUBLIC_KEY_LENGTH];
+        var pos = 0;
+        var publicKeys = syncCommittee.getBlsPublicKeys();
+        for (int i = 0; i < Constants.SYNC_COMMITTEE_COUNT; i++) {
+            System.arraycopy(publicKeys[i], 0, data, pos, BLS_PUBLIC_KEY_LENGTH);
+            pos += BLS_PUBLIC_KEY_LENGTH;
+        }
+        System.arraycopy(syncCommittee.getAggregatePubKey(), 0, data, pos, BLS_PUBLIC_KEY_LENGTH);
+        return data;
     }
 
     public byte[] getHashTreeRoot() {
@@ -85,22 +94,6 @@ public class SyncCommittee {
         var aggregatePubKey = r.readByteArray();
         r.end();
         return new SyncCommittee(pubKeys, aggregatePubKey);
-    }
-
-    public static void writeObject(ObjectWriter w, SyncCommittee syncCommittee) {
-        w.beginList(2);
-        w.beginList(syncCommittee.blsPublicKeys.length);
-        for (byte[] publicKey: syncCommittee.blsPublicKeys)
-            w.write(publicKey);
-        w.end();
-        w.write(syncCommittee.aggregatePubKey);
-        w.end();
-    }
-
-    public byte[] toBytes() {
-        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLPn");
-        SyncCommittee.writeObject(writer, this);
-        return writer.toByteArray();
     }
 
     @Override

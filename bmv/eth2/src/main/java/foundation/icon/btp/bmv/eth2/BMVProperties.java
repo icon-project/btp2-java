@@ -71,7 +71,7 @@ public class BMVProperties {
     }
 
     public void setNextSyncCommittee(SyncCommittee nextSyncCommittee) {
-        byte[] value = nextSyncCommittee != null ? nextSyncCommittee.toBytes() : null;
+        byte[] value = nextSyncCommittee != null ? SyncCommittee.serialize(nextSyncCommittee) : null;
         setNextSyncCommittee(value);
     }
 
