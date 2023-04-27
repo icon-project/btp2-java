@@ -48,20 +48,24 @@ public class BTPMessageVerifierUnitTest extends TestBase {
         }
     }
     public static class Sepolia {
-        private static final DataSource data = DataSource.loadDataSource("sepolia.json");
+        private static final DataSource sepoliaData = DataSource.loadDataSource("sepolia.json");
+        private static final DataSource historicalSummaryData = DataSource.loadDataSource("historicalRoot.json");
         private static final String PREV_BMC = "btp://aa36a7.eth/0xd2f04942ff92709ed9d41988d161710d18d7f1fe";
         private static final String NET = "0x42.icon";
         @TestFactory
         public Collection<DynamicTest> handleRelayMessageTests() {
-            DataSource.ConstructorParams params = data.getParams();
+            DataSource[] dataSources = {sepoliaData, historicalSummaryData};
             List<DynamicTest> t = new ArrayList<>();
-            for (DataSource.Case c : data.getCases()) {
-                t.add(DynamicTest.dynamicTest(c.getDescription(),
-                        () -> {
-                            Score bmv = deployBmv(params);
-                            handleRelayMessageTest(c, bmv, NET, params.getBmc(), PREV_BMC);
-                        }
-                ));
+            for (DataSource d : dataSources) {
+                DataSource.ConstructorParams params = d.getParams();
+                for (DataSource.Case c : d.getCases()) {
+                    t.add(DynamicTest.dynamicTest(c.getDescription(),
+                            () -> {
+                                Score bmv = deployBmv(params);
+                                handleRelayMessageTest(c, bmv, NET, params.getBmc(), PREV_BMC);
+                            }
+                    ));
+                }
             }
             return t;
         }

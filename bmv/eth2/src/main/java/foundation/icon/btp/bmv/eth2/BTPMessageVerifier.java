@@ -96,6 +96,11 @@ public class BTPMessageVerifier implements BMV {
         return s;
     }
 
+    @External(readonly = true)
+    public String getVersion() {
+        return "0.1.0";
+    }
+
     BMVProperties getProperties() {
         return propertiesDB.getOrDefault(BMVProperties.DEFAULT);
     }

@@ -59,7 +59,7 @@ public class SszUtils {
         if (depth.compareTo(BigInteger.valueOf(31)) > 0) {
             index = proof.getIndex();
         } else {
-            index = proofIndex.mod(BigInteger.ONE.shiftLeft(depth.intValue()));
+            index = proofIndex.subtract(BigInteger.ONE.shiftLeft(depth.intValue()));
         }
         validateMerkleBranch(proof.getLeaf(), proof.getHashes(), depth.intValue(), index.intValue(), root);
     }
