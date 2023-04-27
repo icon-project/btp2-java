@@ -54,9 +54,14 @@ public class SszUtils {
 
     public static void verify(byte[] root, Proof proof) {
         var proofIndex = proof.getIndex();
-        var depth = floorLog2(proofIndex).intValue();
-        var index = proofIndex.intValue() % (1 << depth);
-        validateMerkleBranch(proof.getLeaf(), proof.getHashes(), depth, index, root);
+        var depth = floorLog2(proofIndex);
+        BigInteger index;
+        if (depth.compareTo(BigInteger.valueOf(31)) > 0) {
+            index = proof.getIndex();
+        } else {
+            index = proofIndex.mod(BigInteger.ONE.shiftLeft(depth.intValue()));
+        }
+        validateMerkleBranch(proof.getLeaf(), proof.getHashes(), depth.intValue(), index.intValue(), root);
     }
 
     public static BigInteger floorLog2(BigInteger value) {

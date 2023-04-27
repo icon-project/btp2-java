@@ -120,12 +120,13 @@ public class BTPMessageVerifier implements BMV {
         var bmvPeriod = Utils.computeSyncCommitteePeriod(bmvSlot);
         var signaturePeriod = Utils.computeSyncCommitteePeriod(signatureSlot);
 
-        if (properties.getNextSyncCommittee() != null)
+        if (properties.getNextSyncCommittee() != null) {
             if (signaturePeriod.compareTo(bmvPeriod) != 0 && signaturePeriod.compareTo(bmvPeriod.add(BigInteger.ONE)) != 0)
                 throw BMVException.notVerifiable(bmvSlot.toString());
-        else
+        } else {
             if (signaturePeriod.compareTo(bmvPeriod) != 0)
                 throw BMVException.notVerifiable(bmvSlot.toString());
+        }
 
         blockUpdate.verifyFinalizedHeader();
 
@@ -136,10 +137,11 @@ public class BTPMessageVerifier implements BMV {
         }
 
         SyncCommittee syncCommittee;
-        if (signaturePeriod.compareTo(bmvPeriod) == 0)
+        if (signaturePeriod.compareTo(bmvPeriod) == 0) {
             syncCommittee = SyncCommittee.deserialize(properties.getCurrentSyncCommittee());
-        else
+        } else {
             syncCommittee = SyncCommittee.deserialize(properties.getNextSyncCommittee());
+        }
         logger.println("validateBlockUpdate, ", "verify syncAggregate");
         if (!blockUpdate.verifySyncAggregate(syncCommittee.getBlsPublicKeys(), properties.getGenesisValidatorsHash()))
             throw BMVException.unknown("invalid signature");
@@ -154,9 +156,8 @@ public class BTPMessageVerifier implements BMV {
         var bmvPeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(bmvSlot));
         var finalizedPeriod = Utils.computeSyncCommitteePeriod(Utils.computeEpoch(finalizedSlot));
 
-        if (bmvNextSyncCommittee == null) {
+        if (finalizedPeriod.compareTo(bmvPeriod) == 0) {
             logger.println("applyBlockUpdate, ", " assert period. finalizedPeriod : ", finalizedPeriod, ", bmvPeriod : ", bmvPeriod);
-            if (finalizedPeriod.compareTo(bmvPeriod) != 0) throw BMVException.unknown("invalid update period");
             properties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
         } else if (finalizedPeriod.compareTo(bmvPeriod.add(BigInteger.ONE)) == 0) {
             logger.println("applyBlockUpdate, ", "set current/next sync committee");
@@ -186,7 +187,7 @@ public class BTPMessageVerifier implements BMV {
         var proofLeaf = proof.getLeaf();
         if (bmvFinalizedSlot.compareTo(blockProofSlot) < 0)
             throw BMVException.unknown(blockProofSlot.toString());
-        if (blockProofSlot.add(historicalLimit).compareTo(bmvFinalizedSlot) < 0){
+        if (blockProofSlot.add(historicalLimit).compareTo(bmvFinalizedSlot) < 0) {
             var historicalProof = blockProof.getHistoricalProof();
             if (historicalProof == null)
                 throw BMVException.unknown("historicalProof empty");
