@@ -20,7 +20,6 @@ import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
 
-import java.math.BigInteger;
 import scorex.util.ArrayList;
 import java.util.List;
 

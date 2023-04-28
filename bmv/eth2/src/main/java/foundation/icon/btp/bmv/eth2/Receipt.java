@@ -22,7 +22,6 @@ import score.ObjectReader;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 public class Receipt {
     private byte[] postStatusOrState;
