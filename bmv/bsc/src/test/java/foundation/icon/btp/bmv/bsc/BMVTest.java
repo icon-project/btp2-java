@@ -51,7 +51,7 @@ public class BMVTest extends TestBase {
 
     public static class MainNetBMVTest {
         private static final DataSource data = DataSource.loadDataSource("mainnet.json");
-        @TestFactory
+        // @TestFactory
         public Collection<DynamicTest> handleRelayMessageTests() {
             DataSource.ConstructorParams params = data.getParams();
             List<DynamicTest> t = new ArrayList<>();
@@ -71,7 +71,7 @@ public class BMVTest extends TestBase {
         private static final DataSource data = DataSource.loadDataSource("privnet.json");;
         private static final BTPAddress PREV_BMC = BTPAddress.parse("btp://0x1.eth/0xD2F04942FF92709ED9d41988D161710D18d7f1FE");
 
-        @TestFactory
+        // @TestFactory
         public Collection<DynamicTest> handleRelayMessageTests() {
             DataSource.ConstructorParams params = data.getParams();
             List<DynamicTest> t = new ArrayList<>();

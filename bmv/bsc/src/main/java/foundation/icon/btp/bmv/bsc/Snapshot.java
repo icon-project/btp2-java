@@ -79,7 +79,7 @@ public class Snapshot {
             : validators;
 
         newCandidates = newNumber.mod(epoch).equals(BigInteger.ZERO)
-            ? new EthAddresses(head.getValidators())
+            ? new EthAddresses(head.getValidators(config))
             : candidates;
 
         newRecents.add(head.getCoinbase());

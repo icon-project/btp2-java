@@ -28,6 +28,9 @@ import java.util.List;
 public class Header {
     public static final int EXTRA_VANITY = 32;
     public static final int EXTRA_SEAL = 65;
+    public static final int BLS_PUB_LENGTH = 48;
+    public static final int VALIDATOR_BYTES_LENGTH = EthAddress.ADDRESS_LEN + BLS_PUB_LENGTH;
+    public static final int VALIDATOR_NUMBER_SIZE = 1;
     // pre-calculated constant uncle hash:) rlp([])
     public static final Hash UNCLE_HASH = Hash.of("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
     public static final BigInteger INTURN_DIFF = BigInteger.valueOf(2L);
@@ -137,15 +140,18 @@ public class Header {
         return hashCache;
     }
 
-    public List<EthAddress> getValidators() {
+    public List<EthAddress> getValidators(ChainConfig config) {
         Context.require(extra.length > EXTRA_VANITY + EXTRA_SEAL, "No validators bytes");
-        byte[] signersBytes = Arrays.copyOfRange(extra, EXTRA_VANITY, extra.length - EXTRA_SEAL);
-        int n = signersBytes.length / EthAddress.ADDRESS_LEN;
+        Context.require(config.isEpoch(this.number), "Validators does not exist, if it is not epoch");
+        int num = extra[EXTRA_VANITY];
+        Context.require(num > 0 && extra.length > EXTRA_VANITY + EXTRA_SEAL + num * VALIDATOR_BYTES_LENGTH);
+        int start = EXTRA_VANITY + VALIDATOR_NUMBER_SIZE;
+        byte[] signersBytes = Arrays.copyOfRange(extra, start, start + num * VALIDATOR_BYTES_LENGTH);
+        int n = signersBytes.length / VALIDATOR_BYTES_LENGTH;
         List<EthAddress> vals = new ArrayList<>();
         for (int i = 0; i < n; i++) {
-            vals.add(new EthAddress(Arrays.copyOfRange(signersBytes, i * EthAddress.ADDRESS_LEN, (i+1) * EthAddress.ADDRESS_LEN)));
+            vals.add(new EthAddress(Arrays.copyOfRange(signersBytes, i* VALIDATOR_BYTES_LENGTH, i* VALIDATOR_BYTES_LENGTH +EthAddress.ADDRESS_LEN)));
         }
-        EthAddresses.sort(vals);
         return vals;
     }
 

@@ -69,7 +69,7 @@ public class BTPMessageVerifier implements BMV {
                 head.getHash(),
                 head.getNumber(),
                 new EthAddresses(toSortedList(validators)),
-                new EthAddresses(head.getValidators()),
+                new EthAddresses(head.getValidators(config)),
                 new EthAddresses(toSortedList(recents))));
     }
 
@@ -268,17 +268,18 @@ public class BTPMessageVerifier implements BMV {
         byte[] extra = head.getExtra();
         Context.require(extra.length >= EXTRA_VANITY, "Missing signer vanity");
         Context.require(extra.length >= EXTRA_VANITY + EXTRA_SEAL, "Missing signer seal");
-        int signersBytes = extra.length - EXTRA_VANITY - EXTRA_SEAL;
+        byte[] signersBytes = config.getValidatorBytesFromHeader(head);
         if (config.isEpoch(head.getNumber())) {
-            Context.require(signersBytes % EthAddress.ADDRESS_LEN == 0, "Malformed validators set bytes");
+            Context.require(signersBytes.length != 0, "Malformed validators set bytes");
         } else {
-            Context.require(signersBytes == 0, "Forbidden validators set bytes");
+            Context.require(signersBytes.length == 0, "Forbidden validators set bytes");
         }
         Context.require(head.getMixDigest().equals(Hash.EMPTY), "Invalid mix digest" + head.getMixDigest());
         Context.require(head.getGasLimit().compareTo(MIN_GAS_LIMIT) >= 0, "Invalid gas limit(< min)");
         Context.require(head.getGasLimit().compareTo(MAX_GAS_LIMIT) <= 0, "Invalid gas limit(> max)");
         Context.require(head.getGasUsed().compareTo(head.getGasLimit()) < 0, "Invalid gas used");
-        Context.require(head.getSigner(BigInteger.valueOf(config.ChainID)).equals(head.getCoinbase()), "Coinbase mismatch");
+        EthAddress signer = head.getSigner(BigInteger.valueOf(config.ChainID));
+        Context.require(signer.equals(head.getCoinbase()), "Coinbase mismatch");
     }
 
     private void verify(ChainConfig config, Header head, Header parent, Snapshot snap) {
