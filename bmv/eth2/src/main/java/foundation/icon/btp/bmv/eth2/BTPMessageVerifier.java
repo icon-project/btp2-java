@@ -24,6 +24,7 @@ import score.Address;
 import score.Context;
 import score.VarDB;
 import score.annotation.External;
+import score.annotation.Optional;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
@@ -36,15 +37,22 @@ public class BTPMessageVerifier implements BMV {
     private final String eventSignature = "Message(string,uint256,bytes)";
     private final byte[] eventSignatureTopic = Context.hash("keccak-256", eventSignature.getBytes());
 
-    public BTPMessageVerifier(String srcNetworkID, byte[] genesisValidatorsHash, byte[] syncCommittee, Address bmc, byte[] finalizedHeader) {
+    public BTPMessageVerifier(
+            @Optional String srcNetworkID,
+            @Optional byte[] genesisValidatorsHash,
+            @Optional byte[] syncCommittee,
+            @Optional Address bmc,
+            @Optional byte[] finalizedHeader,
+            @Optional BigInteger seq
+    ) {
         var properties = getProperties();
-        properties.setSrcNetworkID(srcNetworkID.getBytes());
-        properties.setBmc(bmc);
-        properties.setGenesisValidatorsHash(genesisValidatorsHash);
-        properties.setCurrentSyncCommittee(syncCommittee);
-        properties.setFinalizedHeader(LightClientHeader.deserialize(finalizedHeader));
+        if (srcNetworkID != null) properties.setSrcNetworkID(srcNetworkID.getBytes());
+        if (bmc != null) properties.setBmc(bmc);
+        if (genesisValidatorsHash != null) properties.setGenesisValidatorsHash(genesisValidatorsHash);
+        if (syncCommittee != null) properties.setCurrentSyncCommittee(syncCommittee);
+        if (finalizedHeader != null) properties.setFinalizedHeader(LightClientHeader.deserialize(finalizedHeader));
+        if (seq.signum() == 0) properties.setLastMsgSeq(seq);
         properties.setLastMsgSlot(BigInteger.ZERO);
-        properties.setLastMsgSeq(BigInteger.ZERO);
         propertiesDB.set(properties);
     }
 
