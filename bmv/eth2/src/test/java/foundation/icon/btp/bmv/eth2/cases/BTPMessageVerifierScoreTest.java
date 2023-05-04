@@ -69,7 +69,8 @@ public class BTPMessageVerifierScoreTest extends TestBase {
                 StringUtil.hexToBytes(params.getGenesisValidatorsHash()),
                 StringUtil.hexToBytes(params.getSyncCommittee()),
                 bmcScore.getAddress(),
-                StringUtil.hexToBytes(params.getFinalizedHeader())
+                StringUtil.hexToBytes(params.getFinalizedHeader()),
+                BigInteger.ZERO
         );
 
         BigInteger seq = BigInteger.ZERO;

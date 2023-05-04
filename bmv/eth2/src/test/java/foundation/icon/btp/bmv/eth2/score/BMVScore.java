@@ -41,7 +41,8 @@ public class BMVScore extends Score {
             byte[] validatorHash,
             byte[] syncCommittee,
             Address bmc,
-            byte[] finalized
+            byte[] finalized,
+            BigInteger seq
     )
             throws ResultTimeoutException, TransactionFailureException, IOException {
         LOG.infoEntering("deploy", "bmv");
@@ -51,6 +52,7 @@ public class BMVScore extends Score {
                 .put("syncCommittee", new RpcValue(syncCommittee))
                 .put("bmc", new RpcValue(bmc.toString()))
                 .put("finalizedHeader", new RpcValue(finalized))
+                .put("seq", new RpcValue(seq))
                 .build();
         Score score = txHandler.deploy(wallet, getFilePath("bmv-eth2"), params, BigInteger.valueOf(2000000000));
         LOG.info("scoreAddr = " + score.getAddress());
