@@ -51,7 +51,8 @@ public class BTPMessageVerifier implements BMV {
         if (genesisValidatorsHash != null) properties.setGenesisValidatorsHash(genesisValidatorsHash);
         if (syncCommittee != null) properties.setCurrentSyncCommittee(syncCommittee);
         if (finalizedHeader != null) properties.setFinalizedHeader(LightClientHeader.deserialize(finalizedHeader));
-        if (seq.signum() == 0) properties.setLastMsgSeq(seq);
+        if (seq.signum() == -1) throw BMVException.unknown("invalid seq. sequence must >= 0");
+        properties.setLastMsgSeq(seq);
         properties.setLastMsgSlot(BigInteger.ZERO);
         propertiesDB.set(properties);
     }
