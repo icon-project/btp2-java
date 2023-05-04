@@ -45,6 +45,7 @@ public class BTPMessageVerifier implements BMV {
             @Optional byte[] finalizedHeader,
             @Optional BigInteger seq
     ) {
+        if (srcNetworkID == null && genesisValidatorsHash == null && syncCommittee == null && bmc == null && finalizedHeader == null && seq.signum() == 0) return;
         var properties = getProperties();
         if (srcNetworkID != null) properties.setSrcNetworkID(srcNetworkID.getBytes());
         if (bmc != null) properties.setBmc(bmc);
@@ -52,8 +53,18 @@ public class BTPMessageVerifier implements BMV {
         if (syncCommittee != null) properties.setCurrentSyncCommittee(syncCommittee);
         if (finalizedHeader != null) properties.setFinalizedHeader(LightClientHeader.deserialize(finalizedHeader));
         if (seq.signum() == -1) throw BMVException.unknown("invalid seq. sequence must >= 0");
+        var lastMsgSeq = properties.getLastMsgSeq();
+        if (lastMsgSeq == null || seq.signum() == 1) properties.setLastMsgSeq(seq);
+        if (properties.getLastMsgSlot() == null) properties.setLastMsgSlot(BigInteger.ZERO);
+        propertiesDB.set(properties);
+    }
+
+    @External
+    public void setSequence(BigInteger seq) {
+        if (!Context.getCaller().equals(Context.getOwner())) throw BMVException.unknown("only owner can call this method");
+        if (seq.signum() < 0) throw BMVException.unknown("invalid seq. sequence must >= 0");
+        var properties = getProperties();
         properties.setLastMsgSeq(seq);
-        properties.setLastMsgSlot(BigInteger.ZERO);
         propertiesDB.set(properties);
     }
 
