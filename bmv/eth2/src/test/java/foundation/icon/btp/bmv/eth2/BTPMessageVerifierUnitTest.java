@@ -26,6 +26,7 @@ public class BTPMessageVerifierUnitTest extends TestBase {
                 StringUtil.hexToBytes(params.getGenesisValidatorsHash()),
                 StringUtil.hexToBytes(params.getSyncCommittee()),
                 Address.fromString(params.getBmc()),
+                StringUtil.hexToBytes(params.getEthBmc()),
                 StringUtil.hexToBytes(params.getFinalizedHeader()),
                 BigInteger.ZERO
         );

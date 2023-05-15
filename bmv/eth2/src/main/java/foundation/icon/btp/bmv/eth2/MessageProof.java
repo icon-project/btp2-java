@@ -24,15 +24,15 @@ import java.math.BigInteger;
 
 public class MessageProof {
     private BigInteger slot;
-    private Proof receiptRootProof;
+    private Proof receiptsRootProof;
     private ReceiptProof[] receiptProofs;
 
     public BigInteger getSlot() {
         return slot;
     }
 
-    public Proof getReceiptRootProof() {
-        return receiptRootProof;
+    public Proof getReceiptsRootProof() {
+        return receiptsRootProof;
     }
 
     public ReceiptProof[] getReceiptProofs() {
@@ -41,7 +41,7 @@ public class MessageProof {
 
     public MessageProof(BigInteger slot, Proof sszProof, ReceiptProof[] receiptProofs) {
         this.slot = slot;
-        this.receiptRootProof = sszProof;
+        this.receiptsRootProof = sszProof;
         this.receiptProofs = receiptProofs;
     }
 
@@ -71,7 +71,7 @@ public class MessageProof {
     public String toString() {
         return "MessageProof{" +
                 "slot=" + slot +
-                ", receiptRootProof=" + receiptRootProof +
+                ", receiptRootProof=" + receiptsRootProof +
                 ", receiptProofs=" + StringUtil.toString(receiptProofs) +
                 '}';
     }

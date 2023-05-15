@@ -34,7 +34,9 @@ public class BMVProperties {
     private byte[] currentSyncCommittee;
     private byte[] nextSyncCommittee;
     private Address bmc;
+    private byte[] ethBmc;
     private LightClientHeader finalizedHeader;
+    private LightClientHeader blockProofHeader;
     private BigInteger lastMsgSeq;
     private BigInteger lastMsgSlot;
 
@@ -52,6 +54,22 @@ public class BMVProperties {
 
     void setBmc(Address bmc) {
         this.bmc = bmc;
+    }
+
+    byte[] getEthBmc() {
+        return ethBmc;
+    }
+
+    void setEthBmc(byte[] ethBmc) {
+        this.ethBmc = ethBmc;
+    }
+
+    LightClientHeader getBlockProofHeader() {
+        return blockProofHeader;
+    }
+
+    void setBlockProofHeader(LightClientHeader header) {
+        this.blockProofHeader = header;
     }
 
     byte[] getCurrentSyncCommittee() {
@@ -121,7 +139,9 @@ public class BMVProperties {
         object.setCurrentSyncCommittee(r.readByteArray());
         object.setNextSyncCommittee(r.readNullable(byte[].class));
         object.setBmc(r.readAddress());
+        object.setEthBmc(r.readByteArray());
         object.setFinalizedHeader(r.read(LightClientHeader.class));
+        object.setBlockProofHeader(r.readNullable(LightClientHeader.class));
         object.setLastMsgSlot(r.readBigInteger());
         object.setLastMsgSeq(r.readBigInteger());
         r.end();
@@ -129,13 +149,15 @@ public class BMVProperties {
     }
 
     public static void writeObject(ObjectWriter w, BMVProperties obj) {
-        w.beginList(9);
+        w.beginList(10);
         w.write(obj.srcNetworkID);
         w.write(obj.genesisValidatorsHash);
         w.write(obj.currentSyncCommittee);
         w.writeNullable(obj.nextSyncCommittee);
         w.write(obj.bmc);
+        w.write(obj.ethBmc);
         w.write(obj.finalizedHeader);
+        w.writeNullable(obj.blockProofHeader);
         w.write(obj.lastMsgSlot);
         w.write(obj.lastMsgSeq);
         w.end();

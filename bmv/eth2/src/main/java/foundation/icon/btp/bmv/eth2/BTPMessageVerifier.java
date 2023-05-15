@@ -42,13 +42,15 @@ public class BTPMessageVerifier implements BMV {
             @Optional byte[] genesisValidatorsHash,
             @Optional byte[] syncCommittee,
             @Optional Address bmc,
+            @Optional byte[] ethBmc,
             @Optional byte[] finalizedHeader,
             @Optional BigInteger seq
     ) {
-        if (srcNetworkID == null && genesisValidatorsHash == null && syncCommittee == null && bmc == null && finalizedHeader == null && seq.signum() == 0) return;
+        if (srcNetworkID == null && genesisValidatorsHash == null && syncCommittee == null && bmc == null && ethBmc == null && finalizedHeader == null && seq.signum() == 0) return;
         var properties = getProperties();
         if (srcNetworkID != null) properties.setSrcNetworkID(srcNetworkID.getBytes());
         if (bmc != null) properties.setBmc(bmc);
+        if (ethBmc != null) properties.setEthBmc(ethBmc);
         if (genesisValidatorsHash != null) properties.setGenesisValidatorsHash(genesisValidatorsHash);
         if (syncCommittee != null) properties.setCurrentSyncCommittee(syncCommittee);
         if (finalizedHeader != null) properties.setFinalizedHeader(LightClientHeader.deserialize(finalizedHeader));
@@ -85,11 +87,10 @@ public class BTPMessageVerifier implements BMV {
                 processBlockUpdate((BlockUpdate) msg);
             } else if (msg instanceof BlockProof) {
                 logger.println("handleRelayMessage, blockProof : " + msg);
-                blockProof = (BlockProof) msg;
-                processBlockProof(blockProof);
+                processBlockProof((BlockProof) msg);
             } else if (msg instanceof MessageProof) {
                 logger.println("handleRelayMessage, MessageProof : " + msg);
-                var msgs = processMessageProof((MessageProof) msg, blockProof);
+                var msgs = processMessageProof((MessageProof) msg);
                 msgList.addAll(msgs);
             }
         }
@@ -226,18 +227,21 @@ public class BTPMessageVerifier implements BMV {
                 throw BMVException.unknown("invalid hashTree");
             SszUtils.verify(bmvStateRoot, proof);
         }
+        properties.setBlockProofHeader(blockProofLightClientHeader);
         propertiesDB.set(properties);
     }
 
-    private List<byte[]> processMessageProof(MessageProof messageProof, BlockProof blockProof) {
+    private List<byte[]> processMessageProof(MessageProof messageProof) {
         var properties = getProperties();
         var seq = properties.getLastMsgSeq();
-        var beaconBlockHeader = blockProof.getLightClientHeader().getBeacon();
-        var stateRoot = beaconBlockHeader.getStateRoot();
-        var receiptRootProof = messageProof.getReceiptRootProof();
+        var blockProofHeader = properties.getBlockProofHeader();
+        var blockProofBeacon = blockProofHeader.getBeacon();
+        var stateRoot = blockProofBeacon.getStateRoot();
+        var receiptRootProof = messageProof.getReceiptsRootProof();
         logger.println("processMessageProof, ", "stateRoot", StringUtil.bytesToHex(stateRoot), ", receiptRootProof : ", receiptRootProof);
         SszUtils.verify(stateRoot, receiptRootProof);
         var receiptsRoot = receiptRootProof.getLeaf();
+        var ethBmc = properties.getEthBmc();
         var messageList = new ArrayList<byte[]>();
         for (ReceiptProof rp : messageProof.getReceiptProofs()) {
             logger.println("processMessageProof, ", "mpt prove", ", receiptProof key : ", StringUtil.bytesToHex(rp.getKey()));
@@ -247,6 +251,8 @@ public class BTPMessageVerifier implements BMV {
             for (Log log : receipt.getLogs()) {
                 var topics = log.getTopics();
                 var signature = topics[0];
+                var logAddress = log.getAddress();
+                if (!Arrays.equals(ethBmc, logAddress)) continue;
                 if (!Arrays.equals(signature, eventSignatureTopic)) continue;
                 var msgSeq = new BigInteger(topics[2]);
                 seq = seq.add(BigInteger.ONE);
@@ -258,7 +264,7 @@ public class BTPMessageVerifier implements BMV {
         var cnt = messageList.size();
         if (cnt != 0) {
             properties.setLastMsgSeq(seq);
-            properties.setLastMsgSlot(beaconBlockHeader.getSlot());
+            properties.setLastMsgSlot(blockProofBeacon.getSlot());
             propertiesDB.set(properties);
         }
         return messageList;

@@ -34,6 +34,7 @@ public class DataSource {
         private String genesisValidatorsHash;
         private String syncCommittee;
         private String bmc;
+        private String ethBmc;
         private String finalizedHeader;
     }
 

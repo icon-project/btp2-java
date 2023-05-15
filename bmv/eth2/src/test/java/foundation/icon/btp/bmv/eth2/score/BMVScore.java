@@ -41,6 +41,7 @@ public class BMVScore extends Score {
             byte[] validatorHash,
             byte[] syncCommittee,
             Address bmc,
+            byte[] ethBmc,
             byte[] finalized,
             BigInteger seq
     )
@@ -51,6 +52,7 @@ public class BMVScore extends Score {
                 .put("genesisValidatorsHash", new RpcValue(validatorHash))
                 .put("syncCommittee", new RpcValue(syncCommittee))
                 .put("bmc", new RpcValue(bmc.toString()))
+                .put("ethBmc", new RpcValue(ethBmc))
                 .put("finalizedHeader", new RpcValue(finalized))
                 .put("seq", new RpcValue(seq))
                 .build();
