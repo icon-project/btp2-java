@@ -3,7 +3,6 @@ version = '0.1.0'
 dependencies {
     compileOnly("foundation.icon:javaee-api:$javaeeVersion")
     implementation("foundation.icon:javaee-scorex:$scorexVersion")
-    implementation project(':score-util')
     implementation project(':lib')
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
@@ -18,7 +17,6 @@ dependencies {
 
 optimizedJar {
     dependsOn(project(':lib').jar)
-    dependsOn(project(':score-util').jar)
     mainClassName = 'foundation.icon.btp.bmv.btpblock.BTPMessageVerifier'
     archivesBaseName = 'bmv-btpblock'
     from {

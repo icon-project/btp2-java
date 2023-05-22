@@ -7,7 +7,6 @@ optimizedJar.enabled = false
 dependencies {
     compileOnly("foundation.icon:javaee-api:$javaeeVersion")
     implementation("foundation.icon:javaee-scorex:$scorexVersion")
-    implementation project(':score-util')
 
     //for generate ScoreClient
     compileOnly("foundation.icon:javaee-score-client:$scoreClientVersion")

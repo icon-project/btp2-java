@@ -14,7 +14,6 @@ dependencies {
 
 optimizedJar {
     dependsOn(project(':lib').jar)
-    dependsOn(project(':score-util').jar)
     mainClassName = 'foundation.icon.btp.xcall.sample.DAppProxySample'
     archiveFileName = "dapp-sample-" + archiveVersion.get() + ".jar"
     from {

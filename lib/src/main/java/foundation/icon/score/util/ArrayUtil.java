@@ -83,6 +83,7 @@ public class ArrayUtil {
         }
         return sum;
     }
+
     public static BigInteger[] copyOf(BigInteger[] original, int newLength) {
         BigInteger[] copy = new BigInteger[newLength];
         System.arraycopy(original, 0, copy, 0,

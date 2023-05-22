@@ -34,5 +34,4 @@ public class ListUtil {
         }
         return srcLen;
     }
-
 }

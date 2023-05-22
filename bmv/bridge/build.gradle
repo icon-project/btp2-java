@@ -3,7 +3,6 @@ version = '0.1.0'
 dependencies {
     compileOnly("foundation.icon:javaee-api:$javaeeVersion")
     implementation("foundation.icon:javaee-scorex:$scorexVersion")
-    implementation project(':score-util')
     implementation project(':lib')
 
     //for generate ScoreClient
@@ -21,7 +20,6 @@ dependencies {
 
 optimizedJar {
     dependsOn(project(':lib').jar)
-    dependsOn(project(':score-util').jar)
     mainClassName = 'foundation.icon.btp.bmv.bridge.BTPMessageVerifier'
     archivesBaseName = 'bmv-bridge'
     from {
