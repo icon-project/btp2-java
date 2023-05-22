@@ -34,7 +34,7 @@ import foundation.icon.gradle.plugins.javaee.task.OptimizedJar
 task optimizedJarIRC31(type: OptimizedJar) {
     dependsOn(project(':lib').jar)
     mainClassName = 'foundation.icon.btp.nativecoin.irc31.OwnerBasedIRC31Supplier'
-    archiveName("irc31-" + archiveVersion.get() + "." + archiveExtension.get());
+    archiveFileName = "irc31-" + archiveVersion.get() + "." + archiveExtension.get()
     from { sourceSets.main.output }
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
