@@ -22,8 +22,11 @@ import score.ObjectReader;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 public class Receipt {
+    private static final int AccessListTxType = 1;
+    private static final int DynamicFeeTxType = 2;
     private byte[] postStatusOrState;
     private BigInteger cumulativeGasUsed;
     private byte[] bloom;
@@ -59,7 +62,20 @@ public class Receipt {
     }
 
     static Receipt fromBytes(byte[] bytes) {
-        ObjectReader reader = Context.newByteArrayObjectReader("RLPn", bytes);
+        int from;
+        if (bytes.length <= 1) {
+            throw BMVException.unknown("receipt too short");
+        }
+        if ((bytes[0] & 0xff) > 0x7f) {
+            from = 0;
+        } else {
+            // It's an EIP2718 typed transaction envelope.
+            if (bytes[0] != AccessListTxType && bytes[0] != DynamicFeeTxType) {
+                throw BMVException.unknown("invalid receipt type");
+            }
+            from = 1;
+        }
+        ObjectReader reader = Context.newByteArrayObjectReader("RLP", Arrays.copyOfRange(bytes, from, bytes.length));
         return Receipt.readObject(reader);
     }
 
