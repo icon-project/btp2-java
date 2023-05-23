@@ -31,8 +31,6 @@ public class BMVProperties {
 
     private byte[] srcNetworkID;
     private byte[] genesisValidatorsHash;
-    private byte[] currentSyncCommittee;
-    private byte[] nextSyncCommittee;
     private Address bmc;
     private byte[] ethBmc;
     private LightClientHeader finalizedHeader;
@@ -70,27 +68,6 @@ public class BMVProperties {
 
     void setBlockProofHeader(LightClientHeader header) {
         this.blockProofHeader = header;
-    }
-
-    byte[] getCurrentSyncCommittee() {
-        return currentSyncCommittee;
-    }
-
-    void setCurrentSyncCommittee(byte[] syncCommittee) {
-        this.currentSyncCommittee = syncCommittee;
-    }
-
-    public byte[] getNextSyncCommittee() {
-        return nextSyncCommittee;
-    }
-
-    public void setNextSyncCommittee(byte[] nextSyncCommittee) {
-        this.nextSyncCommittee = nextSyncCommittee;
-    }
-
-    public void setNextSyncCommittee(SyncCommittee nextSyncCommittee) {
-        byte[] value = nextSyncCommittee != null ? SyncCommittee.serialize(nextSyncCommittee) : null;
-        setNextSyncCommittee(value);
     }
 
     byte[] getGenesisValidatorsHash() {
@@ -136,8 +113,6 @@ public class BMVProperties {
         var object = new BMVProperties();
         object.setSrcNetworkID(r.readByteArray());
         object.setGenesisValidatorsHash(r.readByteArray());
-        object.setCurrentSyncCommittee(r.readByteArray());
-        object.setNextSyncCommittee(r.readNullable(byte[].class));
         object.setBmc(r.readAddress());
         object.setEthBmc(r.readByteArray());
         object.setFinalizedHeader(r.read(LightClientHeader.class));
@@ -149,11 +124,9 @@ public class BMVProperties {
     }
 
     public static void writeObject(ObjectWriter w, BMVProperties obj) {
-        w.beginList(10);
+        w.beginList(8);
         w.write(obj.srcNetworkID);
         w.write(obj.genesisValidatorsHash);
-        w.write(obj.currentSyncCommittee);
-        w.writeNullable(obj.nextSyncCommittee);
         w.write(obj.bmc);
         w.write(obj.ethBmc);
         w.write(obj.finalizedHeader);

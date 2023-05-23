@@ -34,6 +34,8 @@ import java.util.List;
 public class BTPMessageVerifier implements BMV {
     private static final Logger logger = Logger.getLogger(BTPMessageVerifier.class);
     private final VarDB<BMVProperties> propertiesDB = Context.newVarDB("properties", BMVProperties.class);
+    private final VarDB<SyncCommittee> currentSyncCommitteeDB = Context.newVarDB("currentSyncCommittee", SyncCommittee.class);
+    private final VarDB<SyncCommittee> nextSyncCommitteeDB = Context.newVarDB("nextSyncCommittee", SyncCommittee.class);
     private final String eventSignature = "Message(string,uint256,bytes)";
     private final byte[] eventSignatureTopic = Context.hash("keccak-256", eventSignature.getBytes());
 
@@ -52,7 +54,7 @@ public class BTPMessageVerifier implements BMV {
         if (bmc != null) properties.setBmc(bmc);
         if (ethBmc != null) properties.setEthBmc(ethBmc);
         if (genesisValidatorsHash != null) properties.setGenesisValidatorsHash(genesisValidatorsHash);
-        if (syncCommittee != null) properties.setCurrentSyncCommittee(syncCommittee);
+        if (syncCommittee != null) currentSyncCommitteeDB.set(SyncCommittee.deserialize(syncCommittee));
         if (finalizedHeader != null) properties.setFinalizedHeader(LightClientHeader.deserialize(finalizedHeader));
         if (seq.signum() == -1) throw BMVException.unknown("invalid seq. sequence must >= 0");
         var lastMsgSeq = properties.getLastMsgSeq();
@@ -78,7 +80,6 @@ public class BTPMessageVerifier implements BMV {
         checkAccessible(curAddr, prevAddr);
         RelayMessage relayMessages = RelayMessage.fromBytes(_msg);
         RelayMessage.TypePrefixedMessage[] typePrefixedMessages = relayMessages.getMessages();
-        BlockProof blockProof = null;
         List<byte[]> msgList = new ArrayList<>();
         for (RelayMessage.TypePrefixedMessage message : typePrefixedMessages) {
             Object msg = message.getMessage();
@@ -122,6 +123,14 @@ public class BTPMessageVerifier implements BMV {
         return propertiesDB.getOrDefault(BMVProperties.DEFAULT);
     }
 
+    SyncCommittee getCurrentSyncCommittee() {
+        return currentSyncCommitteeDB.get();
+    }
+
+    SyncCommittee getNextSyncCommittee() {
+        return nextSyncCommitteeDB.get();
+    }
+
     private void processBlockUpdate(BlockUpdate blockUpdate) {
         var properties = getProperties();
         validateBlockUpdate(blockUpdate, properties);
@@ -144,7 +153,7 @@ public class BTPMessageVerifier implements BMV {
         var signaturePeriod = Utils.computeSyncCommitteePeriod(signatureSlot);
         var isBmvPeriod = signaturePeriod.compareTo(bmvPeriod) == 0;
 
-        if (properties.getNextSyncCommittee() != null) {
+        if (getNextSyncCommittee() != null) {
             if (!isBmvPeriod && signaturePeriod.compareTo(bmvPeriod.add(BigInteger.ONE)) != 0)
                 throw BMVException.notVerifiable(bmvSlot.toString());
         } else {
@@ -162,9 +171,9 @@ public class BTPMessageVerifier implements BMV {
 
         SyncCommittee syncCommittee;
         if (isBmvPeriod) {
-            syncCommittee = SyncCommittee.deserialize(properties.getCurrentSyncCommittee());
+            syncCommittee = getCurrentSyncCommittee();
         } else {
-            syncCommittee = SyncCommittee.deserialize(properties.getNextSyncCommittee());
+            syncCommittee = getNextSyncCommittee();
         }
         logger.println("validateBlockUpdate, ", "verify syncAggregate", syncCommittee.getAggregatePubKey());
         if (!blockUpdate.verifySyncAggregate(syncCommittee.getBlsPublicKeys(), properties.getGenesisValidatorsHash()))
@@ -172,7 +181,7 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private void applyBlockUpdate(BlockUpdate blockUpdate, BMVProperties properties) {
-        var bmvNextSyncCommittee = properties.getNextSyncCommittee();
+        var bmvNextSyncCommittee = getNextSyncCommittee();
         var bmvBeacon = properties.getFinalizedHeader().getBeacon();
         var bmvSlot = bmvBeacon.getSlot();
         var finalizedHeader = LightClientHeader.deserialize(blockUpdate.getFinalizedHeader());
@@ -183,11 +192,11 @@ public class BTPMessageVerifier implements BMV {
         if (bmvNextSyncCommittee == null) {
             if (finalizedPeriod.compareTo(bmvPeriod) != 0) throw BMVException.unknown("invalid update period");
             logger.println("applyBlockUpdate, ", "set next sync committee");
-            properties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
+            nextSyncCommitteeDB.set(blockUpdate.getNextSyncCommittee());
         } else if (finalizedPeriod.compareTo(bmvPeriod.add(BigInteger.ONE)) == 0) {
             logger.println("applyBlockUpdate, ", "set current/next sync committee");
-            properties.setCurrentSyncCommittee(properties.getNextSyncCommittee());
-            properties.setNextSyncCommittee(blockUpdate.getNextSyncCommittee());
+            currentSyncCommitteeDB.set(getNextSyncCommittee());
+            nextSyncCommitteeDB.set(blockUpdate.getNextSyncCommittee());
         }
 
         if (finalizedSlot.compareTo(bmvSlot) > 0) {
