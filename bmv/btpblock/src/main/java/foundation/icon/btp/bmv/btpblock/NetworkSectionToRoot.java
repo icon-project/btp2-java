@@ -17,13 +17,11 @@
 package foundation.icon.btp.bmv.btpblock;
 
 import score.ObjectReader;
-import score.ObjectWriter;
 
 
 public class NetworkSectionToRoot {
     final static int LEFT = 0;
     final static int RIGHT = 1;
-    final static byte[] EMPTY = new byte[0];
     public int dir;
     public byte[] value;
 
@@ -34,7 +32,7 @@ public class NetworkSectionToRoot {
 
     public static NetworkSectionToRoot readObject(ObjectReader r) {
         r.beginList();
-        NetworkSectionToRoot obj = new NetworkSectionToRoot(r.readInt(), r.readNullableOrDefault(byte[].class, EMPTY));
+        NetworkSectionToRoot obj = new NetworkSectionToRoot(r.readInt(), r.readNullable(byte[].class));
         r.end();
         return obj;
     }

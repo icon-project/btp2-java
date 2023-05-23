@@ -16,10 +16,8 @@
 
 package foundation.icon.btp.bmv.btpblock;
 
-import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
-import score.ObjectWriter;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
@@ -149,12 +147,12 @@ public class BlockHeader {
     }
 
     private static byte[] concatAndHash(byte[] b1, byte[] b2) {
-        byte[] data = new byte[b1.length + b2.length];
-        System.arraycopy(b1, 0, data, 0, b1.length);
-        if (b2.length == 0){
+        if (b2 == null) {
             return b1;
         }
-        System.arraycopy(b2, 0, data, b1.length, b2.length);
+        byte[] data = new byte[HASH_LEN * 2];
+        System.arraycopy(b1, 0, data, 0, HASH_LEN);
+        System.arraycopy(b2, 0, data, HASH_LEN, HASH_LEN);
         return BTPMessageVerifier.hash(data);
     }
 
