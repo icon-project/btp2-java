@@ -149,9 +149,12 @@ public class BlockHeader {
     }
 
     private static byte[] concatAndHash(byte[] b1, byte[] b2) {
-        byte[] data = new byte[HASH_LEN * 2];
-        System.arraycopy(b1, 0, data, 0, HASH_LEN);
-        System.arraycopy(b2, 0, data, HASH_LEN, HASH_LEN);
+        byte[] data = new byte[b1.length + b2.length];
+        System.arraycopy(b1, 0, data, 0, b1.length);
+        if (b2.length == 0){
+            return b1;
+        }
+        System.arraycopy(b2, 0, data, b1.length, b2.length);
         return BTPMessageVerifier.hash(data);
     }
 
@@ -159,9 +162,9 @@ public class BlockHeader {
         byte[] h = leaf;
         for (NetworkSectionToRoot nsRoot : networkSectionToRoot) {
             if (nsRoot.dir == NetworkSectionToRoot.LEFT) {
-                h = concatAndHash(nsRoot.value, leaf);
+                h = concatAndHash(nsRoot.value, h);
             } else if (nsRoot.dir == NetworkSectionToRoot.RIGHT) {
-                h = concatAndHash(leaf, nsRoot.value);
+                h = concatAndHash(h, nsRoot.value);
             }
         }
         return h;

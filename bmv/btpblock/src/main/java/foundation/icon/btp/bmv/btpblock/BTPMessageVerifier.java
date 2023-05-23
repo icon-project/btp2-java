@@ -39,6 +39,9 @@ public class BTPMessageVerifier implements BMV {
 
     public BTPMessageVerifier(String srcNetworkID, int networkTypeID, Address bmc, byte[] blockHeader, BigInteger seqOffset) {
         BMVProperties bmvProperties = getProperties();
+        if (bmvProperties.getBmc() != null) {
+            return;
+        }
         bmvProperties.setSrcNetworkID(srcNetworkID.getBytes());
         bmvProperties.setNetworkTypeID(networkTypeID);
         bmvProperties.setBmc(bmc);
@@ -195,6 +198,9 @@ public class BTPMessageVerifier implements BMV {
         var proofContextBytes = bmvProperties.getProofContext();
         var proofContext = ProofContext.fromBytes(proofContextBytes);
         for (byte[] sig : sigs) {
+            if (sig == null){
+                continue;
+            }
             EthAddress address = recoverAddress(decisionHash, sig);
             if (!proofContext.isValidator(address)) throw BMVException.unknown("invalid validator : " + address);
             if (verifiedValidator.contains(address)) throw BMVException.unknown("duplicated validator : " + address);
@@ -204,7 +210,7 @@ public class BTPMessageVerifier implements BMV {
         var validatorsCnt = proofContext.getValidators().length;
         //quorum = validator * 2/3
         if (verified * 3 <= validatorsCnt * 2)
-                throw BMVException.unknown("not enough proof parts num of validator : " + validatorsCnt + ", num of proof parts : " + verified);
+            throw BMVException.unknown("not enough proof parts num of validator : " + validatorsCnt + ", num of proof parts : " + verified);
     }
 
     private byte[][] handleMessageProof(MessageProof messageProof, BlockUpdate blockUpdate) {
@@ -234,7 +240,7 @@ public class BTPMessageVerifier implements BMV {
             var rightProofNodes = messageProof.getRightProofNodes();
             for (int i = 0; i < rightProofNodes.length; i++) {
                 logger.println("ProofInRight["+i+"] : " + "NumOfLeaf:"+rightProofNodes[i].getNumOfLeaf()
-                + "value:" + StringUtil.bytesToHex(rightProofNodes[i].getValue()));
+                        + "value:" + StringUtil.bytesToHex(rightProofNodes[i].getValue()));
             }
             throw BMVException.unknown(
                     "mismatch MessageCount offset:" + result.offset +

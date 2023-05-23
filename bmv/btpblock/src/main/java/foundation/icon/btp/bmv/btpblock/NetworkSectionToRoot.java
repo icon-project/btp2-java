@@ -23,6 +23,7 @@ import score.ObjectWriter;
 public class NetworkSectionToRoot {
     final static int LEFT = 0;
     final static int RIGHT = 1;
+    final static byte[] EMPTY = new byte[0];
     public int dir;
     public byte[] value;
 
@@ -33,7 +34,7 @@ public class NetworkSectionToRoot {
 
     public static NetworkSectionToRoot readObject(ObjectReader r) {
         r.beginList();
-        NetworkSectionToRoot obj = new NetworkSectionToRoot(r.readInt(), r.readByteArray());
+        NetworkSectionToRoot obj = new NetworkSectionToRoot(r.readInt(), r.readNullableOrDefault(byte[].class, EMPTY));
         r.end();
         return obj;
     }
