@@ -40,7 +40,7 @@ public class Proofs {
         byte[][] proofs;
         List<byte[]> proofList = new ArrayList<>();
         while(r.hasNext()) {
-            proofList.add(r.readByteArray());
+            proofList.add(r.readNullable(byte[].class));
         }
         int proofsLength = proofList.size();
         proofs = new byte[proofsLength][];

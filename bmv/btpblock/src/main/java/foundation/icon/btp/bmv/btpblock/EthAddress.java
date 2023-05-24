@@ -16,6 +16,7 @@
 
 package foundation.icon.btp.bmv.btpblock;
 
+import foundation.icon.score.util.StringUtil;
 import score.ObjectReader;
 import score.ObjectWriter;
 
@@ -28,6 +29,10 @@ public class EthAddress {
     public EthAddress(byte[] data) {
         if (data.length != ADDRESS_LEN) throw BMVException.unknown("invalid Address data length");
         this.data = data;
+    }
+
+    public String toString() {
+        return StringUtil.bytesToHex(data);
     }
 
     public static EthAddress readObject(ObjectReader r) {
