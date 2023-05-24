@@ -32,11 +32,6 @@ public class BMVProperties {
     private byte[] srcNetworkID;
     private byte[] genesisValidatorsHash;
     private Address bmc;
-    private byte[] ethBmc;
-    private LightClientHeader finalizedHeader;
-    private LightClientHeader blockProofHeader;
-    private BigInteger lastMsgSeq;
-    private BigInteger lastMsgSlot;
 
     public byte[] getSrcNetworkID() {
         return srcNetworkID;
@@ -54,52 +49,12 @@ public class BMVProperties {
         this.bmc = bmc;
     }
 
-    byte[] getEthBmc() {
-        return ethBmc;
-    }
-
-    void setEthBmc(byte[] ethBmc) {
-        this.ethBmc = ethBmc;
-    }
-
-    LightClientHeader getBlockProofHeader() {
-        return blockProofHeader;
-    }
-
-    void setBlockProofHeader(LightClientHeader header) {
-        this.blockProofHeader = header;
-    }
-
     byte[] getGenesisValidatorsHash() {
         return genesisValidatorsHash;
     }
 
     void setGenesisValidatorsHash(byte[] genesisValidatorsHash) {
         this.genesisValidatorsHash = genesisValidatorsHash;
-    }
-
-    LightClientHeader getFinalizedHeader() {
-        return finalizedHeader;
-    }
-
-    void setFinalizedHeader(LightClientHeader finalizedHeader) {
-        this.finalizedHeader = finalizedHeader;
-    }
-
-    public BigInteger getLastMsgSlot() {
-        return lastMsgSlot;
-    }
-
-    public void setLastMsgSlot(BigInteger lastMsgSlot) {
-        this.lastMsgSlot = lastMsgSlot;
-    }
-
-    public BigInteger getLastMsgSeq() {
-        return lastMsgSeq;
-    }
-
-    public void setLastMsgSeq(BigInteger lastMsgSeq) {
-        this.lastMsgSeq = lastMsgSeq;
     }
 
     public String getNetwork() {
@@ -114,25 +69,15 @@ public class BMVProperties {
         object.setSrcNetworkID(r.readByteArray());
         object.setGenesisValidatorsHash(r.readByteArray());
         object.setBmc(r.readAddress());
-        object.setEthBmc(r.readByteArray());
-        object.setFinalizedHeader(r.read(LightClientHeader.class));
-        object.setBlockProofHeader(r.readNullable(LightClientHeader.class));
-        object.setLastMsgSlot(r.readBigInteger());
-        object.setLastMsgSeq(r.readBigInteger());
         r.end();
         return object;
     }
 
     public static void writeObject(ObjectWriter w, BMVProperties obj) {
-        w.beginList(8);
+        w.beginList(3);
         w.write(obj.srcNetworkID);
         w.write(obj.genesisValidatorsHash);
         w.write(obj.bmc);
-        w.write(obj.ethBmc);
-        w.write(obj.finalizedHeader);
-        w.writeNullable(obj.blockProofHeader);
-        w.write(obj.lastMsgSlot);
-        w.write(obj.lastMsgSeq);
         w.end();
     }
 }
