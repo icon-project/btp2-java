@@ -132,7 +132,7 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private void handleBlockUpdateMessage(BlockUpdate blockUpdate) {
-        var bmvProperties = propertiesDB.get();
+        var bmvProperties = getProperties();
         var networkID = bmvProperties.getNetworkID();
         var blockHeader = blockUpdate.getBlockHeader();
         var updateNumber = blockHeader.getUpdateNumber();
@@ -194,7 +194,7 @@ public class BTPMessageVerifier implements BMV {
         byte[] decisionHash = decision.hash();
         byte[][] sigs = proofs.getProofs();
         List<EthAddress> verifiedValidator = new ArrayList<>();
-        var bmvProperties = propertiesDB.get();
+        var bmvProperties = getProperties();
         var proofContextBytes = bmvProperties.getProofContext();
         var proofContext = ProofContext.fromBytes(proofContextBytes);
         for (byte[] sig : sigs) {
@@ -216,7 +216,7 @@ public class BTPMessageVerifier implements BMV {
     private byte[][] handleMessageProof(MessageProof messageProof, BlockUpdate blockUpdate) {
         byte[] expectedMessageRoot;
         BigInteger expectedMessageCnt;
-        var bmvProperties = propertiesDB.get();
+        var bmvProperties = getProperties();
         if (bmvProperties.getRemainMessageCount().compareTo(BigInteger.ZERO) <= 0)
             throw BMVException.unknown("remaining message count must greater than zero");
         MessageProof.ProveResult result = messageProof.proveMessage();
