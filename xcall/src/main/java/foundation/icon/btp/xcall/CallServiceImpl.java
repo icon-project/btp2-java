@@ -32,7 +32,7 @@ import score.annotation.Payable;
 
 import java.math.BigInteger;
 
-public class CallServiceImpl implements BSH, CallService, FeeManage {
+public class CallServiceImpl implements BSH, CallService, CallServiceEvent, FeeManage {
     public static final int MAX_DATA_SIZE = 2048;
     public static final int MAX_ROLLBACK_SIZE = 1024;
 
