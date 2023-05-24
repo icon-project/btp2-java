@@ -25,6 +25,7 @@ import score.Address;
 import score.Context;
 import score.VarDB;
 import score.annotation.External;
+import score.annotation.Optional;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
@@ -37,16 +38,20 @@ public class BTPMessageVerifier implements BMV {
     private static String SIGNATURE_ALG = "ecdsa-secp256k1";
     private final VarDB<BMVProperties> propertiesDB = Context.newVarDB("properties", BMVProperties.class);
 
-    public BTPMessageVerifier(String srcNetworkID, int networkTypeID, Address bmc, byte[] blockHeader, BigInteger seqOffset) {
+    public BTPMessageVerifier(
+            @Optional String srcNetworkID,
+            @Optional int networkTypeID,
+            @Optional Address bmc,
+            @Optional byte[] blockHeader,
+            @Optional BigInteger seqOffset
+    ) {
         BMVProperties bmvProperties = getProperties();
-        if (bmvProperties.getBmc() != null) {
-            return;
-        }
-        bmvProperties.setSrcNetworkID(srcNetworkID.getBytes());
+        if (srcNetworkID == null && networkTypeID == 0 && bmc == null && blockHeader == null && seqOffset.signum() == 0) return;
+        if (srcNetworkID != null) bmvProperties.setSrcNetworkID(srcNetworkID.getBytes());
         bmvProperties.setNetworkTypeID(networkTypeID);
-        bmvProperties.setBmc(bmc);
+        if (bmc != null) bmvProperties.setBmc(bmc);
         bmvProperties.setSequenceOffset(seqOffset);
-        handleFirstBlockHeader(BlockHeader.fromBytes(blockHeader), bmvProperties);
+        if (blockHeader != null) handleFirstBlockHeader(BlockHeader.fromBytes(blockHeader), bmvProperties);
     }
 
     public BMVProperties getProperties() {
