@@ -18,20 +18,21 @@ package foundation.icon.btp.bmv.eth2;
 
 import foundation.icon.score.util.StringUtil;
 import score.ObjectReader;
+import score.ObjectWriter;
 import scorex.util.ArrayList;
 
 public class SyncCommittee {
-    private byte[][] blsPublicKeys;
+    private BlsPublicKeys blsPublicKeys;
     private byte[] aggregatePubKey;
     private static final int BLS_PUBLIC_KEY_LENGTH = 48;
 
-    public SyncCommittee(byte[][] blsPublicKeys, byte[] aggregatePubKey) {
+    public SyncCommittee(BlsPublicKeys blsPublicKeys, byte[] aggregatePubKey) {
         this.blsPublicKeys = blsPublicKeys;
         this.aggregatePubKey = aggregatePubKey;
     }
 
     public byte[][] getBlsPublicKeys() {
-        return blsPublicKeys;
+        return blsPublicKeys.blsPublicKeys;
     }
 
     public byte[] getAggregatePubKey() {
@@ -47,19 +48,7 @@ public class SyncCommittee {
             pos += BLS_PUBLIC_KEY_LENGTH;
         }
         System.arraycopy(data, pos, aggregatedPubkey, 0, BLS_PUBLIC_KEY_LENGTH);
-        return new SyncCommittee(publicKeys, aggregatedPubkey);
-    }
-
-    static byte[] serialize(SyncCommittee syncCommittee) {
-        byte[] data = new byte[(Constants.SYNC_COMMITTEE_COUNT + 1) * BLS_PUBLIC_KEY_LENGTH];
-        var pos = 0;
-        var publicKeys = syncCommittee.getBlsPublicKeys();
-        for (int i = 0; i < Constants.SYNC_COMMITTEE_COUNT; i++) {
-            System.arraycopy(publicKeys[i], 0, data, pos, BLS_PUBLIC_KEY_LENGTH);
-            pos += BLS_PUBLIC_KEY_LENGTH;
-        }
-        System.arraycopy(syncCommittee.getAggregatePubKey(), 0, data, pos, BLS_PUBLIC_KEY_LENGTH);
-        return data;
+        return new SyncCommittee(new BlsPublicKeys(publicKeys), aggregatedPubkey);
     }
 
     public byte[] getHashTreeRoot() {
@@ -69,8 +58,8 @@ public class SyncCommittee {
 
     byte[] hashPublicKeys() {
         byte[][] packed = new byte[Constants.SYNC_COMMITTEE_COUNT][Constants.BYTES_PER_CHUNK];
-        for (int i = 0; i < blsPublicKeys.length; i++)
-            packed[i] = SszUtils.concatAndHash(blsPublicKeys[i], new byte[Constants.BYTES_PER_CHUNK / 2]);
+        for (int i = 0; i < blsPublicKeys.blsPublicKeys.length; i++)
+            packed[i] = SszUtils.concatAndHash(blsPublicKeys.blsPublicKeys[i], new byte[Constants.BYTES_PER_CHUNK / 2]);
         return SszUtils.merkleize(packed);
     }
 
@@ -84,16 +73,17 @@ public class SyncCommittee {
 
     public static SyncCommittee readObject(ObjectReader r) {
         r.beginList();
-        var blsPubKeyList = new ArrayList<byte[]>();
-        while(r.hasNext())
-            blsPubKeyList.add(r.readByteArray());
-        var pubKeyLen = blsPubKeyList.size();
-        var pubKeys = new byte[pubKeyLen][];
-        for (int i = 0; i < pubKeyLen; i++)
-            pubKeys[i] = blsPubKeyList.get(i);
+        var blsPublicKeys = r.read(BlsPublicKeys.class);
         var aggregatePubKey = r.readByteArray();
         r.end();
-        return new SyncCommittee(pubKeys, aggregatePubKey);
+        return new SyncCommittee(blsPublicKeys, aggregatePubKey);
+    }
+
+    public static void writeObject(ObjectWriter w, SyncCommittee syncCommittee) {
+        w.beginList(2);
+        w.write(syncCommittee.blsPublicKeys);
+        w.write(syncCommittee.aggregatePubKey);
+        w.end();
     }
 
     @Override
@@ -102,5 +92,33 @@ public class SyncCommittee {
                 "blsPublicKeys=" + StringUtil.toString(blsPublicKeys) +
                 ", aggregatePubKey=" + StringUtil.toString(aggregatePubKey) +
                 '}';
+    }
+
+    public static class BlsPublicKeys {
+        private byte[][] blsPublicKeys;
+
+        public BlsPublicKeys(byte[][] blsPublicKeys) {
+            this.blsPublicKeys = blsPublicKeys;
+        }
+
+        public static BlsPublicKeys readObject(ObjectReader r) {
+            r.beginList();
+            var blsPubKeyList = new ArrayList<byte[]>();
+            while(r.hasNext())
+                blsPubKeyList.add(r.readByteArray());
+            var pubKeyLen = blsPubKeyList.size();
+            var pubKeys = new byte[pubKeyLen][];
+            for (int i = 0; i < pubKeyLen; i++)
+                pubKeys[i] = blsPubKeyList.get(i);
+            r.end();
+            return new BlsPublicKeys(pubKeys);
+        }
+
+        public static void writeObject(ObjectWriter w, BlsPublicKeys publicKeys) {
+            w.beginList(publicKeys.blsPublicKeys.length);
+            for (byte[] publicKey: publicKeys.blsPublicKeys)
+                w.write(publicKey);
+            w.end();
+        }
     }
 }
