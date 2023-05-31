@@ -1,0 +1,141 @@
+/*
+ * Copyright 2023 ICON Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package foundation.icon.btp.bmv.bsc2;
+
+import score.Context;
+import score.ObjectReader;
+import score.ObjectWriter;
+
+import java.math.BigInteger;
+
+public class Snapshot {
+    private Hash hash;
+    private BigInteger number;
+    private Validators validators;
+    private Validators candidates;
+    private EthAddresses recents;
+    private VoteAttestation attestation;
+
+    public Snapshot(Hash hash, BigInteger number, Validators validators,
+            Validators candidates, EthAddresses recents, VoteAttestation attestation) {
+        this.hash = hash;
+        this.number = number;
+        // ensure the list of validators in ascending order
+        this.validators = validators;
+        // ensure the list of validators in ascending order
+        this.candidates = candidates;
+        this.recents = recents;
+        this.attestation = attestation;
+    }
+
+    public static void writeObject(ObjectWriter w, Snapshot o) {
+        w.beginList(6);
+        w.write(o.hash);
+        w.write(o.number);
+        w.write(o.validators);
+        w.write(o.candidates);
+        w.write(o.recents);
+        w.write(o.attestation);
+        w.end();
+    }
+
+    public static Snapshot readObject(ObjectReader r) {
+        r.beginList();
+        Hash hash = r.read(Hash.class);
+        BigInteger number = r.readBigInteger();
+        Validators validators = r.read(Validators.class);
+        Validators candidates = r.read(Validators.class);
+        EthAddresses recents = r.read(EthAddresses.class);
+        VoteAttestation attestation = r.read(VoteAttestation.class);
+        r.end();
+        return new Snapshot(hash, number, validators, candidates, recents, attestation);
+    }
+
+    public boolean inturn(EthAddress validator) {
+        BigInteger offset = number.add(BigInteger.ONE).mod(BigInteger.valueOf(validators.size()));
+        EthAddress[] vals = validators.getAddresses().toArray();
+        return vals[offset.intValue()].equals(validator);
+    }
+
+    public Snapshot apply(ChainConfig config, Header head) {
+        Hash newHash = head.getHash();
+        BigInteger newNumber = head.getNumber();
+        Context.require(number.longValue() + 1L == newNumber.longValue()
+                && hash.equals(head.getParentHash()), "Inconsistent header");
+
+        // ensure the coinbase is sealer
+        EthAddress sealer = head.getCoinbase();
+        // TODO Check authority
+        // TODO Check recently sealer
+        Validators newValidators = newNumber.longValue() % config.Epoch == validators.size() / 2
+                ? candidates
+                : validators;
+
+        Validators newCandidates = config.isEpoch(newNumber) ? head.getValidators(config) : candidates;
+        EthAddresses newRecents = new EthAddresses(recents);
+        newRecents.add(head.getCoinbase());
+        if (newRecents.size() > newValidators.size() / 2) {
+            for (int i = 0; i < newRecents.size() - newValidators.size()/2; i++) {
+                newRecents.remove(i);
+            }
+        }
+        VoteAttestation newAttestation = head.getVoteAttestation(config);
+        if (newAttestation != null) {
+            Hash target = newAttestation.getVoteRange().getTargetHash();
+            Context.require(target.equals(head.getParentHash()), "Invalid attestation, target mismatch");
+        } else {
+            newAttestation = attestation;
+        }
+        // TODO recent fork hashes...?
+        return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newRecents, newAttestation);
+    }
+
+    public Hash getHash() {
+        return hash;
+    }
+
+    public BigInteger getNumber() {
+        return number;
+    }
+
+    public Validators getValidators() {
+        return validators;
+    }
+
+    public Validators getCandidates() {
+        return candidates;
+    }
+
+    public EthAddresses getRecents() {
+        return recents;
+    }
+
+    public VoteAttestation getVoteAttestation() {
+        return attestation;
+    }
+
+    @Override
+    public String toString() {
+        return "Snapshot{" +
+                "hash=" + hash +
+                ", number=" + number +
+                ", validators=" + validators +
+                ", candidates=" + candidates +
+                ", recents=" + recents +
+                '}';
+    }
+
+}
