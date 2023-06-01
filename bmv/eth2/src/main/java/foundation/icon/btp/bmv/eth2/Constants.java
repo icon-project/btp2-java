@@ -21,8 +21,9 @@ import java.math.BigInteger;
 
 public class Constants {
     public static final int HASH_LENGTH = 32;
-    public static final int SYNC_COMMITTEE_COUNT = 512;
+    public static int SYNC_COMMITTEE_COUNT = 512;
     public static final int BYTES_PER_CHUNK = 32;
+    public static BigInteger SLOTS_PER_HISTORICAL_ROOT = BigInteger.valueOf(8192);
     public static final byte[] MAINNET_GENESIS_VALIDATORS_ROOT = StringUtil.hexToBytes("4b363db94e286120d76eb905340fdd4e54bfe9f06bf33ff6cf5ad27f511bfe95");
     public static final byte[] SEPOLIA_GENESIS_VALIDATORS_ROOT = StringUtil.hexToBytes("d8ea171f3c94aea21ebc42a1ed61052acf3f9209c00e4efbaaddac09ed9b8078");
 
@@ -40,4 +41,7 @@ public class Constants {
     public static final byte[] SEPOLIA_BELLATRIX_VERSION = StringUtil.hexToBytes("90000071");
     public static final byte[] SEPOLIA_ALTAIR_VERSION = StringUtil.hexToBytes("90000070");
     public static final byte[] SEPOLIA_GENESIS_VERSION = StringUtil.hexToBytes("90000069");
+    public static final byte[] E2E_BELLATRIX_VERSION = StringUtil.hexToBytes("02000001"); //js.park
+    public static final BigInteger E2E_CAPELLA_EPOCH = BigInteger.valueOf(2147483647); //js.park
+    public static final byte[] E2E_CAPELLA_VERSION = StringUtil.hexToBytes("03000001"); //js.park
 }

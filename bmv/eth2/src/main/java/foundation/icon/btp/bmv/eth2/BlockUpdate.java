@@ -175,7 +175,10 @@ public class BlockUpdate {
                 return Constants.SEPOLIA_ALTAIR_VERSION;
             return Constants.SEPOLIA_GENESIS_VERSION;
         }
-        throw BMVException.unknown("invalid genesisValidatorsRoot");
+        if (epoch.compareTo(Constants.E2E_CAPELLA_EPOCH) >= 0)
+            return Constants.E2E_CAPELLA_VERSION;
+        return Constants.E2E_BELLATRIX_VERSION;
+//        throw BMVException.unknown("invalid genesisValidatorsRoot");
     }
 
     boolean verifySyncAggregate(byte[][] syncCommitteePubs, byte[] genesisValidatorsRoot) {

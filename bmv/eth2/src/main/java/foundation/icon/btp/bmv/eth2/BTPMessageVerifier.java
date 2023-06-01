@@ -49,9 +49,17 @@ public class BTPMessageVerifier implements BMV {
             @Optional Address bmc,
             @Optional byte[] ethBmc,
             @Optional byte[] finalizedHeader,
-            @Optional BigInteger seq
+            @Optional BigInteger seq,
+            @Optional byte[] consensusConfig
     ) {
-        if (srcNetworkID == null && genesisValidatorsHash == null && syncCommittee == null && bmc == null && ethBmc == null && finalizedHeader == null && seq.signum() == 0) return;
+        if (srcNetworkID == null && genesisValidatorsHash == null && syncCommittee == null && bmc == null && ethBmc == null && finalizedHeader == null && seq.signum() == 0 && consensusConfig == null) return;
+        if (consensusConfig != null) {
+            ConsensusConfig config = ConsensusConfig.fromBytes(consensusConfig);
+            Utils.SLOTS_PER_EPOCH = config.getSlotPerEpoch();
+            Utils.EPOCHS_PER_SYNC_COMMITTEE_PERIOD = config.getEpochsPerSyncCommitteePeriod();
+            Constants.SYNC_COMMITTEE_COUNT = config.getSyncCommitteeSize();
+            Constants.SLOTS_PER_HISTORICAL_ROOT = config.getSlotPerHistoricalRoot();
+        }
         var properties = getProperties();
         var mpProperties = getMessageProofProperties();
         if (srcNetworkID != null) properties.setSrcNetworkID(srcNetworkID.getBytes());
@@ -229,7 +237,6 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private LightClientHeader processBlockProof(BlockProof blockProof, LightClientHeader finalizedHeader) {
-        var historicalLimit = BigInteger.valueOf(8192);
         if (finalizedHeader == null) finalizedHeader = getFinalizedHeader();
         var bmvBeacon = finalizedHeader.getBeacon();
         var blockProofLightClientHeader = blockProof.getLightClientHeader();
@@ -244,7 +251,7 @@ public class BTPMessageVerifier implements BMV {
         logger.println("processBlockProof, ", "bmvStateRoot : ", StringUtil.bytesToHex(bmvStateRoot), ", proof : ", proof);
         if (bmvFinalizedSlot.compareTo(blockProofSlot) < 0)
             throw BMVException.unknown(blockProofSlot.toString());
-        if (blockProofSlot.add(historicalLimit).compareTo(bmvFinalizedSlot) < 0) {
+        if (blockProofSlot.add(Constants.SLOTS_PER_HISTORICAL_ROOT).compareTo(bmvFinalizedSlot) < 0) {
             var historicalProof = blockProof.getHistoricalProof();
             logger.println("processBlockProof, ", "historicalProof : ", historicalProof);
             if (historicalProof == null)
