@@ -239,24 +239,30 @@ public class BTPMessageVerifier implements BMV {
         var blockProofBeaconHashTreeRoot = blockProofBeacon.getHashTreeRoot();
         var bmvStateRoot = bmvBeacon.getStateRoot();
         var proof = blockProof.getProof();
-        var proofLeaf = proof.getLeaf();
         logger.println("processBlockProof, ", "blockProofSlot : ", blockProofSlot, ", bmvFinalizedSlot : ", bmvFinalizedSlot);
         logger.println("processBlockProof, ", "bmvStateRoot : ", StringUtil.bytesToHex(bmvStateRoot), ", proof : ", proof);
-        if (bmvFinalizedSlot.compareTo(blockProofSlot) < 0)
-            throw BMVException.unknown(blockProofSlot.toString());
-        if (blockProofSlot.add(historicalLimit).compareTo(bmvFinalizedSlot) < 0) {
-            var historicalProof = blockProof.getHistoricalProof();
-            logger.println("processBlockProof, ", "historicalProof : ", historicalProof);
-            if (historicalProof == null)
-                throw BMVException.unknown("historicalProof empty");
-            if (!Arrays.equals(blockProofBeaconHashTreeRoot, historicalProof.getLeaf()))
-                throw BMVException.unknown("invalid hashTree");
-            SszUtils.verify(bmvStateRoot, proof);
-            SszUtils.verify(proofLeaf, historicalProof);
+        if (proof == null) {
+            if (!bmvBeacon.equals(blockProofBeacon)) {
+                throw BMVException.unknown("BlockProof.proof is empty but BlockProof.header is not same with finalized header");
+            }
         } else {
-            if (!Arrays.equals(proofLeaf, blockProofBeaconHashTreeRoot))
-                throw BMVException.unknown("invalid hashTree");
-            SszUtils.verify(bmvStateRoot, proof);
+            var proofLeaf = proof.getLeaf();
+            if (bmvFinalizedSlot.compareTo(blockProofSlot) < 0)
+                throw BMVException.unknown(blockProofSlot.toString());
+            if (blockProofSlot.add(historicalLimit).compareTo(bmvFinalizedSlot) < 0) {
+                var historicalProof = blockProof.getHistoricalProof();
+                logger.println("processBlockProof, ", "historicalProof : ", historicalProof);
+                if (historicalProof == null)
+                    throw BMVException.unknown("historicalProof empty");
+                if (!Arrays.equals(blockProofBeaconHashTreeRoot, historicalProof.getLeaf()))
+                    throw BMVException.unknown("invalid hashTree");
+                SszUtils.verify(bmvStateRoot, proof);
+                SszUtils.verify(proofLeaf, historicalProof);
+            } else {
+                if (!Arrays.equals(proofLeaf, blockProofBeaconHashTreeRoot))
+                    throw BMVException.unknown("invalid hashTree");
+                SszUtils.verify(bmvStateRoot, proof);
+            }
         }
         blockProofHeaderDB.set(blockProofLightClientHeader);
         return blockProofLightClientHeader;
