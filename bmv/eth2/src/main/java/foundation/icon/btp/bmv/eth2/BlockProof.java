@@ -44,7 +44,7 @@ public class BlockProof {
 
     public static BlockProof readObject(ObjectReader r) {
         r.beginList();
-        var blockProof = new BlockProof(r.readByteArray(), r.read(Proof.class), r.readNullable(Proof.class));
+        var blockProof = new BlockProof(r.readByteArray(), r.readNullable(Proof.class), r.readNullable(Proof.class));
         r.end();
         return blockProof;
     }
