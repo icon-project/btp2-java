@@ -249,7 +249,7 @@ public class BTPMessageVerifier implements BMV {
             var proofLeaf = proof.getLeaf();
             if (bmvFinalizedSlot.compareTo(blockProofSlot) < 0)
                 throw BMVException.unknown(blockProofSlot.toString());
-            if (blockProofSlot.add(Constants.SLOTS_PER_HISTORICAL_ROOT).compareTo(bmvFinalizedSlot) < 0) {
+            if (blockProofSlot.add(historicalLimit).compareTo(bmvFinalizedSlot) < 0) {
                 var historicalProof = blockProof.getHistoricalProof();
                 logger.println("processBlockProof, ", "historicalProof : ", historicalProof);
                 if (historicalProof == null)
