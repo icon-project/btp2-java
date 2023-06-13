@@ -82,6 +82,7 @@ public class BTPMessageVerifier implements BMV {
         int i = 0;
         for (byte[] msg : msgs) {
             ret[i] = msg;
+            i++;
         }
         return ret;
     }
