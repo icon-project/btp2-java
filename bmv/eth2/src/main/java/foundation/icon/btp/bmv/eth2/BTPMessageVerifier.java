@@ -201,7 +201,6 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private LightClientHeader applyBlockUpdate(BlockUpdate blockUpdate) {
-        var bmvNextSyncCommittee = getNextSyncCommittee();
         var bmvFinalizedHeader = getFinalizedHeader();
         var bmvBeacon = bmvFinalizedHeader.getBeacon();
         var bmvSlot = bmvBeacon.getSlot();
@@ -213,8 +212,9 @@ public class BTPMessageVerifier implements BMV {
         var aggregateCount = 0;
         for (boolean bit : aggregateBits)
             if (bit) aggregateCount++;
+        if (aggregateCount * 3 < aggregateBits.length * 2) return bmvFinalizedHeader;
 
-        if (bmvNextSyncCommittee == null) {
+        if (getNextSyncCommittee() == null) {
             if (finalizedPeriod.compareTo(bmvPeriod) != 0) throw BMVException.unknown("invalid update period");
             logger.println("applyBlockUpdate, ", "set next sync committee");
             nextSyncCommitteeDB.set(blockUpdate.getNextSyncCommittee());
@@ -224,7 +224,7 @@ public class BTPMessageVerifier implements BMV {
             nextSyncCommitteeDB.set(blockUpdate.getNextSyncCommittee());
         }
 
-        if (finalizedSlot.compareTo(bmvSlot) > 0 && aggregateCount * 3 >= aggregateBits.length * 2) {
+        if (finalizedSlot.compareTo(bmvSlot) > 0) {
             logger.println("applyBlockUpdate, ", "set finalized header");
             finalizedHeaderDB.set(finalizedHeader);
             return finalizedHeader;
