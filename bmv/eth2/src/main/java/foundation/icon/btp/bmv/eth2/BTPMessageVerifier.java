@@ -132,7 +132,7 @@ public class BTPMessageVerifier implements BMV {
 
     @External(readonly = true)
     public String getVersion() {
-        return "0.3.0";
+        return "0.4.3";
     }
 
     BMVProperties getProperties() {
@@ -209,7 +209,6 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private LightClientHeader applyBlockUpdate(BlockUpdate blockUpdate) {
-        var bmvNextSyncCommittee = getNextSyncCommittee();
         var bmvFinalizedHeader = getFinalizedHeader();
         var bmvBeacon = bmvFinalizedHeader.getBeacon();
         var bmvSlot = bmvBeacon.getSlot();
@@ -217,8 +216,13 @@ public class BTPMessageVerifier implements BMV {
         var finalizedSlot = finalizedHeader.getBeacon().getSlot();
         var bmvPeriod = Utils.computeSyncCommitteePeriod(bmvSlot);
         var finalizedPeriod = Utils.computeSyncCommitteePeriod(finalizedSlot);
+        var aggregateBits = blockUpdate.getSyncAggregate().getSyncCommitteeBits();
+        var aggregateCount = 0;
+        for (boolean bit : aggregateBits)
+            if (bit) aggregateCount++;
+        if (aggregateCount * 3 < aggregateBits.length * 2) return bmvFinalizedHeader;
 
-        if (bmvNextSyncCommittee == null) {
+        if (getNextSyncCommittee() == null) {
             if (finalizedPeriod.compareTo(bmvPeriod) != 0) throw BMVException.unknown("invalid update period");
             logger.println("applyBlockUpdate, ", "set next sync committee");
             nextSyncCommitteeDB.set(blockUpdate.getNextSyncCommittee());
@@ -246,14 +250,14 @@ public class BTPMessageVerifier implements BMV {
         var blockProofBeaconHashTreeRoot = blockProofBeacon.getHashTreeRoot();
         var bmvStateRoot = bmvBeacon.getStateRoot();
         var proof = blockProof.getProof();
+        logger.println("processBlockProof, ", "blockProofSlot : ", blockProofSlot, ", bmvFinalizedSlot : ", bmvFinalizedSlot);
+        logger.println("processBlockProof, ", "bmvStateRoot : ", StringUtil.bytesToHex(bmvStateRoot), ", proof : ", proof);
         if (proof == null) {
             if (!bmvBeacon.equals(blockProofBeacon)) {
                 throw BMVException.unknown("BlockProof.proof is empty but BlockProof.header is not same with finalized header");
             }
         } else {
             var proofLeaf = proof.getLeaf();
-            logger.println("processBlockProof, ", "blockProofSlot : ", blockProofSlot, ", bmvFinalizedSlot : ", bmvFinalizedSlot);
-            logger.println("processBlockProof, ", "bmvStateRoot : ", StringUtil.bytesToHex(bmvStateRoot), ", proof : ", proof);
             if (bmvFinalizedSlot.compareTo(blockProofSlot) < 0)
                 throw BMVException.unknown(blockProofSlot.toString());
             if (blockProofSlot.add(Constants.SLOTS_PER_HISTORICAL_ROOT).compareTo(bmvFinalizedSlot) < 0) {
