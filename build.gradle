@@ -95,3 +95,81 @@ subprojects {
     }
     loadProperties()
 }
+
+configure([
+        project(':lib'),
+        project(':xcall'),
+]) {
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    group = getProperty("group")
+
+    def projectName = 'btp2-'+ project.name.replaceAll("_","-")
+    def repoUrl = 'https://github.com/icon-project/btp2-java'
+    def pomConfig = {
+        licenses {
+            license {
+                name "The Apache Software License, Version 2.0"
+                url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution "repo"
+            }
+        }
+        developers {
+            developer {
+                id "iconfoundation"
+                name "icon.foundation"
+                email "foo@icon.foundation"
+            }
+        }
+        scm {
+            url repoUrl
+        }
+    }
+
+    publishing {
+        repositories {
+            maven {
+                name = 'mavenCentral'
+                def releasesUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                def snapshotsUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+                url = rootProject.hasProperty('release') ? releasesUrl : snapshotsUrl
+                credentials {
+                    username = rootProject.hasProperty('mavenCentralUsername') ? "$mavenCentralUsername" : ''
+                    password = rootProject.hasProperty('mavenCentralPassword') ? "$mavenCentralPassword" : ''
+                }
+            }
+        }
+        publications {
+            mavenJava(MavenPublication) {
+                groupId = group
+                artifactId = projectName
+                from components.java
+                artifact sourcesJar
+                artifact javadocJar
+                pom.withXml {
+                    def root = asNode()
+                    root.appendNode('name', projectName)
+                    root.appendNode('description', 'Java Contracts for BTP2')
+                    root.appendNode('url', repoUrl)
+                    root.children().last() + pomConfig
+                }
+            }
+        }
+    }
+
+    signing {
+        required rootProject.hasProperty('release')
+        sign publishing.publications.mavenJava
+    }
+}

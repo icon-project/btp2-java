@@ -26,7 +26,10 @@ public class BTPMessageVerifierUnitTest extends TestBase {
                 StringUtil.hexToBytes(params.getGenesisValidatorsHash()),
                 StringUtil.hexToBytes(params.getSyncCommittee()),
                 Address.fromString(params.getBmc()),
-                StringUtil.hexToBytes(params.getFinalizedHeader()));
+                StringUtil.hexToBytes(params.getEthBmc()),
+                StringUtil.hexToBytes(params.getFinalizedHeader()),
+                BigInteger.ZERO
+        );
     }
 
     public static void handleRelayMessageTest(DataSource.Case c, Score bmv, String net, String bmc, String prev) {

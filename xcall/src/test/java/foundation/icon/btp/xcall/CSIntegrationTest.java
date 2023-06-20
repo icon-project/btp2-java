@@ -40,53 +40,53 @@ public interface CSIntegrationTest extends BTPIntegrationTest {
                             "_callService", callSvc._address())));
 
     static Consumer<TransactionResult> callMessageEvent(
-            Consumer<CallServiceScoreClient.CallMessage> consumer) {
+            Consumer<CallServiceEventScoreClient.CallMessage> consumer) {
         return eventLogChecker(
-                CallServiceScoreClient.CallMessage::eventLogs,
+                CallServiceEventScoreClient.CallMessage::eventLogs,
                 consumer);
     }
 
     static Consumer<TransactionResult> callMessageSentEvent(
-            Consumer<CallServiceScoreClient.CallMessageSent> consumer) {
+            Consumer<CallServiceEventScoreClient.CallMessageSent> consumer) {
         return eventLogChecker(
-                CallServiceScoreClient.CallMessageSent::eventLogs,
+                CallServiceEventScoreClient.CallMessageSent::eventLogs,
                 consumer);
     }
 
     static Consumer<TransactionResult> responseMessageEvent(
-            Consumer<CallServiceScoreClient.ResponseMessage> consumer) {
+            Consumer<CallServiceEventScoreClient.ResponseMessage> consumer) {
         return eventLogChecker(
-                CallServiceScoreClient.ResponseMessage::eventLogs,
+                CallServiceEventScoreClient.ResponseMessage::eventLogs,
                 consumer);
     }
 
     static Consumer<TransactionResult> rollbackMessageEvent(
-            Consumer<CallServiceScoreClient.RollbackMessage> consumer) {
+            Consumer<CallServiceEventScoreClient.RollbackMessage> consumer) {
         return eventLogChecker(
-                CallServiceScoreClient.RollbackMessage::eventLogs,
+                CallServiceEventScoreClient.RollbackMessage::eventLogs,
                 consumer);
     }
 
     static Consumer<TransactionResult> callExecutedEvent(
-            Consumer<CallServiceScoreClient.CallExecuted> consumer) {
+            Consumer<CallServiceEventScoreClient.CallExecuted> consumer) {
         return eventLogChecker(
-                CallServiceScoreClient.CallExecuted::eventLogs,
+                CallServiceEventScoreClient.CallExecuted::eventLogs,
                 consumer);
     }
 
     static Consumer<TransactionResult> rollbackExecutedEvent(
-            Consumer<CallServiceScoreClient.RollbackExecuted> consumer) {
+            Consumer<CallServiceEventScoreClient.RollbackExecuted> consumer) {
         return eventLogChecker(
-                CallServiceScoreClient.RollbackExecuted::eventLogs,
+                CallServiceEventScoreClient.RollbackExecuted::eventLogs,
                 consumer);
     }
 
     static Consumer<TransactionResult> responseMessageEventShouldNotExists() {
-        return eventLogShouldNotExistsChecker(CallServiceScoreClient.ResponseMessage::eventLogs);
+        return eventLogShouldNotExistsChecker(CallServiceEventScoreClient.ResponseMessage::eventLogs);
     }
 
     static Consumer<TransactionResult> rollbackMessageEventShouldNotExists() {
-        return eventLogShouldNotExistsChecker(CallServiceScoreClient.RollbackMessage::eventLogs);
+        return eventLogShouldNotExistsChecker(CallServiceEventScoreClient.RollbackMessage::eventLogs);
     }
 
     static <T> Consumer<TransactionResult> eventLogChecker(

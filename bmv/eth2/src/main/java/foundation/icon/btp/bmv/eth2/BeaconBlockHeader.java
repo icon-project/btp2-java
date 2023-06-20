@@ -147,4 +147,11 @@ public class BeaconBlockHeader {
                 ", bodyRoot=" + StringUtil.toString(bodyRoot) +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj ||
+                (obj instanceof BeaconBlockHeader && toString().equals(obj.toString()));
+    }
+
 }

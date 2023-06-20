@@ -10,7 +10,6 @@ include (
         'dapp-sample',
         'lib',
         'nativecoin',
-        'score-util',
         'test-lib',
         'xcall',
 )

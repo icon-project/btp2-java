@@ -191,9 +191,8 @@ public class BlockUpdate {
                 verified++;
             }
         }
-        if (verified * 3 < 2 * aggregateBits.length) {
+        if (verified < Constants.MIN_SYNC_COMMITTEE_PARTICIPANTS)
             throw BMVException.unknown("not enough validator : " + verified);
-        }
         return Context.verifySignature(BLS_SIG_ALG, signingRoot, committeeSig, aggregatedKey);
     }
 

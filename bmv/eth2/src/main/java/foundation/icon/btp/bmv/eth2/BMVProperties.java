@@ -31,12 +31,7 @@ public class BMVProperties {
 
     private byte[] srcNetworkID;
     private byte[] genesisValidatorsHash;
-    private byte[] currentSyncCommittee;
-    private byte[] nextSyncCommittee;
     private Address bmc;
-    private LightClientHeader finalizedHeader;
-    private BigInteger lastMsgSeq;
-    private BigInteger lastMsgSlot;
 
     public byte[] getSrcNetworkID() {
         return srcNetworkID;
@@ -54,57 +49,12 @@ public class BMVProperties {
         this.bmc = bmc;
     }
 
-    byte[] getCurrentSyncCommittee() {
-        return currentSyncCommittee;
-    }
-
-    void setCurrentSyncCommittee(byte[] syncCommittee) {
-        this.currentSyncCommittee = syncCommittee;
-    }
-
-    public byte[] getNextSyncCommittee() {
-        return nextSyncCommittee;
-    }
-
-    public void setNextSyncCommittee(byte[] nextSyncCommittee) {
-        this.nextSyncCommittee = nextSyncCommittee;
-    }
-
-    public void setNextSyncCommittee(SyncCommittee nextSyncCommittee) {
-        byte[] value = nextSyncCommittee != null ? SyncCommittee.serialize(nextSyncCommittee) : null;
-        setNextSyncCommittee(value);
-    }
-
     byte[] getGenesisValidatorsHash() {
         return genesisValidatorsHash;
     }
 
     void setGenesisValidatorsHash(byte[] genesisValidatorsHash) {
         this.genesisValidatorsHash = genesisValidatorsHash;
-    }
-
-    LightClientHeader getFinalizedHeader() {
-        return finalizedHeader;
-    }
-
-    void setFinalizedHeader(LightClientHeader finalizedHeader) {
-        this.finalizedHeader = finalizedHeader;
-    }
-
-    public BigInteger getLastMsgSlot() {
-        return lastMsgSlot;
-    }
-
-    public void setLastMsgSlot(BigInteger lastMsgSlot) {
-        this.lastMsgSlot = lastMsgSlot;
-    }
-
-    public BigInteger getLastMsgSeq() {
-        return lastMsgSeq;
-    }
-
-    public void setLastMsgSeq(BigInteger lastMsgSeq) {
-        this.lastMsgSeq = lastMsgSeq;
     }
 
     public String getNetwork() {
@@ -118,26 +68,16 @@ public class BMVProperties {
         var object = new BMVProperties();
         object.setSrcNetworkID(r.readByteArray());
         object.setGenesisValidatorsHash(r.readByteArray());
-        object.setCurrentSyncCommittee(r.readByteArray());
-        object.setNextSyncCommittee(r.readNullable(byte[].class));
         object.setBmc(r.readAddress());
-        object.setFinalizedHeader(r.read(LightClientHeader.class));
-        object.setLastMsgSlot(r.readBigInteger());
-        object.setLastMsgSeq(r.readBigInteger());
         r.end();
         return object;
     }
 
     public static void writeObject(ObjectWriter w, BMVProperties obj) {
-        w.beginList(9);
+        w.beginList(3);
         w.write(obj.srcNetworkID);
         w.write(obj.genesisValidatorsHash);
-        w.write(obj.currentSyncCommittee);
-        w.writeNullable(obj.nextSyncCommittee);
         w.write(obj.bmc);
-        w.write(obj.finalizedHeader);
-        w.write(obj.lastMsgSlot);
-        w.write(obj.lastMsgSeq);
         w.end();
     }
 }

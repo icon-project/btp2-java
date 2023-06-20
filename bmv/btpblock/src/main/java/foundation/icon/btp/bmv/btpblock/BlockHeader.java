@@ -16,10 +16,8 @@
 
 package foundation.icon.btp.bmv.btpblock;
 
-import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
-import score.ObjectWriter;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
@@ -149,6 +147,9 @@ public class BlockHeader {
     }
 
     private static byte[] concatAndHash(byte[] b1, byte[] b2) {
+        if (b2 == null) {
+            return b1;
+        }
         byte[] data = new byte[HASH_LEN * 2];
         System.arraycopy(b1, 0, data, 0, HASH_LEN);
         System.arraycopy(b2, 0, data, HASH_LEN, HASH_LEN);
@@ -159,9 +160,9 @@ public class BlockHeader {
         byte[] h = leaf;
         for (NetworkSectionToRoot nsRoot : networkSectionToRoot) {
             if (nsRoot.dir == NetworkSectionToRoot.LEFT) {
-                h = concatAndHash(nsRoot.value, leaf);
+                h = concatAndHash(nsRoot.value, h);
             } else if (nsRoot.dir == NetworkSectionToRoot.RIGHT) {
-                h = concatAndHash(leaf, nsRoot.value);
+                h = concatAndHash(h, nsRoot.value);
             }
         }
         return h;

@@ -16,11 +16,8 @@
 
 package foundation.icon.score.util;
 
-import score.Context;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.MathContext;
 
 public class BigIntegerUtil {
     /**
@@ -47,5 +44,4 @@ public class BigIntegerUtil {
         double scale = StrictMath.pow(10, s);
         return StrictMath.floor(x.doubleValue() / y.doubleValue() * scale) / scale;
     }
-
 }

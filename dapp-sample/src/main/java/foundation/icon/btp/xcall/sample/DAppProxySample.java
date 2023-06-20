@@ -32,18 +32,18 @@ import java.math.BigInteger;
 
 @ScoreClient
 public class DAppProxySample implements CallServiceReceiver {
-    private final Address callSvc;
+    private final XCallProxy xCall;
     private final String callSvcBtpAddr;
     private final VarDB<BigInteger> id = Context.newVarDB("id", BigInteger.class);
     private final DictDB<BigInteger, RollbackData> rollbacks = Context.newDictDB("rollbacks", RollbackData.class);
 
     public DAppProxySample(Address _callService) {
-        this.callSvc = _callService;
-        this.callSvcBtpAddr = Context.call(String.class, this.callSvc, "getBtpAddress");
+        this.xCall = new XCallProxy(_callService);
+        this.callSvcBtpAddr = xCall.getBtpAddress();
     }
 
     private void onlyCallService() {
-        Context.require(Context.getCaller().equals(this.callSvc), "onlyCallService");
+        Context.require(Context.getCaller().equals(xCall.address()), "onlyCallService");
     }
 
     private BigInteger getNextId() {
@@ -73,7 +73,7 @@ public class DAppProxySample implements CallServiceReceiver {
 
     private BigInteger _sendCallMessage(BigInteger value, String to, byte[] data, byte[] rollback) {
         try {
-            return Context.call(BigInteger.class, value, this.callSvc, "sendCallMessage", to, data, rollback);
+            return xCall.sendCallMessage(value, to, data, rollback);
         } catch (UserRevertedException e) {
             // propagate the error code to the caller
             Context.revert(e.getCode(), "UserReverted");
