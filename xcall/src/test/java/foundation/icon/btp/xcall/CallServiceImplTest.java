@@ -161,6 +161,12 @@ class CallServiceImplTest implements CSIntegrationTest {
     void executeCallWithoutSuccessResponse() {
         var from = new BTPAddress(linkNet, sampleAddress.toString());
         byte[] data = requestMap.get(srcSn).getData();
+
+        // should fail if data is not the expected one
+        AssertRevertedException.assertUserReverted(0, () ->
+                callSvc.executeCall(reqId, "fakeData".getBytes())
+        );
+
         var checker = CSIntegrationTest.messageReceivedEvent((el) -> {
             assertEquals(from.toString(), el.get_from());
             assertArrayEquals(data, el.get_data());
