@@ -74,9 +74,10 @@ public interface CallServiceEvent {
      * @param _to A string representation of the callee address
      * @param _sn The serial number of the request from the source
      * @param _reqId The request id of the destination chain
+     * @param _data The calldata
      */
     @EventLog(indexed=3)
-    void CallMessage(String _from, String _to, BigInteger _sn, BigInteger _reqId);
+    void CallMessage(String _from, String _to, BigInteger _sn, BigInteger _reqId, byte[] _data);
 
     /**
      * Notifies that the call message has been executed.

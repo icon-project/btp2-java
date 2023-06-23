@@ -54,7 +54,8 @@ public interface CallService {
      * Executes the requested call message.
      *
      * @param _reqId The request id
+     * @param _data The calldata
      */
     @External
-    void executeCall(BigInteger _reqId);
+    void executeCall(BigInteger _reqId, byte[] _data);
 }

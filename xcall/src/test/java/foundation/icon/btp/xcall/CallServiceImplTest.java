@@ -148,6 +148,7 @@ class CallServiceImplTest implements CSIntegrationTest {
             assertEquals(to.account(), el.get_to());
             assertEquals(srcSn, el.get_sn());
             assertEquals(reqId, el.get_reqId());
+            assertArrayEquals(data, el.get_data());
         });
         MockBMCIntegrationTest.mockBMC.handleBTPMessage(
                 checker, csAddress,
@@ -159,15 +160,22 @@ class CallServiceImplTest implements CSIntegrationTest {
     @Test
     void executeCallWithoutSuccessResponse() {
         var from = new BTPAddress(linkNet, sampleAddress.toString());
+        byte[] data = requestMap.get(srcSn).getData();
+
+        // should fail if data is not the expected one
+        AssertRevertedException.assertUserReverted(0, () ->
+                callSvc.executeCall(reqId, "fakeData".getBytes())
+        );
+
         var checker = CSIntegrationTest.messageReceivedEvent((el) -> {
             assertEquals(from.toString(), el.get_from());
-            assertArrayEquals(requestMap.get(srcSn).getData(), el.get_data());
+            assertArrayEquals(data, el.get_data());
         }).andThen(CSIntegrationTest.callExecutedEvent((el) -> {
             assertEquals(reqId, el.get_reqId());
             assertEquals(CSMessageResponse.SUCCESS, el.get_code());
             assertEquals("", el.get_msg());
         })).andThen(MockBMCIntegrationTest.sendMessageEventShouldNotExists());
-        callSvc.executeCall(checker, reqId);
+        callSvc.executeCall(checker, reqId, data);
     }
 
     @Order(3)
@@ -332,7 +340,7 @@ class CallServiceImplTest implements CSIntegrationTest {
             assertEquals(CSMessageResponse.FAILURE, el.get_code());
             assertEquals(response.getMsg(), el.get_msg());
         }));
-        callSvc.executeCall(checker, reqId);
+        callSvc.executeCall(checker, reqId, data);
     }
 
     @Order(12)

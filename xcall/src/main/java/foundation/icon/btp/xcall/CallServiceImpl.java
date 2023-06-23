@@ -31,6 +31,7 @@ import score.annotation.Optional;
 import score.annotation.Payable;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 public class CallServiceImpl implements BSH, CallService, CallServiceEvent, FeeManage {
     public static final int MAX_DATA_SIZE = 2048;
@@ -99,6 +100,10 @@ public class CallServiceImpl implements BSH, CallService, CallServiceEvent, FeeM
         requests.set(sn, null);
     }
 
+    private byte[] getDataHash(byte[] data) {
+        return Context.hash("keccak-256", data);
+    }
+
     @Override
     @Payable
     @External
@@ -141,9 +146,11 @@ public class CallServiceImpl implements BSH, CallService, CallServiceEvent, FeeM
 
     @Override
     @External
-    public void executeCall(BigInteger _reqId) {
+    public void executeCall(BigInteger _reqId, byte[] _data) {
         CSMessageRequest req = proxyReqs.get(_reqId);
         Context.require(req != null, "InvalidRequestId");
+        // compare the given data hash with the saved one
+        Context.require(Arrays.equals(getDataHash(_data), req.getData()), "DataHashMismatch");
         // cleanup
         proxyReqs.set(_reqId, null);
 
@@ -151,7 +158,7 @@ public class CallServiceImpl implements BSH, CallService, CallServiceEvent, FeeM
         CSMessageResponse msgRes = null;
         try {
             DAppProxy proxy = new DAppProxy(Address.fromString(req.getTo()));
-            proxy.handleCallMessage(req.getFrom(), req.getData());
+            proxy.handleCallMessage(req.getFrom(), _data);
             msgRes = new CSMessageResponse(req.getSn(), CSMessageResponse.SUCCESS, "");
         } catch (UserRevertedException e) {
             int code = e.getCode();
@@ -201,7 +208,7 @@ public class CallServiceImpl implements BSH, CallService, CallServiceEvent, FeeM
 
     @Override
     @EventLog(indexed=3)
-    public void CallMessage(String _from, String _to, BigInteger _sn, BigInteger _reqId) {}
+    public void CallMessage(String _from, String _to, BigInteger _sn, BigInteger _reqId, byte[] _data) {}
 
     @Override
     @EventLog(indexed=1)
@@ -267,11 +274,12 @@ public class CallServiceImpl implements BSH, CallService, CallServiceEvent, FeeM
         String to = msgReq.getTo();
 
         BigInteger reqId = getNextReqId();
-        CSMessageRequest req = new CSMessageRequest(from.toString(), to, msgReq.getSn(), msgReq.needRollback(), msgReq.getData());
+        CSMessageRequest req = new CSMessageRequest(from.toString(), to, msgReq.getSn(), msgReq.needRollback(),
+                getDataHash(msgReq.getData()));
         proxyReqs.set(reqId, req);
 
         // emit event to notify the user
-        CallMessage(from.toString(), to, msgReq.getSn(), reqId);
+        CallMessage(from.toString(), to, msgReq.getSn(), reqId, msgReq.getData());
     }
 
     private void handleResponse(String netFrom, BigInteger sn, byte[] data) {

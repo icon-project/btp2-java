@@ -52,7 +52,7 @@ public class XCallProxy implements CallService {
     }
 
     @Override
-    public void executeCall(BigInteger _reqId) {
-        Context.call(this.address, "executeCall", _reqId);
+    public void executeCall(BigInteger _reqId, byte[] _data) {
+        Context.call(this.address, "executeCall", _reqId, _data);
     }
 }
