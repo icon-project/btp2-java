@@ -4,7 +4,7 @@ dependencies {
     compileOnly("foundation.icon:javaee-api:$javaeeVersion")
     implementation("foundation.icon:javaee-scorex:$scorexVersion")
     implementation project(':lib')
-    implementation("com.github.sink772:javaee-tokens:0.6.3")
+    implementation("com.github.sink772:javaee-tokens:0.6.4")
 
     //for generate ScoreClient
     compileOnly("foundation.icon:javaee-score-client:$scoreClientVersion")
