@@ -94,6 +94,9 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
     private final VarDB<Address> feeHandler = Context.newVarDB("feeHandler", Address.class);
     //Map<NetworkSn, BMCRequest>
     private final DictDB<BigInteger, BMCRequest> requests = Context.newDictDB("requests", BMCRequest.class);
+    private final VarDB<BigInteger> mode = Context.newVarDB("mode", BigInteger.class);
+    public static final BigInteger MODE_NORMAL = BigInteger.ZERO;
+    public static final BigInteger MODE_MAINTENANCE = BigInteger.ONE;
 
     public BTPMessageCenter(String _net) {
         this.btpAddr = new BTPAddress(BTPAddress.PROTOCOL_BTP, _net, Context.getAddress().toString());
@@ -429,6 +432,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
     @Payable
     @External
     public void claimReward(String _network, String _receiver) {
+        requireNormalMode();
         Address caller = Context.getCaller();
         Address fh = getFeeHandler();
         if (fh != null && fh.equals(caller)) {
@@ -507,6 +511,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
 
     @External
     public void handleRelayMessage(String _prev, String _msg) {
+        requireNormalMode();
         byte[] msgBytes = Base64.getUrlDecoder().decode(_msg.getBytes());
         handleRelayMessage(_prev, msgBytes);
     }
@@ -732,6 +737,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
     @Payable
     @External
     public BigInteger sendMessage(String _to, String _svc, BigInteger _sn, byte[] _msg) {
+        requireNormalMode();
         Address addr = services.get(_svc);
         if (addr == null) {
             throw BMCException.notExistsBSH();
@@ -907,6 +913,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
 
     @External
     public void handleFragment(String _prev, String _msg, int _idx) {
+        requireNormalMode();
         logger.println("handleFragment", "_prev", _prev, "_idx:", _idx, "len(_msg):" + _msg.length());
         requireLink(BTPAddress.valueOf(_prev));
         Address caller = Context.getCaller();
@@ -1161,4 +1168,20 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
         return btpLinkOffset.get(networkId).longValue();
     }
 
+    @External
+    public void setMode(BigInteger _mode) {
+        requireOwnerAccess();
+        mode.set(_mode);
+    }
+
+    @External(readonly = true)
+    public BigInteger getMode() {
+        return mode.getOrDefault(MODE_NORMAL);
+    }
+
+    private void requireNormalMode() {
+        if (!getMode().equals(MODE_NORMAL)) {
+            throw BMCException.unknown("not normal mode");
+        }
+    }
 }
