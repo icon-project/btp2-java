@@ -12,16 +12,14 @@ public class Voters {
     public Voters(byte[] bitset) {
         Context.require(bitset.length <= BITSET_BYTES_LENGTH, "Invalid bitset size");
         this.bitset = new byte[8];
-        for (int i = 0; i < bitset.length; i++) {
-            this.bitset[i] = bitset[i];
-        }
+        System.arraycopy(bitset, 0, this.bitset, 0, bitset.length);
     }
 
     public int count() {
         int cnt = 0;
-        for (int i = 0; i < bitset.length; i++) {
+        for (byte b : bitset) {
             for (int j = 0; j < 8; j++) {
-                if ((bitset[i] >> j & 1) == 1) {
+                if ((b >> j & 1) == 1) {
                     cnt++;
                 }
             }

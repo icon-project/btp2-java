@@ -22,12 +22,12 @@ import score.ObjectWriter;
 import java.math.BigInteger;
 
 public class Snapshot {
-    private Hash hash;
-    private BigInteger number;
-    private Validators validators;
-    private Validators candidates;
-    private EthAddresses recents;
-    private VoteAttestation attestation;
+    private final Hash hash;
+    private final BigInteger number;
+    private final Validators validators;
+    private final Validators candidates;
+    private final EthAddresses recents;
+    private final VoteAttestation attestation;
 
     public Snapshot(Hash hash, BigInteger number, Validators validators,
             Validators candidates, EthAddresses recents, VoteAttestation attestation) {
@@ -74,24 +74,26 @@ public class Snapshot {
         Hash newHash = head.getHash();
         BigInteger newNumber = head.getNumber();
         Context.require(number.longValue() + 1L == newNumber.longValue()
-                && hash.equals(head.getParentHash()), "Inconsistent header");
+                && hash.equals(head.getParentHash()), "Inconsistent block number");
+        Context.require(hash.equals(head.getParentHash()), "Inconsistent block hash");
 
         // ensure the coinbase is sealer
         EthAddress sealer = head.getCoinbase();
-        // TODO Check authority
-        // TODO Check recently sealer
         Validators newValidators = newNumber.longValue() % config.Epoch == validators.size() / 2
                 ? candidates
                 : validators;
+        Context.require(newValidators.contains(sealer), "UnauthorizedValidator");
 
         Validators newCandidates = config.isEpoch(newNumber) ? head.getValidators(config) : candidates;
         EthAddresses newRecents = new EthAddresses(recents);
-        newRecents.add(head.getCoinbase());
         if (newRecents.size() > newValidators.size() / 2) {
             for (int i = 0; i < newRecents.size() - newValidators.size()/2; i++) {
                 newRecents.remove(i);
             }
         }
+        Context.require(!newRecents.contains(sealer), "RecentlySigned");
+        newRecents.add(head.getCoinbase());
+
         VoteAttestation newAttestation = head.getVoteAttestation(config);
         if (newAttestation != null) {
             Hash target = newAttestation.getVoteRange().getTargetHash();
@@ -99,7 +101,6 @@ public class Snapshot {
         } else {
             newAttestation = attestation;
         }
-        // TODO recent fork hashes...?
         return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newRecents, newAttestation);
     }
 

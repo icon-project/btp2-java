@@ -23,7 +23,7 @@ import scorex.util.Collections;
 import java.util.List;
 
 public class BlockUpdate {
-    private List<Header> headers;
+    private final List<Header> headers;
 
     public BlockUpdate(List<Header> headers) {
         this.headers = Collections.unmodifiableList(headers);

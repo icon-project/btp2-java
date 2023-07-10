@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
 public class BlockTree {
 
     private Hash root;
-    private Map<Hash, List<Hash>> nodes;
+    private final Map<Hash, List<Hash>> nodes;
 
     public BlockTree(Hash root) {
         this.root = root;

@@ -22,9 +22,9 @@ import scorex.util.Collections;
 import java.util.List;
 
 public class EventLog {
-    private EthAddress address;
-    private List<byte[]> topics;
-    private byte[] data;
+    private final EthAddress address;
+    private final List<byte[]> topics;
+    private final byte[] data;
 
     public EventLog(EthAddress address, List<byte[]> topics, byte[] data) {
         this.address = address;

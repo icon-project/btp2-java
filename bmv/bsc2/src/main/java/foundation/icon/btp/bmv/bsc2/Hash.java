@@ -24,7 +24,7 @@ import java.util.Arrays;
 
 public class Hash {
     public static final Hash EMPTY = new Hash(new byte[32]);
-    private byte[] data;
+    private final byte[] data;
 
     public Hash(byte[] data) {
         this.data = data;

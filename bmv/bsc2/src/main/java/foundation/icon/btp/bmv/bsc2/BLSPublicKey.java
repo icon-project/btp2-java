@@ -7,7 +7,7 @@ import score.ObjectWriter;
 public class BLSPublicKey {
 
     public static final int LENGTH = 48;
-    private byte[] data;
+    private final byte[] data;
 
     public BLSPublicKey(byte[] data) {
         Context.require(data.length == LENGTH, "Invalid bls public key");

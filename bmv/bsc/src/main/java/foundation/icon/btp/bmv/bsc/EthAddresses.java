@@ -16,7 +16,6 @@
 package foundation.icon.btp.bmv.bsc;
 
 import foundation.icon.score.util.StringUtil;
-import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
 import scorex.util.ArrayList;

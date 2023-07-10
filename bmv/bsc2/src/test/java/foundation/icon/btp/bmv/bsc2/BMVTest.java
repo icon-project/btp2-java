@@ -6,7 +6,6 @@ import com.iconloop.score.test.ServiceManager;
 import com.iconloop.score.test.TestBase;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
-import foundation.icon.score.util.StringUtil;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
@@ -21,13 +20,6 @@ public class BMVTest extends TestBase {
     static final ServiceManager sm = getServiceManager();
     static final Account BMC = sm.createAccount(Integer.MAX_VALUE);
     static final BTPAddress BMC_BTP_ADDR = BTPAddress.parse("btp://0x1.icon/cx123");
-
-    // public static Score deployBmv(DataSource.Case.Deployment params) throws Exception {
-    //     return sm.deploy(sm.createAccount(), BTPMessageVerifier.class,
-    //             BMC.getAddress(), params.getChainId(), StringUtil.hexToBytes(params.getHeader()),
-    //             DataSource.Case.Deployment.toBytesArray(params.getRecents()),
-    //             DataSource.Case.Deployment.toBytesArray(params.getValidators()));
-    // }
 
     public static Score deployBmv(DataSource.Case.Deployment deployment) throws Exception {
         return sm.deploy(sm.createAccount(), BTPMessageVerifier.class,

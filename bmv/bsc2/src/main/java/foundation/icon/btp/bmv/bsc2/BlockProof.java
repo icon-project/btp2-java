@@ -23,9 +23,9 @@ import java.math.BigInteger;
 import java.util.List;
 
 public class BlockProof {
-    private Header header;
-    private BigInteger height;
-    private byte[][] witness;
+    private final Header header;
+    private final BigInteger height;
+    private final byte[][] witness;
 
     public BlockProof(Header header, BigInteger height, byte[][] witness) {
         this.header = header;

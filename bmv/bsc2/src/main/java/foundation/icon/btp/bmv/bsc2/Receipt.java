@@ -25,24 +25,20 @@ import java.util.List;
 
 public class Receipt {
     public static final int StatusFailed = 0;
-    private byte[] postStatusOrState;
-    private BigInteger cumulativeGasUsed;
-    private byte[] bloom;
-    private List<EventLog> logs;
+    private final byte[] postStatusOrState;
+    private final List<EventLog> logs;
 
-    public Receipt(byte[] postStatusOrState, BigInteger cumulativeGasUsed,
-            byte[] bloom, List<EventLog> logs) {
+    public Receipt(byte[] postStatusOrState,
+                   List<EventLog> logs) {
         this.postStatusOrState = postStatusOrState;
-        this.cumulativeGasUsed = cumulativeGasUsed;
-        this.bloom = bloom;
         this.logs = Collections.unmodifiableList(logs);
     }
 
     public static Receipt readObject(ObjectReader r) {
         r.beginList();
         byte[] postStatusOrState = r.readByteArray();
-        BigInteger cumulativeGasUsed = r.readBigInteger();
-        byte[] bloom = r.readByteArray();
+        r.readBigInteger();
+        r.readByteArray();
         r.beginList();
         List<EventLog> logs = new ArrayList<>();
         while(r.hasNext()) {
@@ -50,7 +46,7 @@ public class Receipt {
         }
         r.end();
         r.end();
-        return new Receipt(postStatusOrState, cumulativeGasUsed, bloom, logs);
+        return new Receipt(postStatusOrState, logs);
     }
 
     public static Receipt fromBytes(byte[] bytes) {

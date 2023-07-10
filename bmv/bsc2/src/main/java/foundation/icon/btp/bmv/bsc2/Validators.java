@@ -8,7 +8,7 @@ import scorex.util.ArrayList;
 import java.util.List;
 
 public class Validators {
-    private List<Validator> validators;
+    private final List<Validator> validators;
 
     public Validators(List<Validator> validators) {
         this.validators = validators;
@@ -58,6 +58,24 @@ public class Validators {
 
     public boolean contains(Validator validator) {
         return validators.contains(validator);
+    }
+
+    public boolean contains(EthAddress address) {
+        for (Validator validator : validators) {
+            if (validator.getAddress().equals(address)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean contains(BLSPublicKey pubkey) {
+        for (Validator validator : validators) {
+            if (validator.getPublicKey().equals(pubkey)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public int size() {

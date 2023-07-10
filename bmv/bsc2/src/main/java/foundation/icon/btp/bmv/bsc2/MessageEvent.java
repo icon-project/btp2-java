@@ -26,9 +26,9 @@ public class MessageEvent {
     // keccak256("Message(string,uint256,bytes)")
     public static final Hash SIGNATURE = Hash.of("37be353f216cf7e33639101fd610c542e6a0c0109173fa1c1d8b04d34edb7c1b");
 
-    private BTPAddress next;
-    private BigInteger sequence;
-    private byte[] message;
+    private final BTPAddress next;
+    private final BigInteger sequence;
+    private final byte[] message;
 
     public MessageEvent(BTPAddress next, BigInteger sequence, byte[] message) {
         this.next = next;

@@ -4,8 +4,8 @@ import score.ObjectReader;
 import score.ObjectWriter;
 
 public class Validator {
-    private EthAddress address;
-    private BLSPublicKey pubkey;
+    private final EthAddress address;
+    private final BLSPublicKey pubkey;
 
     public Validator(EthAddress address, BLSPublicKey pubkey) {
         this.address = address;
