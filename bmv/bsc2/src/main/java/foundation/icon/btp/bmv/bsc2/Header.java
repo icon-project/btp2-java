@@ -19,9 +19,11 @@ import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
+import scorex.util.ArrayList;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 
 public class Header {
     public static final int EXTRA_VANITY = 32;
@@ -36,21 +38,21 @@ public class Header {
     public static final BigInteger MAX_GAS_LIMIT = BigInteger.valueOf(0x7FFFFFFFFFFFFFFFL); // (2^63-1)
     public static final BigInteger MIN_GAS_LIMIT = BigInteger.valueOf(5000L);
 
-    private Hash parentHash;
-    private Hash uncleHash;
-    private EthAddress coinbase;
-    private Hash root;
-    private Hash txHash;
-    private Hash receiptHash;
-    private byte[] bloom;
-    private BigInteger difficulty;
-    private BigInteger number;
-    private BigInteger gasLimit;
-    private BigInteger gasUsed;
-    private long time;
-    private byte[] extra;
-    private Hash mixDigest;
-    private byte[] nonce;
+    private final Hash parentHash;
+    private final Hash uncleHash;
+    private final EthAddress coinbase;
+    private final Hash root;
+    private final Hash txHash;
+    private final Hash receiptHash;
+    private final byte[] bloom;
+    private final BigInteger difficulty;
+    private final BigInteger number;
+    private final BigInteger gasLimit;
+    private final BigInteger gasUsed;
+    private final long time;
+    private final byte[] extra;
+    private final Hash mixDigest;
+    private final byte[] nonce;
 
     // caches
     private Hash hashCache;
@@ -141,7 +143,17 @@ public class Header {
 
     public Validators getValidators(ChainConfig config) {
         if (valsCache == null) {
-            valsCache = Validators.fromBytes(getValidatorBytes(config));
+            List<Validator> validators = new ArrayList<>();
+            byte[] b = getValidatorBytes(config);
+            int n = b.length / VALIDATOR_BYTES_LENGTH;
+            for (int i = 0; i < n; i++) {
+                byte[] consensus = Arrays.copyOfRange(b, i * VALIDATOR_BYTES_LENGTH,
+                        i * VALIDATOR_BYTES_LENGTH + EthAddress.LENGTH);
+                byte[] vote = Arrays.copyOfRange(b, i * VALIDATOR_BYTES_LENGTH + EthAddress.LENGTH,
+                        (i + 1) * VALIDATOR_BYTES_LENGTH);
+                validators.add(new Validator(new EthAddress(consensus), new BLSPublicKey(vote)));
+            }
+            valsCache = new Validators(validators);
         }
         return valsCache;
     }
@@ -166,7 +178,6 @@ public class Header {
 
     public VoteAttestation getVoteAttestation(ChainConfig config) {
         if (extra.length <= EXTRA_VANITY + EXTRA_SEAL) {
-            Context.println("No vote attestation - height(" + number.intValue() + ")");
             return null;
         }
 

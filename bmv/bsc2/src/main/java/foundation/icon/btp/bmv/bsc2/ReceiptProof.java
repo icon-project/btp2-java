@@ -22,8 +22,8 @@ import scorex.util.ArrayList;
 import java.util.List;
 
 public class ReceiptProof {
-    private byte[] key; // transaction index encoded with rlp
-    private byte[][] proof; // merkle proof
+    private final byte[] key; // transaction index encoded with rlp
+    private final byte[][] proof; // merkle proof
 
     private ReceiptProof(byte[] key, byte[][] proof) {
         this.key = key;

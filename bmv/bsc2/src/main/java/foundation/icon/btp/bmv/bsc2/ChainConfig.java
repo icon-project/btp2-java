@@ -54,11 +54,4 @@ public class ChainConfig {
         return number.longValue() % this.Epoch == 0;
     }
 
-    public boolean isRamanujan(BigInteger number) {
-        return number.longValue() >= this.RamanujanBlock;
-    }
-
-    public boolean isPlanck(BigInteger number) {
-        return this.PlanckBlock <= number.longValue();
-    }
 }

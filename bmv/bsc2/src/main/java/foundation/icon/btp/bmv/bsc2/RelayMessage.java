@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class RelayMessage {
-    private List<TypePrefixedMessage> tpms;
+    private final List<TypePrefixedMessage> tpms;
 
     public RelayMessage(List<TypePrefixedMessage> tpms) {
         this.tpms = Collections.unmodifiableList(tpms);
@@ -125,12 +125,6 @@ public class RelayMessage {
             w.write(o.type);
             w.write(o.payload);
             w.end();
-        }
-
-        public byte[] toBytes() {
-            ByteArrayObjectWriter w = Context.newByteArrayObjectWriter("RLP");
-            writeObject(w, this);
-            return w.toByteArray();
         }
 
         @Override

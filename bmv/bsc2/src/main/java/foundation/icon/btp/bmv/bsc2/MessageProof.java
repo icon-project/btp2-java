@@ -24,8 +24,8 @@ import java.util.List;
 
 public class MessageProof {
     // block hash
-    private Hash id;
-    private List<ReceiptProof> proofs;
+    private final Hash id;
+    private final List<ReceiptProof> proofs;
 
     public MessageProof(Hash id, List<ReceiptProof> proofs) {
         this.id = id;

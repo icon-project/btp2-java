@@ -15,7 +15,6 @@
  */
 package foundation.icon.btp.bmv.bsc2;
 
-import foundation.icon.score.util.StringUtil;
 import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
@@ -24,20 +23,10 @@ import scorex.util.ArrayList;
 import java.util.List;
 
 public class EthAddresses {
-    private List<EthAddress> addresses;
+    private final List<EthAddress> addresses;
 
-    public EthAddresses(EthAddress[] addresses) {
-        this.addresses = new ArrayList<>(List.of(addresses));
-    }
     public EthAddresses(List<EthAddress> addresses) {
         this.addresses = addresses;
-    }
-
-    public EthAddresses(byte[][] addresses) {
-        this.addresses = new ArrayList<>();
-        for (int i = 0; i < addresses.length; i++) {
-            this.addresses.add(new EthAddress(StringUtil.bytesToHex(addresses[i])));
-        }
     }
 
     public EthAddresses(EthAddresses o) {
@@ -50,15 +39,6 @@ public class EthAddresses {
             addresses[i] = this.addresses.get(i);
         }
         return addresses;
-    }
-
-    public static EthAddresses fromString(String o) {
-        List<String> tokens = StringUtil.tokenize(o, ',');
-        List<EthAddress> addresses = new ArrayList<>();
-        for (String token : tokens) {
-            addresses.add(EthAddress.of(token));
-        }
-        return new EthAddresses(addresses);
     }
 
     public EthAddress get(int i) {
@@ -75,10 +55,6 @@ public class EthAddresses {
 
     public EthAddress remove(int i) {
         return addresses.remove(i);
-    }
-
-    public EthAddresses subList(int from, int to) {
-        return new EthAddresses(addresses.subList(from, to));
     }
 
     public int size() {
@@ -112,21 +88,6 @@ public class EthAddresses {
             w.write(address);
         }
         w.end();
-    }
-
-    public static void sort(EthAddress[] a) {
-        int len = a.length;
-        for (int i = 0; i < len; i++) {
-            EthAddress v = a[i];
-            for (int j = i+1; j < len; j++) {
-                if (v.compareTo(a[j]) > 0) {
-                    EthAddress t = v;
-                    v = a[j];
-                    a[j] = t;
-                }
-            }
-            a[i] = v;
-        }
     }
 
     public static void sort(List<EthAddress> a) {

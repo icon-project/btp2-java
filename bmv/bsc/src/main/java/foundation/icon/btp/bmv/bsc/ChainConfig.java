@@ -48,7 +48,7 @@ public class ChainConfig {
             return new ChainConfig(97L, 200L, 3L, 1010000L, 28196022L, 29295050L);
         } else if (cid.longValue() == 99L) {
             // Private BSC Testnet
-            return new ChainConfig(99L, 200L, 3L, 0L, 0L, 0L);
+            return new ChainConfig(99L, 200L, 3L, 0L, 0L, 6L);
         }
 
         Context.require(false, "No Chain Config - ChainID(" + cid.intValue() + ")");
