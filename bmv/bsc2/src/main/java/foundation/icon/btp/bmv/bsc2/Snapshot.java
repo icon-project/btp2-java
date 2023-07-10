@@ -74,12 +74,13 @@ public class Snapshot {
         Hash newHash = head.getHash();
         BigInteger newNumber = head.getNumber();
         Context.require(number.longValue() + 1L == newNumber.longValue()
-                && hash.equals(head.getParentHash()), "Inconsistent header");
+                && hash.equals(head.getParentHash()), "Inconsistent block number");
+        Context.require(hash.equals(head.getParentHash()), "Inconsistent block hash");
 
         // ensure the coinbase is sealer
         EthAddress sealer = head.getCoinbase();
-        // TODO Check authority
-        // TODO Check recently sealer
+        Context.require(validators.contains(sealer), "UnauthorizedValidator");
+        Context.require(!recents.contains(sealer), "RecentlySigned");
         Validators newValidators = newNumber.longValue() % config.Epoch == validators.size() / 2
                 ? candidates
                 : validators;
@@ -99,7 +100,6 @@ public class Snapshot {
         } else {
             newAttestation = attestation;
         }
-        // TODO recent fork hashes...?
         return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newRecents, newAttestation);
     }
 

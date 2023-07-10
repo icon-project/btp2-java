@@ -60,6 +60,24 @@ public class Validators {
         return validators.contains(validator);
     }
 
+    public boolean contains(EthAddress address) {
+        for (Validator validator : validators) {
+            if (validator.getAddress() == address) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean contains(BLSPublicKey pubkey) {
+        for (Validator validator : validators) {
+            if (validator.getPublicKey() == pubkey) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public int size() {
         return validators.size();
     }

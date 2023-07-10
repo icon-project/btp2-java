@@ -19,9 +19,12 @@ import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
+import foundation.icon.score.util.StringUtil;
+import scorex.util.ArrayList;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 
 public class Header {
     public static final int EXTRA_VANITY = 32;
@@ -141,7 +144,17 @@ public class Header {
 
     public Validators getValidators(ChainConfig config) {
         if (valsCache == null) {
-            valsCache = Validators.fromBytes(getValidatorBytes(config));
+            List<Validator> validators = new ArrayList<>();
+            byte[] b = getValidatorBytes(config);
+            int n = b.length / VALIDATOR_BYTES_LENGTH;
+            for (int i = 0; i < n; i++) {
+                byte[] consensus = Arrays.copyOfRange(b, i * VALIDATOR_BYTES_LENGTH,
+                        i * VALIDATOR_BYTES_LENGTH + EthAddress.LENGTH);
+                byte[] vote = Arrays.copyOfRange(b, i * VALIDATOR_BYTES_LENGTH + EthAddress.LENGTH,
+                        (i + 1) * VALIDATOR_BYTES_LENGTH);
+                validators.add(new Validator(new EthAddress(consensus), new BLSPublicKey(vote)));
+            }
+            valsCache = new Validators(validators);
         }
         return valsCache;
     }
@@ -166,7 +179,6 @@ public class Header {
 
     public VoteAttestation getVoteAttestation(ChainConfig config) {
         if (extra.length <= EXTRA_VANITY + EXTRA_SEAL) {
-            Context.println("No vote attestation - height(" + number.intValue() + ")");
             return null;
         }
 

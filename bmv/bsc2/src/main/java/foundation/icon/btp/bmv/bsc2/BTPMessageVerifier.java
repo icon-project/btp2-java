@@ -46,7 +46,7 @@ public class BTPMessageVerifier implements BMV {
 
         ChainConfig config = ChainConfig.fromChainID(_chainId);
         Header head = Header.fromBytes(_header);
-        // Context.require(config.isEpoch(head.getNumber()), "No epoch block");
+        Context.require(config.isEpoch(head.getNumber()), "No epoch block");
         verify(config, head);
 
         MerkleTreeAccumulator mta = new MerkleTreeAccumulator();
@@ -68,8 +68,8 @@ public class BTPMessageVerifier implements BMV {
         this.tree.set(new BlockTree(head.getHash()));
         this.mta.set(mta);
         this.heads.set(head.getHash().toBytes(), head);
-        // TODO attestation shouldn't be null
         VoteAttestation attestation = head.getVoteAttestation(config);
+        Context.require(attestation != null, "No vote attestation");
         this.snap.set(new Snapshot(
                 head.getHash(),
                 head.getNumber(),
@@ -131,7 +131,6 @@ public class BTPMessageVerifier implements BMV {
         if (newHeads.isEmpty()) {
             return new ArrayList<>();
         }
-
         List<Hash> ancestors = tree.getStem(newHeads.get(0).getParentHash());
         Context.require(ancestors.size() > 0, "Inconsistent block");
 
@@ -169,6 +168,13 @@ public class BTPMessageVerifier implements BMV {
         }
 
         this.snap.set(snaps.get(finality));
+
+        // ascending ordered finalized heads
+        List<Header> finalities = collect(heads, tree.getRoot(), finality);
+        for (Header head : finalities) {
+            mta.add(head.getHash().toBytes());
+        }
+
         tree.prune(finality, new BlockTree.OnRemoveListener() {
             @Override
             public void onRemove(Hash node) {
@@ -190,12 +196,6 @@ public class BTPMessageVerifier implements BMV {
         // store not finalized heads
         for (Header newHead : newHeads) {
             this.heads.set(newHead.getHash().toBytes(), newHead);
-        }
-
-        // ascending ordered finalized heads
-        List<Header> finalities = collect(heads, tree.getRoot(), finality);
-        for (Header head : finalities) {
-            mta.add(head.getHash().toBytes());
         }
         return finalities;
     }
@@ -363,7 +363,6 @@ public class BTPMessageVerifier implements BMV {
                 Context.require(snaps.get(range.getSourceHash()) != null, "Unknown justified block hash");
                 return range.getSourceHash();
             }
-            //snap = snaps.get(range.getSourceHash());
             snap = snaps.get(head.getParentHash());
             head = heads.get(head.getParentHash());
         }
@@ -407,10 +406,10 @@ public class BTPMessageVerifier implements BMV {
 
     private static List<Header> collect(Map<Hash, Header> heads, Hash from, Hash to) {
         List<Header> cols = new ArrayList<>();
-        Header head = heads.get(from);
-        while (!head.getHash().equals(to)) {
+        Header head = heads.get(to);
+        while (!head.getHash().equals(from)) {
             cols.add(head);
-            head = heads.get(head.getHash());
+            head = heads.get(head.getParentHash());
             Context.require(head != null, "Inconsistent chain");
         }
         reverse(cols);
