@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package foundation.icon.btp.bmv.bsc;
+package foundation.icon.btp.bmv.bsc2;
 
 import score.ByteArrayObjectWriter;
 import score.Context;
@@ -27,10 +27,9 @@ import java.util.List;
 
 public class Header {
     public static final int EXTRA_VANITY = 32;
-    public static final int EXTRA_SEAL = 65;
-    public static final int BLS_PUB_LENGTH = 48;
-    public static final int VALIDATOR_BYTES_LENGTH = EthAddress.ADDRESS_LEN + BLS_PUB_LENGTH;
     public static final int VALIDATOR_NUMBER_SIZE = 1;
+    public static final int VALIDATOR_BYTES_LENGTH = EthAddress.LENGTH + BLSPublicKey.LENGTH;
+    public static final int EXTRA_SEAL = 65;
     // pre-calculated constant uncle hash:) rlp([])
     public static final Hash UNCLE_HASH = Hash.of("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
     public static final BigInteger INTURN_DIFF = BigInteger.valueOf(2L);
@@ -39,24 +38,26 @@ public class Header {
     public static final BigInteger MAX_GAS_LIMIT = BigInteger.valueOf(0x7FFFFFFFFFFFFFFFL); // (2^63-1)
     public static final BigInteger MIN_GAS_LIMIT = BigInteger.valueOf(5000L);
 
-    private Hash parentHash;
-    private Hash uncleHash;
-    private EthAddress coinbase;
-    private Hash root;
-    private Hash txHash;
-    private Hash receiptHash;
-    private byte[] bloom;
-    private BigInteger difficulty;
-    private BigInteger number;
-    private BigInteger gasLimit;
-    private BigInteger gasUsed;
-    private long time;
-    private byte[] extra;
-    private Hash mixDigest;
-    private byte[] nonce;
+    private final Hash parentHash;
+    private final Hash uncleHash;
+    private final EthAddress coinbase;
+    private final Hash root;
+    private final Hash txHash;
+    private final Hash receiptHash;
+    private final byte[] bloom;
+    private final BigInteger difficulty;
+    private final BigInteger number;
+    private final BigInteger gasLimit;
+    private final BigInteger gasUsed;
+    private final long time;
+    private final byte[] extra;
+    private final Hash mixDigest;
+    private final byte[] nonce;
 
     // caches
     private Hash hashCache;
+    private Validators valsCache;
+    private VoteAttestation atteCache;
 
     public Header(Hash parentHash, Hash uncleHash, EthAddress coinbase, Hash root,
             Hash txHash, Hash receiptHash, byte[] bloom, BigInteger difficulty,
@@ -140,19 +141,62 @@ public class Header {
         return hashCache;
     }
 
-    public List<EthAddress> getValidators(ChainConfig config) {
-        Context.require(extra.length > EXTRA_VANITY + EXTRA_SEAL, "No validators bytes");
-        Context.require(config.isEpoch(this.number), "Validators does not exist, if it is not epoch");
-        int num = extra[EXTRA_VANITY];
-        Context.require(num > 0 && extra.length > EXTRA_VANITY + EXTRA_SEAL + num * VALIDATOR_BYTES_LENGTH);
-        int start = EXTRA_VANITY + VALIDATOR_NUMBER_SIZE;
-        byte[] signersBytes = Arrays.copyOfRange(extra, start, start + num * VALIDATOR_BYTES_LENGTH);
-        int n = signersBytes.length / VALIDATOR_BYTES_LENGTH;
-        List<EthAddress> vals = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            vals.add(new EthAddress(Arrays.copyOfRange(signersBytes, i* VALIDATOR_BYTES_LENGTH, i* VALIDATOR_BYTES_LENGTH +EthAddress.ADDRESS_LEN)));
+    public Validators getValidators(ChainConfig config) {
+        if (valsCache == null) {
+            List<Validator> validators = new ArrayList<>();
+            byte[] b = getValidatorBytes(config);
+            int n = b.length / VALIDATOR_BYTES_LENGTH;
+            for (int i = 0; i < n; i++) {
+                byte[] consensus = Arrays.copyOfRange(b, i * VALIDATOR_BYTES_LENGTH,
+                        i * VALIDATOR_BYTES_LENGTH + EthAddress.LENGTH);
+                byte[] vote = Arrays.copyOfRange(b, i * VALIDATOR_BYTES_LENGTH + EthAddress.LENGTH,
+                        (i + 1) * VALIDATOR_BYTES_LENGTH);
+                validators.add(new Validator(new EthAddress(consensus), new BLSPublicKey(vote)));
+            }
+            valsCache = new Validators(validators);
         }
-        return vals;
+        return valsCache;
+    }
+
+    public byte[] getValidatorBytes(ChainConfig config) {
+        if (extra.length <= EXTRA_VANITY + EXTRA_SEAL) {
+            return null;
+        }
+
+        if (!config.isEpoch(number)) {
+            return null;
+        }
+        int num = extra[EXTRA_VANITY];
+        if (num == 0 || extra.length <= EXTRA_VANITY + EXTRA_SEAL + num * VALIDATOR_BYTES_LENGTH) {
+            return null;
+        }
+
+        int start = EXTRA_VANITY + VALIDATOR_NUMBER_SIZE;
+        int end = start + num * VALIDATOR_BYTES_LENGTH;
+        return Arrays.copyOfRange(extra, start, end);
+    }
+
+    public VoteAttestation getVoteAttestation(ChainConfig config) {
+        if (extra.length <= EXTRA_VANITY + EXTRA_SEAL) {
+            return null;
+        }
+
+        if (atteCache == null) {
+            byte[] blob;
+            if (!config.isEpoch(number)) {
+                blob = Arrays.copyOfRange(extra, EXTRA_VANITY, extra.length - EXTRA_SEAL);
+            } else {
+                int num = extra[EXTRA_VANITY];
+                if (extra.length <= EXTRA_VANITY + EXTRA_SEAL + VALIDATOR_NUMBER_SIZE + num * VALIDATOR_BYTES_LENGTH) {
+                    return null;
+                }
+                int start = EXTRA_VANITY + VALIDATOR_NUMBER_SIZE + num * VALIDATOR_BYTES_LENGTH;
+                int end = extra.length - EXTRA_SEAL;
+                blob = Arrays.copyOfRange(extra, start, end);
+            }
+            atteCache = VoteAttestation.fromBytes(blob);
+        }
+        return atteCache;
     }
 
     public EthAddress getSigner(BigInteger cid) {

@@ -3,6 +3,7 @@ include (
         'bmc',
         'bmv:bridge',
         'bmv:bsc',
+        'bmv:bsc2',
         'bmv:btpblock',
         'bmv:eth2',
         'bmv:icon',

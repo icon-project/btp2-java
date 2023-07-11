@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package foundation.icon.btp.bmv.bsc;
+package foundation.icon.btp.bmv.bsc2;
 
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
@@ -30,7 +30,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-import static foundation.icon.btp.bmv.bsc.Header.*;
+import static foundation.icon.btp.bmv.bsc2.Header.*;
 
 public class BTPMessageVerifier implements BMV {
     private final VarDB<Address> bmc = Context.newVarDB("bmc", Address.class);
@@ -40,12 +40,11 @@ public class BTPMessageVerifier implements BMV {
     private final VarDB<MerkleTreeAccumulator> mta = Context.newVarDB("mta", MerkleTreeAccumulator.class);
     private final DictDB<byte[], Header> heads = Context.newDictDB("heads", Header.class);
 
-    public BTPMessageVerifier(Address bmc, BigInteger chainId, byte[] header,
-                              byte[][] recents, byte[][] validators) {
+    public BTPMessageVerifier(Address _bmc, BigInteger _chainId, byte[] _header,
+                              byte[] _validators, byte[] _candidates, byte[] _recents) {
 
-        ChainConfig config = ChainConfig.fromChainID(chainId);
-        Header head = Header.fromBytes(header);
-        Context.require(config.isEpoch(head.getNumber()), "No epoch block");
+        ChainConfig config = ChainConfig.fromChainID(_chainId);
+        Header head = Header.fromBytes(_header);
         verify(config, head);
 
         MerkleTreeAccumulator mta = new MerkleTreeAccumulator();
@@ -53,24 +52,29 @@ public class BTPMessageVerifier implements BMV {
         mta.setOffset(head.getNumber().longValue());
         mta.add(head.getHash().toBytes());
 
+        Validators validators = Validators.fromBytes(_validators);
+        EthAddresses recents = EthAddresses.fromBytes(_recents);
         if (head.getNumber().compareTo(BigInteger.ZERO) == 0) {
-            Context.require(recents.length == 1, "Wrong recent signers");
+            Context.require(recents.size() == 1, "Wrong recent signers");
         } else {
-            Context.require(recents.length == validators.length / 2 + 1,
+            Context.require(recents.size() == validators.size() / 2 + 1,
                     "Wrong recent signers - validators/2+1");
         }
 
-        this.bmc.set(bmc);
-        this.cid.set(chainId);
+        this.bmc.set(_bmc);
+        this.cid.set(_chainId);
         this.tree.set(new BlockTree(head.getHash()));
         this.mta.set(mta);
         this.heads.set(head.getHash().toBytes(), head);
+        VoteAttestation attestation = head.getVoteAttestation(config);
+        Context.require(attestation != null, "No vote attestation");
         this.snap.set(new Snapshot(
                 head.getHash(),
                 head.getNumber(),
-                new EthAddresses(toSortedList(validators)),
-                new EthAddresses(head.getValidators(config)),
-                new EthAddresses(toSortedList(recents))));
+                Validators.fromBytes(_validators),
+                Validators.fromBytes(_candidates),
+                EthAddresses.fromBytes(_recents),
+                attestation));
     }
 
     @External(readonly = true)
@@ -104,8 +108,8 @@ public class BTPMessageVerifier implements BMV {
                 confirmations.add(handleBlockProof((BlockProof) msg, mta));
             } else if (msg instanceof MessageProof) {
                 msgs.addAll(handleMessageProof((MessageProof) msg, confirmations,
-                            seq.add(BigInteger.valueOf(msgs.size())),
-                            EthAddress.of(BTPAddress.parse(_prev).account()), BTPAddress.parse(_bmc)));
+                        seq.add(BigInteger.valueOf(msgs.size())),
+                        EthAddress.of(BTPAddress.parse(_prev).account()), BTPAddress.parse(_bmc)));
             }
         }
 
@@ -125,9 +129,7 @@ public class BTPMessageVerifier implements BMV {
         if (newHeads.isEmpty()) {
             return new ArrayList<>();
         }
-
-        Hash hash = newHeads.get(0).getParentHash();
-        List<Hash> ancestors = tree.getStem(hash);
+        List<Hash> ancestors = tree.getStem(newHeads.get(0).getParentHash());
         Context.require(ancestors.size() > 0, "Inconsistent block");
 
         // load heads in storage
@@ -144,9 +146,12 @@ public class BTPMessageVerifier implements BMV {
             snaps.put(ancestor, snap);
         }
 
-        Header parent = heads.get(hash);
+        Header parent = heads.get(newHeads.get(0).getParentHash());
         for (Header newHead : newHeads) {
             verify(config, newHead, parent, snap);
+            if (newHead.getVoteAttestation(config) != null) {
+                verifyVoteAttestation(config, newHead, snaps.get(newHead.getParentHash()));
+            }
             tree.add(snap.getHash(), newHead.getHash());
             snap = snap.apply(config, newHead);
             snaps.put(snap.getHash(), snap);
@@ -154,33 +159,43 @@ public class BTPMessageVerifier implements BMV {
             parent = newHead;
         }
 
-        List<Header> confirmations = confirm(config, snaps, heads, snap.getHash());
-        if (confirmations.size() > 0) {
-            Hash newRoot = confirmations.get(confirmations.size()-1).getHash();
-            this.snap.set(snaps.get(newRoot));
-            tree.prune(newRoot, new BlockTree.OnRemoveListener() {
-                @Override
-                public void onRemove(Hash node) {
-                    if (ancestors.contains(node)) {
-                        BTPMessageVerifier.this.heads.set(node.toBytes(), null);
-                    } else {
-                        for (Header newHead : newHeads) {
-                            if (newHead.getHash().equals(node)) {
-                                newHeads.remove(newHead);
-                                break;
-                            }
+        // current `parent` refer to leaf header
+        Hash finality = getFinalizedBlockHash(config, heads, snaps, heads.get(tree.getRoot()), parent);
+        if (finality == null) {
+            return new ArrayList<>();
+        }
+
+        this.snap.set(snaps.get(finality));
+
+        // ascending ordered finalized heads
+        List<Header> finalities = collect(heads, tree.getRoot(), finality);
+        for (Header head : finalities) {
+            mta.add(head.getHash().toBytes());
+        }
+
+        tree.prune(finality, new BlockTree.OnRemoveListener() {
+            @Override
+            public void onRemove(Hash node) {
+                if (ancestors.contains(node)) {
+                    // remove finalized heads on storage
+                    BTPMessageVerifier.this.heads.set(node.toBytes(), null);
+                } else {
+                    // remove finalized heads on memory
+                    for (int i = newHeads.size()-1; i >= 0; i--) {
+                        if (newHeads.get(i).getHash().equals(node)) {
+                            newHeads.remove(i);
+                            break;
                         }
                     }
                 }
-            });
-            for (Header newHead : newHeads) {
-                this.heads.set(newHead.getHash().toBytes(), newHead);
             }
-            for (Header confirmation : confirmations) {
-                mta.add(confirmation.getHash().toBytes());
-            }
+        });
+
+        // store not finalized heads
+        for (Header newHead : newHeads) {
+            this.heads.set(newHead.getHash().toBytes(), newHead);
         }
-        return confirmations;
+        return finalities;
     }
 
     private Header handleBlockProof(BlockProof bp, MerkleTreeAccumulator mta) {
@@ -203,7 +218,7 @@ public class BTPMessageVerifier implements BMV {
     }
 
     private List<MessageEvent> handleMessageProof(MessageProof mp, List<Header> confirmations,
-            BigInteger seq, EthAddress prev, BTPAddress bmc) {
+                                                  BigInteger seq, EthAddress prev, BTPAddress bmc) {
         List<MessageEvent> msgs = new ArrayList<>();
         if (confirmations.isEmpty()) {
             return msgs;
@@ -268,18 +283,15 @@ public class BTPMessageVerifier implements BMV {
         byte[] extra = head.getExtra();
         Context.require(extra.length >= EXTRA_VANITY, "Missing signer vanity");
         Context.require(extra.length >= EXTRA_VANITY + EXTRA_SEAL, "Missing signer seal");
-        byte[] signersBytes = config.getValidatorBytesFromHeader(head);
+        int validatorsBytes = extra.length - EXTRA_VANITY - EXTRA_SEAL;
         if (config.isEpoch(head.getNumber())) {
-            Context.require(signersBytes.length != 0, "Malformed validators set bytes");
-        } else {
-            Context.require(signersBytes.length == 0, "Forbidden validators set bytes");
+            Context.require(validatorsBytes != 0, "Malformed validators set bytes");
         }
         Context.require(head.getMixDigest().equals(Hash.EMPTY), "Invalid mix digest" + head.getMixDigest());
         Context.require(head.getGasLimit().compareTo(MIN_GAS_LIMIT) >= 0, "Invalid gas limit(< min)");
         Context.require(head.getGasLimit().compareTo(MAX_GAS_LIMIT) <= 0, "Invalid gas limit(> max)");
         Context.require(head.getGasUsed().compareTo(head.getGasLimit()) < 0, "Invalid gas used");
-        EthAddress signer = head.getSigner(BigInteger.valueOf(config.ChainID));
-        Context.require(signer.equals(head.getCoinbase()), "Coinbase mismatch");
+        Context.require(head.getSigner(BigInteger.valueOf(config.ChainID)).equals(head.getCoinbase()), "Coinbase mismatch");
     }
 
     private void verify(ChainConfig config, Header head, Header parent, Snapshot snap) {
@@ -303,7 +315,7 @@ public class BTPMessageVerifier implements BMV {
         Context.require(diff.compareTo(parent.getGasLimit().divide(GAS_LIMIT_BOUND_DIVISOR)) < 0,
                 "Invalid gas limit");
 
-        Context.require(snap.getValidators().contains(head.getCoinbase()), "Unauthorized validator");
+        Context.require(snap.getValidators().getAddresses().contains(head.getCoinbase()), "Unauthorized validator");
         Context.require(!snap.getRecents().contains(head.getCoinbase()) ||
                 snap.getRecents().size() <= snap.getValidators().size() / 2 + 1, "Recently signed");
         if (snap.inturn(head.getCoinbase())) {
@@ -313,55 +325,43 @@ public class BTPMessageVerifier implements BMV {
         }
     }
 
-    // sorted by leaf to root
-    private List<Header> confirm(ChainConfig config, Map<Hash, Snapshot> snaps, Map<Hash, Header> heads, Hash leaf) {
-        List<Header> confirmations = new ArrayList<>();
-        Header head = heads.get(leaf);
-        Snapshot snap = snaps.get(head.getParentHash());
-        Map<EthAddress, Boolean> validators = new HashMap<>();
-        while (snap != null) {
-            EthAddresses newValidators = snap.getCandidates();
-            validators.put(head.getCoinbase(), Boolean.TRUE);
-            if (config.isEpoch(head.getNumber())) {
-                EthAddresses oldValidators = snap.getValidators();
-                if (validators.size() > oldValidators.size() / 2 &&
-                        countBy(validators, newValidators) > newValidators.size() * 2 / 3) {
-                    confirmations.add(heads.get(head.getHash()));
-                } else {
-                    confirmations.clear();
-                }
-            } else if (!confirmations.isEmpty() ||
-                    countBy(validators, newValidators) > newValidators.size() * 2 / 3) {
-                confirmations.add(heads.get(head.getHash()));
-            }
-            head = heads.get(head.getParentHash());
-            snap = snaps.get(head.getParentHash());
+    private void verifyVoteAttestation(ChainConfig config, Header head, Snapshot snap) {
+        VoteAttestation atte = head.getVoteAttestation(config);
+        if (atte == null) {
+            return;
         }
 
-        for (int i = 0; i < confirmations.size()/2; i++) {
-            Header tmp = confirmations.get(i);
-            confirmations.set(i, confirmations.get(confirmations.size()-1-i));
-            confirmations.set(confirmations.size()-1-i, tmp);
-        }
-        return confirmations;
+        Context.require(head.getParentHash().equals(snap.getHash()),
+                "Invalid snapshot, no parent snapshot");
+        VoteRange range = atte.getVoteRange();
+        Context.require(atte.getVoteRange() != null, "Invalid attestation, vote range is null");
+
+        // target block should be direct parent
+        Context.require(atte.isTargetOf(snap.getNumber(), snap.getHash()),
+                "Invalid attestation, target mismatch");
+        VoteRange pvr = snap.getVoteAttestation().getVoteRange();
+        Context.require(atte.isSourceOf(pvr.getTargetNumber(), pvr.getTargetHash()),
+                "Invalid attestation, source mismatch");
+        atte.verify(snap.getValidators());
     }
 
-    private static int countBy(Map<EthAddress, Boolean> vals, EthAddresses newVals) {
-        int cnt = 0;
-        for (int i = 0; i < newVals.size(); i++) {
-            if (vals.containsKey(newVals.get(i))) {
-                cnt++;
+    private Hash getFinalizedBlockHash(ChainConfig config, Map<Hash, Header> heads, Map<Hash, Snapshot> snaps, Header root, Header from) {
+        Snapshot snap = snaps.get(from.getHash());
+        Header head = heads.get(from.getHash());
+        while (snap != null && !snap.getHash().equals(root.getHash())) {
+            VoteRange range = snap.getVoteAttestation().getVoteRange();
+            if (range.getTargetNumber().compareTo(range.getSourceNumber().add(BigInteger.ONE)) == 0) {
+                Context.require(snaps.get(range.getSourceHash()) != null, "Unknown justified block hash");
+                return range.getSourceHash();
             }
+            snap = snaps.get(head.getParentHash());
+            head = heads.get(head.getParentHash());
         }
-        return cnt;
+        return null;
     }
 
     private static final long DEFAULT_BACKOFF_TIME = 1L;
     private void verifyForRamanujanFork(ChainConfig config, Snapshot snap, Header head, Header parent) {
-        if (!config.isRamanujan(head.getNumber())) {
-            return;
-        }
-
         long diffTime = config.Period + getBackOffTime(config, snap, head);
         Context.require(head.getTime() >= parent.getTime() + diffTime, "Future block - number("+head.getNumber()+")");
     }
@@ -371,13 +371,11 @@ public class BTPMessageVerifier implements BMV {
             return 0L;
         }
 
-        if (config.isPlanck(head.getNumber())) {
-            EthAddresses vals = snap.getValidators();
-            long number = head.getNumber().longValue();
-            EthAddress inturn = vals.get((int)(number % (long)vals.size()));
-            if (snap.getRecents().contains(inturn)) {
-                return 0L;
-            }
+        Validators vals = snap.getValidators();
+        long number = head.getNumber().longValue();
+        EthAddress inturn = vals.get((int)(number % (long)vals.size())).getAddress();
+        if (snap.getRecents().contains(inturn)) {
+            return 0L;
         }
         return DEFAULT_BACKOFF_TIME;
     }
@@ -395,5 +393,25 @@ public class BTPMessageVerifier implements BMV {
         }
         EthAddresses.sort(list);
         return list;
+    }
+
+    private static List<Header> collect(Map<Hash, Header> heads, Hash from, Hash to) {
+        List<Header> cols = new ArrayList<>();
+        Header head = heads.get(to);
+        while (!head.getHash().equals(from)) {
+            cols.add(head);
+            head = heads.get(head.getParentHash());
+            Context.require(head != null, "Inconsistent chain");
+        }
+        reverse(cols);
+        return cols;
+    }
+
+    private static void reverse(List<Header> heads) {
+        for (int i = 0; i < heads.size() / 2; i++) {
+            Header tmp = heads.get(i);
+            heads.set(i, heads.get(heads.size()-1-i));
+            heads.set(heads.size()-1-i, tmp);
+        }
     }
 }

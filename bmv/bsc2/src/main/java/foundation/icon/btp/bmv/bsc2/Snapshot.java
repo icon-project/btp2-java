@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package foundation.icon.btp.bmv.bsc;
+package foundation.icon.btp.bmv.bsc2;
 
 import score.Context;
 import score.ObjectReader;
@@ -22,28 +22,33 @@ import score.ObjectWriter;
 import java.math.BigInteger;
 
 public class Snapshot {
-    private Hash hash;
-    private BigInteger number;
-    private EthAddresses validators;
-    private EthAddresses candidates;
-    private EthAddresses recents;
+    private final Hash hash;
+    private final BigInteger number;
+    private final Validators validators;
+    private final Validators candidates;
+    private final EthAddresses recents;
+    private final VoteAttestation attestation;
 
-    public Snapshot(Hash hash, BigInteger number, EthAddresses validators,
-            EthAddresses candidates, EthAddresses recents) {
+    public Snapshot(Hash hash, BigInteger number, Validators validators,
+            Validators candidates, EthAddresses recents, VoteAttestation attestation) {
         this.hash = hash;
         this.number = number;
+        // ensure the list of validators in ascending order
         this.validators = validators;
+        // ensure the list of validators in ascending order
         this.candidates = candidates;
         this.recents = recents;
+        this.attestation = attestation;
     }
 
     public static void writeObject(ObjectWriter w, Snapshot o) {
-        w.beginList(5);
+        w.beginList(6);
         w.write(o.hash);
         w.write(o.number);
         w.write(o.validators);
         w.write(o.candidates);
         w.write(o.recents);
+        w.write(o.attestation);
         w.end();
     }
 
@@ -51,45 +56,52 @@ public class Snapshot {
         r.beginList();
         Hash hash = r.read(Hash.class);
         BigInteger number = r.readBigInteger();
-        EthAddresses validators = r.read(EthAddresses.class);
-        EthAddresses candidates = r.read(EthAddresses.class);
+        Validators validators = r.read(Validators.class);
+        Validators candidates = r.read(Validators.class);
         EthAddresses recents = r.read(EthAddresses.class);
+        VoteAttestation attestation = r.read(VoteAttestation.class);
         r.end();
-        return new Snapshot(hash, number, validators, candidates, recents);
+        return new Snapshot(hash, number, validators, candidates, recents, attestation);
     }
 
     public boolean inturn(EthAddress validator) {
         BigInteger offset = number.add(BigInteger.ONE).mod(BigInteger.valueOf(validators.size()));
-        EthAddress[] vals = validators.toArray();
+        EthAddress[] vals = validators.getAddresses().toArray();
         return vals[offset.intValue()].equals(validator);
     }
 
     public Snapshot apply(ChainConfig config, Header head) {
-        Context.require(head != null && number.add(BigInteger.ONE).equals(head.getNumber()) &&
-                hash.equals(head.getParentHash()), "Inconsistent header");
         Hash newHash = head.getHash();
         BigInteger newNumber = head.getNumber();
-        EthAddresses newValidators;
-        EthAddresses newCandidates;
+        Context.require(number.longValue() + 1L == newNumber.longValue()
+                && hash.equals(head.getParentHash()), "Inconsistent block number");
+        Context.require(hash.equals(head.getParentHash()), "Inconsistent block hash");
+
+        // ensure the coinbase is sealer
+        EthAddress sealer = head.getCoinbase();
+        Validators newValidators = newNumber.longValue() % config.Epoch == validators.size() / 2
+                ? candidates
+                : validators;
+        Context.require(newValidators.contains(sealer), "UnauthorizedValidator");
+
+        Validators newCandidates = config.isEpoch(newNumber) ? head.getValidators(config) : candidates;
         EthAddresses newRecents = new EthAddresses(recents);
-        BigInteger epoch = BigInteger.valueOf(config.Epoch);
-
-        newValidators = newNumber.mod(epoch).equals(BigInteger.valueOf(validators.size() / 2))
-            ? candidates
-            : validators;
-
-        newCandidates = newNumber.mod(epoch).equals(BigInteger.ZERO)
-            ? new EthAddresses(head.getValidators(config))
-            : candidates;
-
-        newRecents.add(head.getCoinbase());
         if (newRecents.size() > newValidators.size() / 2) {
             for (int i = 0; i < newRecents.size() - newValidators.size()/2; i++) {
                 newRecents.remove(i);
             }
         }
+        Context.require(!newRecents.contains(sealer), "RecentlySigned");
+        newRecents.add(head.getCoinbase());
 
-        return new Snapshot(newHash, newNumber, newValidators, newCandidates, newRecents);
+        VoteAttestation newAttestation = head.getVoteAttestation(config);
+        if (newAttestation != null) {
+            Hash target = newAttestation.getVoteRange().getTargetHash();
+            Context.require(target.equals(head.getParentHash()), "Invalid attestation, target mismatch");
+        } else {
+            newAttestation = attestation;
+        }
+        return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newRecents, newAttestation);
     }
 
     public Hash getHash() {
@@ -100,16 +112,20 @@ public class Snapshot {
         return number;
     }
 
-    public EthAddresses getValidators() {
+    public Validators getValidators() {
         return validators;
     }
 
-    public EthAddresses getCandidates() {
+    public Validators getCandidates() {
         return candidates;
     }
 
     public EthAddresses getRecents() {
         return recents;
+    }
+
+    public VoteAttestation getVoteAttestation() {
+        return attestation;
     }
 
     @Override
