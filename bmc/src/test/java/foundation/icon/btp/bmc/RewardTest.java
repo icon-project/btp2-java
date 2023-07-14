@@ -18,8 +18,6 @@ package foundation.icon.btp.bmc;
 
 import foundation.icon.btp.lib.BTPAddress;
 import foundation.icon.btp.lib.BTPException;
-import foundation.icon.btp.mock.ChainScore;
-import foundation.icon.btp.mock.ChainScoreClient;
 import foundation.icon.btp.test.AssertBTPException;
 import foundation.icon.btp.test.BTPIntegrationTest;
 import foundation.icon.btp.test.MockBMVIntegrationTest;
@@ -51,6 +49,8 @@ public class RewardTest implements BMCIntegrationTest {
     @BeforeAll
     static void beforeAll() {
         System.out.println("RewardTest:beforeAll start");
+        BMCIntegrationTest.topUpTesterBalance();
+
         bmc.setDumpJson(true);
         BMVManagementTest.addVerifier(link.net(), MockBMVIntegrationTest.mockBMV._address());
         LinkManagementTest.addLink(link.toString());
@@ -61,18 +61,6 @@ public class RewardTest implements BMCIntegrationTest {
 
         FeeManagementTest.setFeeTable(linkFee);
 
-        //To transfer, BMC should have enough balance more than contractCallStep * StepPrice
-        ChainScoreClient chainScore = new ChainScoreClient(
-                client.endpoint(),
-                client._nid(),
-                client._wallet(),
-                new Address(ChainScore.ADDRESS));
-        BigInteger stepPrice = chainScore.getStepPrice();
-        BigInteger minBalance = chainScore.getStepCost("contractCall").multiply(stepPrice);
-        if (client._balance(bmc._address()).compareTo(minBalance) < 0) {
-            client._transfer(bmc._address(), minBalance, null);
-            System.out.println("transferred " + bmc._address() + ":" + client._balance(bmc._address()));
-        }
         System.out.println("RewardTest:beforeAll end");
     }
 

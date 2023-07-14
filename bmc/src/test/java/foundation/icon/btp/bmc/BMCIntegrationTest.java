@@ -19,10 +19,14 @@ package foundation.icon.btp.bmc;
 import foundation.icon.btp.lib.BMCScoreClient;
 import foundation.icon.btp.lib.BTPAddress;
 import foundation.icon.btp.lib.OwnerManagerScoreClient;
+import foundation.icon.btp.mock.ChainScore;
+import foundation.icon.btp.mock.ChainScoreClient;
 import foundation.icon.btp.test.BTPIntegrationTest;
+import foundation.icon.jsonrpc.Address;
 import foundation.icon.jsonrpc.model.TransactionResult;
 import foundation.icon.score.test.ScoreIntegrationTest;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -40,6 +44,22 @@ public interface BMCIntegrationTest extends BTPIntegrationTest {
     BMCScoreClient bmcWithTester = new BMCScoreClient(bmc.endpoint(), bmc._nid(), tester, bmc._address());
     ICONSpecificScoreClient iconSpecificWithTester = new ICONSpecificScoreClient(bmcWithTester);
     OwnerManagerScoreClient ownerManagerWithTester = new OwnerManagerScoreClient(bmcWithTester);
+
+    static void topUpTesterBalance() {
+        // the caller should have enough balance more than StepLimit * StepPrice
+        ChainScoreClient chainScore = new ChainScoreClient(
+                client.endpoint(),
+                client._nid(),
+                client._wallet(),
+                new Address(ChainScore.ADDRESS));
+        BigInteger stepPrice = chainScore.getStepPrice();
+        BigInteger minBalance = client._stepLimit().multiply(stepPrice);
+        Address testerAddress = tester.getAddress();
+        if (client._balance(testerAddress).compareTo(minBalance) < 0) {
+            client._transfer(testerAddress, minBalance.multiply(BigInteger.TEN), null);
+            System.out.println("transferred "+testerAddress + ":" + client._balance(testerAddress));
+        }
+    }
 
     static <T> Consumer<TransactionResult> eventLogChecker(
             ScoreIntegrationTest.EventLogsSupplier<T> supplier, Consumer<T> consumer, Predicate<T> filter) {

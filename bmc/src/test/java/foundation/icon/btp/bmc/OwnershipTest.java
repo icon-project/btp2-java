@@ -16,8 +16,6 @@
 
 package foundation.icon.btp.bmc;
 
-import foundation.icon.btp.mock.ChainScore;
-import foundation.icon.btp.mock.ChainScoreClient;
 import foundation.icon.jsonrpc.Address;
 import foundation.icon.score.test.ScoreIntegrationTest;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,8 +33,6 @@ public class OwnershipTest implements BMCIntegrationTest {
     static String string = "";
     static String btpAddress = Faker.btpLink().toString();
     static String netAddress = Faker.btpNetwork();
-    static int intVal = 0;
-    static long longVal = 0;
     static BigInteger bigInteger = BigInteger.ZERO;
     static long longPositiveNumber = 1;
 
@@ -64,20 +60,7 @@ public class OwnershipTest implements BMCIntegrationTest {
     @BeforeAll
     static void beforeAll() {
         System.out.println("OwnershipTest:beforeAll start");
-
-        //the caller should have enough balance more than StepLimit * StepPrice
-        ChainScoreClient chainScore = new ChainScoreClient(
-                client.endpoint(),
-                client._nid(),
-                client._wallet(),
-                new Address(ChainScore.ADDRESS));
-        BigInteger stepPrice = chainScore.getStepPrice();
-        BigInteger minBalance = client._stepLimit().multiply(stepPrice);
-        Address testerAddress = tester.getAddress();
-        if (client._balance(testerAddress).compareTo(minBalance) < 0) {
-            client._transfer(testerAddress, minBalance.multiply(BigInteger.TEN), null);
-            System.out.println("transferred "+testerAddress + ":" + client._balance(testerAddress));
-        }
+        BMCIntegrationTest.topUpTesterBalance();
         System.out.println("OwnershipTest:beforeAll start");
     }
 

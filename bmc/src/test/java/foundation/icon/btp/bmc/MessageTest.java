@@ -81,6 +81,8 @@ public class MessageTest implements BMCIntegrationTest {
     @BeforeAll
     static void beforeAll() {
         System.out.println("MessageTest:beforeAll start");
+        BMCIntegrationTest.topUpTesterBalance();
+
         bmc.setDumpJson(true);
         BMVManagementTest.addVerifier(link.net(), MockBMVIntegrationTest.mockBMV._address());
         LinkManagementTest.addLink(link.toString());
