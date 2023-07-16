@@ -1,8 +1,11 @@
 package foundation.icon.btp.bmv.bsc2;
 
+import foundation.icon.score.util.StringUtil;
 import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
+
+import java.util.Arrays;
 
 public class BLSPublicKey {
 
@@ -12,6 +15,19 @@ public class BLSPublicKey {
     public BLSPublicKey(byte[] data) {
         Context.require(data.length == LENGTH, "Invalid bls public key");
         this.data = copy(data);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BLSPublicKey that = (BLSPublicKey) o;
+        return Arrays.equals(data, that.data);
+    }
+
+    @Override
+    public String toString() {
+        return StringUtil.toString(data);
     }
 
     public static BLSPublicKey readObject(ObjectReader r) {

@@ -34,7 +34,6 @@ import static foundation.icon.btp.bmv.bsc2.Header.*;
 
 public class BTPMessageVerifier implements BMV {
     private final VarDB<Address> bmc = Context.newVarDB("bmc", Address.class);
-    private final VarDB<BigInteger> cid = Context.newVarDB("cid", BigInteger.class);
     private final VarDB<BlockTree> tree = Context.newVarDB("tree", BlockTree.class);
     private final VarDB<Snapshot> snap = Context.newVarDB("snap", Snapshot.class);
     private final VarDB<MerkleTreeAccumulator> mta = Context.newVarDB("mta", MerkleTreeAccumulator.class);
@@ -43,7 +42,7 @@ public class BTPMessageVerifier implements BMV {
     public BTPMessageVerifier(Address _bmc, BigInteger _chainId, byte[] _header,
                               byte[] _validators, byte[] _candidates, byte[] _recents) {
 
-        ChainConfig config = ChainConfig.fromChainID(_chainId);
+        ChainConfig config = ChainConfig.setChainID(_chainId);
         Header head = Header.fromBytes(_header);
         verify(config, head);
 
@@ -62,7 +61,6 @@ public class BTPMessageVerifier implements BMV {
         }
 
         this.bmc.set(_bmc);
-        this.cid.set(_chainId);
         this.tree.set(new BlockTree(head.getHash()));
         this.mta.set(mta);
         this.heads.set(head.getHash().toBytes(), head);
@@ -94,7 +92,7 @@ public class BTPMessageVerifier implements BMV {
 
         BlockTree tree = this.tree.get();
         MerkleTreeAccumulator mta = this.mta.get();
-        ChainConfig config = ChainConfig.fromChainID(this.cid.get());
+        ChainConfig config = ChainConfig.getInstance();
         List<Header> confirmations = new ArrayList<>();
         List<MessageEvent> msgs = new ArrayList<>();
         BigInteger seq = _seq.add(BigInteger.ONE);
@@ -150,7 +148,7 @@ public class BTPMessageVerifier implements BMV {
         for (Header newHead : newHeads) {
             verify(config, newHead, parent, snap);
             if (newHead.getVoteAttestation(config) != null) {
-                verifyVoteAttestation(config, newHead, snaps.get(newHead.getParentHash()));
+                verifyVoteAttestation(config, newHead, snap);
             }
             tree.add(snap.getHash(), newHead.getHash());
             snap = snap.apply(config, newHead);
