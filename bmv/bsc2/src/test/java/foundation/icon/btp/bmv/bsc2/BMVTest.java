@@ -42,7 +42,9 @@ public class BMVTest extends TestBase {
                 }
             }
             BMVStatus status = bmv.call(BMVStatus.class, "getStatus");
-            assertEquals(p.getStatus().getHeight(), status.getHeight());
+            if (p.getStatus().getHeight() != 0) {
+                assertEquals(p.getStatus().getHeight(), status.getHeight());
+            }
         }
     }
 

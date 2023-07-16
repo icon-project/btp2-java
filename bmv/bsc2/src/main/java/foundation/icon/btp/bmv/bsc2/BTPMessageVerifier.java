@@ -71,6 +71,7 @@ public class BTPMessageVerifier implements BMV {
                 head.getNumber(),
                 Validators.fromBytes(_validators),
                 Validators.fromBytes(_candidates),
+                Validators.fromBytes(_validators),
                 EthAddresses.fromBytes(_recents),
                 attestation));
     }
@@ -340,7 +341,7 @@ public class BTPMessageVerifier implements BMV {
         VoteRange pvr = snap.getVoteAttestation().getVoteRange();
         Context.require(atte.isSourceOf(pvr.getTargetNumber(), pvr.getTargetHash()),
                 "Invalid attestation, source mismatch");
-        atte.verify(snap.getValidators());
+        atte.verify(snap.getVoters());
     }
 
     private Hash getFinalizedBlockHash(ChainConfig config, Map<Hash, Header> heads, Map<Hash, Snapshot> snaps, Header root, Header from) {

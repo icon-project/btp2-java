@@ -26,17 +26,19 @@ public class Snapshot {
     private final BigInteger number;
     private final Validators validators;
     private final Validators candidates;
+    private final Validators voters;
     private final EthAddresses recents;
     private final VoteAttestation attestation;
 
     public Snapshot(Hash hash, BigInteger number, Validators validators,
-            Validators candidates, EthAddresses recents, VoteAttestation attestation) {
+            Validators candidates, Validators voters, EthAddresses recents, VoteAttestation attestation) {
         this.hash = hash;
         this.number = number;
         // ensure the list of validators in ascending order
         this.validators = validators;
         // ensure the list of validators in ascending order
         this.candidates = candidates;
+        this.voters = voters;
         this.recents = recents;
         this.attestation = attestation;
     }
@@ -47,6 +49,7 @@ public class Snapshot {
         w.write(o.number);
         w.write(o.validators);
         w.write(o.candidates);
+        w.write(o.voters);
         w.write(o.recents);
         w.write(o.attestation);
         w.end();
@@ -58,10 +61,11 @@ public class Snapshot {
         BigInteger number = r.readBigInteger();
         Validators validators = r.read(Validators.class);
         Validators candidates = r.read(Validators.class);
+        Validators voters = r.read(Validators.class);
         EthAddresses recents = r.read(EthAddresses.class);
         VoteAttestation attestation = r.read(VoteAttestation.class);
         r.end();
-        return new Snapshot(hash, number, validators, candidates, recents, attestation);
+        return new Snapshot(hash, number, validators, candidates, voters, recents, attestation);
     }
 
     public boolean inturn(EthAddress validator) {
@@ -77,11 +81,17 @@ public class Snapshot {
                 && hash.equals(head.getParentHash()), "Inconsistent block number");
         Context.require(hash.equals(head.getParentHash()), "Inconsistent block hash");
 
-        // ensure the coinbase is sealer
-        EthAddress sealer = head.getCoinbase();
+
+        Validators newVoters = newNumber.longValue() % config.Epoch == (voters.size() / 2) + 1
+            ? validators
+            : voters;
+
         Validators newValidators = newNumber.longValue() % config.Epoch == validators.size() / 2
                 ? candidates
                 : validators;
+
+        // ensure the coinbase is sealer
+        EthAddress sealer = head.getCoinbase();
         Context.require(newValidators.contains(sealer), "UnauthorizedValidator");
 
         Validators newCandidates = config.isEpoch(newNumber) ? head.getValidators(config) : candidates;
@@ -91,6 +101,7 @@ public class Snapshot {
                 newRecents.remove(i);
             }
         }
+
         Context.require(!newRecents.contains(sealer), "RecentlySigned");
         newRecents.add(head.getCoinbase());
 
@@ -101,7 +112,7 @@ public class Snapshot {
         } else {
             newAttestation = attestation;
         }
-        return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newRecents, newAttestation);
+        return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newVoters, newRecents, newAttestation);
     }
 
     public Hash getHash() {
@@ -120,6 +131,10 @@ public class Snapshot {
         return candidates;
     }
 
+    public Validators getVoters() {
+        return voters;
+    }
+
     public EthAddresses getRecents() {
         return recents;
     }
@@ -135,6 +150,7 @@ public class Snapshot {
                 ", number=" + number +
                 ", validators=" + validators +
                 ", candidates=" + candidates +
+                ", voters=" + voters +
                 ", recents=" + recents +
                 '}';
     }
