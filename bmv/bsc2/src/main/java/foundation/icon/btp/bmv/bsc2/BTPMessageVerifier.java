@@ -159,7 +159,7 @@ public class BTPMessageVerifier implements BMV {
         }
 
         // current `parent` refer to leaf header
-        Hash finality = getFinalizedBlockHash(config, heads, snaps, heads.get(tree.getRoot()), parent);
+        Hash finality = getFinalizedBlockHash(heads, snaps, heads.get(tree.getRoot()), parent);
         if (finality == null) {
             return new ArrayList<>();
         }
@@ -332,7 +332,6 @@ public class BTPMessageVerifier implements BMV {
 
         Context.require(head.getParentHash().equals(snap.getHash()),
                 "Invalid snapshot, no parent snapshot");
-        VoteRange range = atte.getVoteRange();
         Context.require(atte.getVoteRange() != null, "Invalid attestation, vote range is null");
 
         // target block should be direct parent
@@ -344,7 +343,7 @@ public class BTPMessageVerifier implements BMV {
         atte.verify(snap.getVoters());
     }
 
-    private Hash getFinalizedBlockHash(ChainConfig config, Map<Hash, Header> heads, Map<Hash, Snapshot> snaps, Header root, Header from) {
+    private Hash getFinalizedBlockHash(Map<Hash, Header> heads, Map<Hash, Snapshot> snaps, Header root, Header from) {
         Snapshot snap = snaps.get(from.getHash());
         Header head = heads.get(from.getHash());
         while (snap != null && !snap.getHash().equals(root.getHash())) {
@@ -361,11 +360,11 @@ public class BTPMessageVerifier implements BMV {
 
     private static final long DEFAULT_BACKOFF_TIME = 1L;
     private void verifyForRamanujanFork(ChainConfig config, Snapshot snap, Header head, Header parent) {
-        long diffTime = config.Period + getBackOffTime(config, snap, head);
+        long diffTime = config.Period + getBackOffTime(snap, head);
         Context.require(head.getTime() >= parent.getTime() + diffTime, "Future block - number("+head.getNumber()+")");
     }
 
-    private long getBackOffTime(ChainConfig config, Snapshot snap, Header head) {
+    private long getBackOffTime(Snapshot snap, Header head) {
         if (snap.inturn(head.getCoinbase())) {
             return 0L;
         }
@@ -383,15 +382,6 @@ public class BTPMessageVerifier implements BMV {
         if (!Context.getCaller().equals(this.bmc.get())) {
             throw BMVException.unknown("invalid caller bmc");
         }
-    }
-
-    private List<EthAddress> toSortedList(byte[][] addrs) {
-        List<EthAddress> list = new ArrayList<>();
-        for (int i = 0; i < addrs.length; i++) {
-            list.add(new EthAddress(addrs[i]));
-        }
-        EthAddresses.sort(list);
-        return list;
     }
 
     private static List<Header> collect(Map<Hash, Header> heads, Hash from, Hash to) {

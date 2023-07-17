@@ -163,7 +163,7 @@ public class MerkleTreeAccumulator {
         }
         long idx = height - 1 - offset;
         int rootIdx = (roots == null ? 0 : roots.length) - 1;
-        while (rootIdx >= 0) {
+        while (roots != null && rootIdx >= 0) {
             if (roots[rootIdx] != null) {
                 long bitFlag = 1L << rootIdx;
                 if (idx < bitFlag) {
@@ -196,26 +196,6 @@ public class MerkleTreeAccumulator {
 
     public boolean isRootSizeLimitEnabled() {
         return rootSize != null && rootSize > 0;
-    }
-
-    /**
-     * call after update rootSize
-     */
-    public void ensureRoots() {
-        if (isRootSizeLimitEnabled() && rootSize < this.roots.length) {
-            byte[][] roots = new byte[rootSize][];
-            int i = rootSize - 1;
-            int j = this.roots.length - 1;
-            while(i >= 0) {
-                roots[i--] = this.roots[j--];
-            }
-            while(j >= 0) {
-                if (this.roots[j] != null) {
-                    addOffset(j--);
-                }
-            }
-            this.roots = roots;
-        }
     }
 
     public void add(byte[] hash) {
@@ -257,42 +237,6 @@ public class MerkleTreeAccumulator {
 
     public boolean isCacheEnabled() {
         return cacheSize != null && cacheSize > 0;
-    }
-
-    /**
-     * call after update cacheSize
-     */
-    public void ensureCache() {
-        if (isCacheEnabled()) {
-            if (cache == null) {
-                cache = new byte[cacheSize][];
-                cacheIdx = 0;
-            } else if (cache.length != cacheSize) {
-                byte[][] cache = new byte[cacheSize][];
-                //copy this.cache to cache
-                int len = this.cache.length;
-                int src = this.cacheIdx;
-                int dst = 0;
-                for (int i = 0; i < len; i++) {
-                    byte[] v = this.cache[src++];
-                    if (src >= len) {
-                        src = 0;
-                    }
-                    if (v == null) {
-                        continue;
-                    }
-                    cache[dst++] = v;
-                    if (dst >= cacheSize) {
-                        dst = 0;
-                        break;
-                    }
-                }
-                this.cache = cache;
-                this.cacheIdx = dst;
-            }
-        } else {
-            cache = null;
-        }
     }
 
     private boolean hasCache(byte[] hash) {
@@ -410,12 +354,6 @@ public class MerkleTreeAccumulator {
     public static MerkleTreeAccumulator fromBytes(byte[] bytes) {
         ObjectReader reader = Context.newByteArrayObjectReader("RLPn", bytes);
         return MerkleTreeAccumulator.readObject(reader);
-    }
-
-    public byte[] toBytes() {
-        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLPn");
-        MerkleTreeAccumulator.writeObject(writer, this);
-        return writer.toByteArray();
     }
 
 }

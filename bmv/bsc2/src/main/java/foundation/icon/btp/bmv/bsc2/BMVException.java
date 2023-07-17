@@ -19,10 +19,6 @@ import foundation.icon.btp.lib.BTPException;
 
 public class BMVException extends BTPException.BMV {
 
-    public BMVException(Code c) {
-        super(c, c.name());
-    }
-
     public BMVException(Code c, String message) {
         super(c, message);
     }
@@ -33,10 +29,6 @@ public class BMVException extends BTPException.BMV {
 
     public static BMVException notVerifiable(String message) {
         return new BMVException(Code.NotVerifiable, message);
-    }
-
-    public static BMVException alreadyVerified(String message) {
-        return new BMVException(Code.AlreadyVerified, message);
     }
 
     public static BMVException invalidBlockWitnessOld(String message) {

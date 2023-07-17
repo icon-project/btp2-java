@@ -21,10 +21,6 @@ public class MTAException extends RuntimeException {
         super(message);
     }
 
-    public MTAException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
     public static class InvalidWitnessOldException extends MTAException {
         public InvalidWitnessOldException(String message) {
             super(message);

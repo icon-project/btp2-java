@@ -75,7 +75,6 @@ public class Snapshot {
     }
 
     public Snapshot apply(ChainConfig config, Header head) {
-        Hash newHash = head.getHash();
         BigInteger newNumber = head.getNumber();
         Context.require(number.longValue() + 1L == newNumber.longValue()
                 && hash.equals(head.getParentHash()), "Inconsistent block number");

@@ -37,6 +37,7 @@ public class Receipt {
     }
 
     public static Receipt readObject(ObjectReader r) {
+        // TODO supports to decoding typed-receipt
         r.beginList();
         byte[] postStatusOrState = r.readByteArray();
         r.readBigInteger();

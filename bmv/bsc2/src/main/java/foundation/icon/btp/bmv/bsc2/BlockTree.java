@@ -33,9 +33,8 @@ public class BlockTree {
 
     public BlockTree(Hash root) {
         this.root = root;
-        this.nodes = new HashMap<>() {{
-            put(root, new ArrayList<>());
-        }};
+        this.nodes = new HashMap<>();
+        this.nodes.put(root, new ArrayList<>());
     }
 
     private BlockTree(Hash root, Map<Hash, List<Hash>> nodes) {
@@ -44,8 +43,8 @@ public class BlockTree {
     }
 
     private static class Item {
-        private int nleaves;
-        private Hash id;
+        private final int nleaves;
+        private final Hash id;
 
         private Item(int nleaves, Hash id) {
             this.nleaves = nleaves;
@@ -59,9 +58,8 @@ public class BlockTree {
         r.beginList();
         int nleaves = r.readInt();
         Hash root = Hash.of(r.readByteArray());
-        List<Item> items = new ArrayList<>() {{
-            add(new Item(nleaves, root));
-        }};
+        List<Item> items = new ArrayList<>();
+        items.add(new Item(nleaves, root));
 
         while(items.size() > 0) {
             Item item = items.remove(0);
@@ -75,15 +73,12 @@ public class BlockTree {
             nodes.put(id, children);
         }
         r.end();
-        BlockTree bt = new BlockTree(root, nodes);
-        return bt;
+        return new BlockTree(root, nodes);
     }
 
     public static void writeObject(ObjectWriter w, BlockTree o) {
-        List<Hash> children = new ArrayList<>() {{
-            add(o.root);
-        }};
-
+        List<Hash> children = new ArrayList<>();
+        children.add(o.root);
         w.beginList(o.nodes.size());
         while (children.size() > 0) {
             Hash node = children.remove(0);
@@ -95,12 +90,6 @@ public class BlockTree {
             }
         }
         w.end();
-    }
-
-    public byte[] toBytes() {
-        ByteArrayObjectWriter w = Context.newByteArrayObjectWriter("RLP");
-        writeObject(w, this);
-        return w.toByteArray();
     }
 
     public static BlockTree fromBytes(byte[] bytes) {
@@ -167,7 +156,8 @@ public class BlockTree {
     }
 
     public void prune(Hash until, OnRemoveListener lst) {
-        List<Hash> removals = new ArrayList<>() {{ add(root); }};
+        List<Hash> removals = new ArrayList<>();
+        removals.add(root);
         while (removals.size() > 0) {
             List<Hash> buf = new ArrayList<>();
             for (Hash removal : removals) {
@@ -193,6 +183,11 @@ public class BlockTree {
                 "root=" + root +
                 ", nodes=" + nodes +
                 '}';
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     @Override

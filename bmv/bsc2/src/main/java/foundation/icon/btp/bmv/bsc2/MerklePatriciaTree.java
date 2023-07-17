@@ -29,15 +29,6 @@ public class MerklePatriciaTree {
             super(message);
         }
 
-        public MPTException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
-    public static byte[] encodeKey(Object key) {
-        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLP");
-        writer.write(key);
-        return writer.toByteArray();
     }
 
     public static byte[] prove(byte[] rootHash, byte[] key, byte[][] proofs) {

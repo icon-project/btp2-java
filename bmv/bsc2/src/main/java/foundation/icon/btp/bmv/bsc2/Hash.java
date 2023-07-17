@@ -68,7 +68,7 @@ public class Hash {
 
     @Override
     public int hashCode() {
-        return StringUtil.toString(data).hashCode();
+        return toString().hashCode();
     }
 
     @Override

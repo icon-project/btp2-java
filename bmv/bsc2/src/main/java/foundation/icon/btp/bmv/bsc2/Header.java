@@ -84,7 +84,6 @@ public class Header {
     }
 
     public static Header readObject(ObjectReader r) {
-        ChainConfig config = ChainConfig.getInstance();
         r.beginList();
         Hash parentHash = r.read(Hash.class);
         Hash uncleHash = r.read(Hash.class);
@@ -136,6 +135,11 @@ public class Header {
     public static Header fromBytes(byte[] bytes) {
         ObjectReader r = Context.newByteArrayObjectReader("RLP", bytes);
         return Header.readObject(r);
+    }
+
+    @Override
+    public int hashCode() {
+        return getHash().hashCode();
     }
 
     public byte[] toBytes() {
@@ -240,24 +244,8 @@ public class Header {
         return Context.hash("keccak-256", w.toByteArray());
     }
 
-    public Hash getRoot() {
-        return root;
-    }
-
-    public Hash getTxHash() {
-        return txHash;
-    }
-
     public Hash getReceiptHash() {
         return receiptHash;
-    }
-
-    public byte[] getBloom() {
-        return bloom;
-    }
-
-    public byte[] getNonce() {
-        return nonce;
     }
 
     public Hash getParentHash() {
@@ -298,10 +286,6 @@ public class Header {
 
     public Hash getMixDigest() {
         return this.mixDigest;
-    }
-
-    public BigInteger getBaseFee() {
-        return this.baseFee;
     }
 
     @Override
