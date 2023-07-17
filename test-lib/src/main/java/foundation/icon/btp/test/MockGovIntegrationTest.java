@@ -26,7 +26,7 @@ import foundation.icon.score.client.Wallet;
 import foundation.icon.score.util.StringUtil;
 import org.junit.jupiter.api.Tag;
 
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,8 +43,12 @@ public interface MockGovIntegrationTest {
     ChainScore chainScore = chainScoreClient;
 
     static long openBTPNetwork(String networkTypeName, String name, score.Address owner) {
-        ensureRevision();
-        ensureBTPPublicKey();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> netInfo = mockGovClient.request(Map.class, "icx_getNetworkInfo", null);
+        final String platform = (String) netInfo.getOrDefault("platform", "basic");
+
+        ensureRevision(platform);
+        ensureBTPPublicKey(platform);
         AtomicLong networkId = new AtomicLong();
 
         mockGovClient.openBTPNetwork(chainScoreClient.BTPNetworkOpened((l) -> {
@@ -64,24 +68,46 @@ public interface MockGovIntegrationTest {
                 networkId);
     }
 
-    static void ensureRevision() {
-        final int revision = 9;
+    static void ensureRevision(String platform) {
+        final int revision;
+        switch (platform) {
+            case "icon":
+                revision = 21;
+                break;
+            case "basic":
+            default:
+                revision = 9;
+        }
         if (revision != chainScore.getRevision()) {
             mockGov.setRevision(revision);
         }
     }
 
-    static void ensureBTPPublicKey() {
+    static void ensureBTPPublicKey(String platform) {
         String DSA = "ecdsa/secp256k1";
         Address address = validatorWallet.getAddress();
-        byte[] pubKey = chainScore.getBTPPublicKey(address, DSA);
+        byte[] pubKey;
+        switch (platform) {
+            case "icon":
+                pubKey = chainScore.getPRepNodePublicKey(address);
+                break;
+            case "basic":
+            default:
+                pubKey = chainScore.getBTPPublicKey(address, DSA);
+        }
         System.out.println("getPublicKey:" + StringUtil.bytesToHex(pubKey));
+
         if (pubKey == null) {
             pubKey = validatorWallet.getPublicKey();
             System.out.println("setBTPPublicKey:" + StringUtil.bytesToHex(pubKey));
-            chainScore.setBTPPublicKey(DSA, pubKey);
+            switch (platform) {
+                case "icon":
+                    chainScore.setPRepNodePublicKey(pubKey);
+                    break;
+                case "basic":
+                default:
+                    chainScore.setBTPPublicKey(DSA, pubKey);
+            }
         }
     }
-
-
 }

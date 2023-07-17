@@ -68,6 +68,12 @@ public interface ChainScore {
     @External(readonly=true)
     byte[] getBTPPublicKey(Address address, String name);
 
+    @External
+    void setPRepNodePublicKey(byte[] pubKey);
+
+    @External(readonly=true)
+    byte[] getPRepNodePublicKey(Address address);
+
     @External(readonly=true)
     long getBTPNetworkTypeID(String name);
 
