@@ -17,13 +17,9 @@
 package foundation.icon.btp.bmc;
 
 import foundation.icon.score.data.EnumerableDictDB;
-import foundation.icon.score.util.Logger;
 
 public class Routes extends EnumerableDictDB<String, String> {
-    private static final Logger logger = Logger.getLogger(Routes.class);
-
     public Routes(String id) {
         super(id, String.class, String.class);
     }
-
 }

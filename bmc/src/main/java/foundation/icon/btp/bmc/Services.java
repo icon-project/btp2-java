@@ -17,14 +17,10 @@
 package foundation.icon.btp.bmc;
 
 import foundation.icon.score.data.EnumerableDictDB;
-import foundation.icon.score.util.Logger;
 import score.Address;
 
 public class Services extends EnumerableDictDB<String, Address> {
-    private static final Logger logger = Logger.getLogger(Services.class);
-
     public Services(String id) {
         super(id, String.class, Address.class);
     }
-
 }
