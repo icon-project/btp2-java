@@ -184,21 +184,4 @@ public class BlockTree {
                 '}';
     }
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof BlockTree)) {
-            return false;
-        }
-        BlockTree other = (BlockTree) o;
-        return root.equals(other.root) && nodes.equals(other.nodes);
-    }
-
 }
