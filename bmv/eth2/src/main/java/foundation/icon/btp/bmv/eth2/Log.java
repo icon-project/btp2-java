@@ -23,9 +23,10 @@ import scorex.util.ArrayList;
 import java.math.BigInteger;
 
 public class Log {
-    private byte[] address;
-    private byte[][] topics;
-    private byte[] data;
+    private final byte[] address;
+    private final byte[][] topics;
+    private final byte[] data;
+
     public Log(byte[] address, byte[][] topics, byte[] data) {
         this.address = address;
         this.topics = topics;

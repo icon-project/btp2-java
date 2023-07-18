@@ -22,8 +22,8 @@ import score.ObjectWriter;
 import scorex.util.ArrayList;
 
 public class SyncCommittee {
-    private BlsPublicKeys blsPublicKeys;
-    private byte[] aggregatePubKey;
+    private final BlsPublicKeys blsPublicKeys;
+    private final byte[] aggregatePubKey;
     private static final int BLS_PUBLIC_KEY_LENGTH = 48;
 
     public SyncCommittee(BlsPublicKeys blsPublicKeys, byte[] aggregatePubKey) {
@@ -95,7 +95,7 @@ public class SyncCommittee {
     }
 
     public static class BlsPublicKeys {
-        private byte[][] blsPublicKeys;
+        private final byte[][] blsPublicKeys;
 
         public BlsPublicKeys(byte[][] blsPublicKeys) {
             this.blsPublicKeys = blsPublicKeys;

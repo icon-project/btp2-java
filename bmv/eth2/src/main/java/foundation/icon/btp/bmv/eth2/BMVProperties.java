@@ -20,8 +20,6 @@ import score.Address;
 import score.ObjectReader;
 import score.ObjectWriter;
 
-import java.math.BigInteger;
-
 public class BMVProperties {
     public static final BMVProperties DEFAULT;
 

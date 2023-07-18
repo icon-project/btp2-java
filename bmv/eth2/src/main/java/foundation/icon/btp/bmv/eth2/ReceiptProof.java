@@ -24,8 +24,8 @@ import scorex.util.ArrayList;
 import java.util.List;
 
 public class ReceiptProof {
-    private byte[] key;
-    private byte[] proof;
+    private final byte[] key;
+    private final byte[] proof;
 
     public ReceiptProof(byte[] key, byte[] proof) {
         this.key = key;

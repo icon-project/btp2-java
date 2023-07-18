@@ -23,9 +23,9 @@ import scorex.util.ArrayList;
 import java.math.BigInteger;
 
 public class MessageProof {
-    private BigInteger slot;
-    private Proof receiptsRootProof;
-    private ReceiptProof[] receiptProofs;
+    private final BigInteger slot;
+    private final Proof receiptsRootProof;
+    private final ReceiptProof[] receiptProofs;
 
     public BigInteger getSlot() {
         return slot;

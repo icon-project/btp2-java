@@ -27,10 +27,10 @@ import java.util.Arrays;
 public class Receipt {
     private static final int AccessListTxType = 1;
     private static final int DynamicFeeTxType = 2;
-    private byte[] postStatusOrState;
-    private BigInteger cumulativeGasUsed;
-    private byte[] bloom;
-    private Log[] logs;
+    private final byte[] postStatusOrState;
+    private final BigInteger cumulativeGasUsed;
+    private final byte[] bloom;
+    private final Log[] logs;
 
     public Receipt(byte[] postStatusOrState, BigInteger cumulativeGasUsed, byte[] bloom, Log[] logs) {
         this.postStatusOrState = postStatusOrState;

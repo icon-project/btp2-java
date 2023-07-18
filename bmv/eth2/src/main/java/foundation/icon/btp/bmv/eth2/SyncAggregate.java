@@ -17,8 +17,8 @@ package foundation.icon.btp.bmv.eth2;
 
 
 public class SyncAggregate {
-    private byte[] syncCommitteeBits;
-    private byte[] syncCommitteeSignature;
+    private final byte[] syncCommitteeBits;
+    private final byte[] syncCommitteeSignature;
     private static final int BLS_SIGNATURE_LENGTH = 96;
 
     public SyncAggregate(byte[] syncCommitteeBits, byte[] syncCommitteeSignature) {

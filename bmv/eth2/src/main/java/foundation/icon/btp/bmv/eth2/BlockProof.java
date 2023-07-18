@@ -20,9 +20,9 @@ import score.Context;
 import score.ObjectReader;
 
 public class BlockProof {
-    private byte[] header;
-    private Proof proof;
-    private Proof historicalProof;
+    private final byte[] header;
+    private final Proof proof;
+    private final Proof historicalProof;
 
     public BlockProof(byte[] header, Proof proof, Proof historicalProof) {
         this.header = header;

@@ -25,13 +25,13 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BlockUpdate {
-    private byte[] attestedHeader;
-    private byte[] finalizedHeader;
-    private byte[][] finalizedHeaderBranch;
-    private byte[] syncAggregate;
-    private BigInteger signatureSlot;
-    private byte[] nextSyncCommittee;
-    private byte[][] nextSyncCommitteeBranch;
+    private final byte[] attestedHeader;
+    private final byte[] finalizedHeader;
+    private final byte[][] finalizedHeaderBranch;
+    private final byte[] syncAggregate;
+    private final BigInteger signatureSlot;
+    private final byte[] nextSyncCommittee;
+    private final byte[][] nextSyncCommitteeBranch;
     private static final byte[] DOMAIN_SYNC_COMMITTEE = StringUtil.hexToBytes("07000000");
     private static final String BLS_AGGREGATE_ALG = "bls12-381-g1";
     private static final String BLS_SIG_ALG = "bls12-381-g2";

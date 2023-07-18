@@ -23,9 +23,9 @@ import scorex.util.ArrayList;
 import java.math.BigInteger;
 
 public class Proof {
-    private BigInteger index;
-    private byte[] leaf;
-    private byte[][] hashes;
+    private final BigInteger index;
+    private final byte[] leaf;
+    private final byte[][] hashes;
 
     public Proof(BigInteger index, byte[] leaf, byte[][] hashes) {
         this.index = index;
