@@ -26,6 +26,11 @@ public class BLSPublicKey {
     }
 
     @Override
+    public int hashCode() {
+        return Arrays.hashCode(data);
+    }
+
+    @Override
     public String toString() {
         return StringUtil.toString(data);
     }

@@ -24,8 +24,6 @@ import java.math.BigInteger;
 import java.util.List;
 
 public class Receipt {
-    private static final int AccessListTxType = 1;
-    private static final int DynamicFeeTxType = 2;
     public static final int StatusFailed = 0;
     private final byte[] postStatusOrState;
     private final List<EventLog> logs;

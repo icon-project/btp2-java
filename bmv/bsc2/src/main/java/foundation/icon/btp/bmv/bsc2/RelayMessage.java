@@ -16,7 +16,6 @@
 package foundation.icon.btp.bmv.bsc2;
 
 import foundation.icon.score.util.StringUtil;
-import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
