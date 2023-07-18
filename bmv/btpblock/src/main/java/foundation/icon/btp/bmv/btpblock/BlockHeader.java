@@ -25,16 +25,16 @@ import java.util.List;
 
 public class BlockHeader {
     private static final int HASH_LEN = 32;
-    private BigInteger mainHeight;
-    private BigInteger round;
-    private byte[] nextProofContextHash;
-    private NetworkSectionToRoot[] networkSectionToRoot;
-    private BigInteger nid;
-    private BigInteger updateNumber;
-    private byte[] prev;
-    private BigInteger messageCount;
-    private byte[] messageRoot;
-    private byte[] nextProofContext;
+    private final BigInteger mainHeight;
+    private final BigInteger round;
+    private final byte[] nextProofContextHash;
+    private final NetworkSectionToRoot[] networkSectionToRoot;
+    private final BigInteger nid;
+    private final BigInteger updateNumber;
+    private final byte[] prev;
+    private final BigInteger messageCount;
+    private final byte[] messageRoot;
+    private final byte[] nextProofContext;
 
     public BigInteger getMainHeight() {
         return mainHeight;
@@ -159,10 +159,10 @@ public class BlockHeader {
     public byte[] getNetworkSectionsRoot(byte[] leaf) {
         byte[] h = leaf;
         for (NetworkSectionToRoot nsRoot : networkSectionToRoot) {
-            if (nsRoot.dir == NetworkSectionToRoot.LEFT) {
-                h = concatAndHash(nsRoot.value, h);
-            } else if (nsRoot.dir == NetworkSectionToRoot.RIGHT) {
-                h = concatAndHash(h, nsRoot.value);
+            if (nsRoot.getDir() == NetworkSectionToRoot.LEFT) {
+                h = concatAndHash(nsRoot.getValue(), h);
+            } else if (nsRoot.getDir() == NetworkSectionToRoot.RIGHT) {
+                h = concatAndHash(h, nsRoot.getValue());
             }
         }
         return h;

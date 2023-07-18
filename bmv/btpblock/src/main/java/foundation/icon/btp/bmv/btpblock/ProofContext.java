@@ -23,7 +23,7 @@ import scorex.util.ArrayList;
 import java.util.List;
 
 public class ProofContext {
-    private EthAddress[] validators;
+    private final EthAddress[] validators;
 
     public ProofContext(EthAddress[] validators) {
         this.validators = validators;

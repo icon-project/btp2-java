@@ -22,8 +22,8 @@ import score.ObjectWriter;
 import java.util.Arrays;
 
 public class ProofNode {
-    private int numOfLeaf;
-    private byte[] value;
+    private final int numOfLeaf;
+    private final byte[] value;
 
     public ProofNode(int level, byte[] value) {
         this.numOfLeaf = level;

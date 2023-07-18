@@ -34,8 +34,8 @@ import java.util.List;
 
 public class BTPMessageVerifier implements BMV {
     private static final Logger logger = Logger.getLogger(BTPMessageVerifier.class);
-    private static String HASH = "keccak-256";
-    private static String SIGNATURE_ALG = "ecdsa-secp256k1";
+    private static final String HASH = "keccak-256";
+    private static final String SIGNATURE_ALG = "ecdsa-secp256k1";
     private final VarDB<BMVProperties> propertiesDB = Context.newVarDB("properties", BMVProperties.class);
 
     public BTPMessageVerifier(

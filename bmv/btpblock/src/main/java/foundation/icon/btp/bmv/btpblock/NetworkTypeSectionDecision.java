@@ -21,11 +21,11 @@ import score.Context;
 import score.ObjectWriter;
 
 public class NetworkTypeSectionDecision {
-    private byte[] srcNetworkId;
-    private int networkTypeID;
-    private long mainHeight;
-    private int round;
-    private byte[] networkTypeSectionHash;
+    private final byte[] srcNetworkId;
+    private final int networkTypeID;
+    private final long mainHeight;
+    private final int round;
+    private final byte[] networkTypeSectionHash;
 
     public NetworkTypeSectionDecision(byte[] srcNetworkId, int networkTypeID, long mainHeight, int round, byte[] networkTypeSectionHash) {
         this.srcNetworkId = srcNetworkId;

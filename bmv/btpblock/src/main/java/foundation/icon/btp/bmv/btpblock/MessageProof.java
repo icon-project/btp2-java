@@ -16,18 +16,16 @@
 
 package foundation.icon.btp.bmv.btpblock;
 
-import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
-import score.ObjectWriter;
 import scorex.util.ArrayList;
 
 import java.util.List;
 
 public class MessageProof {
-    private ProofNode[] leftProofNodes;
-    private byte[][] messages;
-    private ProofNode[] rightProofNodes;
+    private final ProofNode[] leftProofNodes;
+    private final byte[][] messages;
+    private final ProofNode[] rightProofNodes;
 
     public MessageProof(ProofNode[] leftProofNodes, byte[][] messages, ProofNode[] rightProofNodes) {
         this.leftProofNodes = leftProofNodes;
@@ -122,8 +120,9 @@ public class MessageProof {
     }
 
     public static class ProveResult {
-        byte[] hash;
-        int offset, total;
+        final byte[] hash;
+        final int offset;
+        final int total;
 
         public ProveResult(byte[] hash, int left, int total) {
             this.hash = hash;

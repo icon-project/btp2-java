@@ -20,14 +20,22 @@ import score.ObjectReader;
 
 
 public class NetworkSectionToRoot {
-    final static int LEFT = 0;
-    final static int RIGHT = 1;
-    public int dir;
-    public byte[] value;
+    static final int LEFT = 0;
+    static final int RIGHT = 1;
+    private final int dir;
+    private final byte[] value;
 
     public NetworkSectionToRoot(int dir, byte[] value) {
         this.dir = dir;
         this.value = value;
+    }
+
+    public int getDir() {
+        return dir;
+    }
+
+    public byte[] getValue() {
+        return value;
     }
 
     public static NetworkSectionToRoot readObject(ObjectReader r) {

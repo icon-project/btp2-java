@@ -23,11 +23,13 @@ import score.ObjectWriter;
 import java.util.Arrays;
 
 public class EthAddress {
-    private byte[] data;
+    private final byte[] data;
     public static final int ADDRESS_LEN = 20;
 
     public EthAddress(byte[] data) {
-        if (data.length != ADDRESS_LEN) throw BMVException.unknown("invalid Address data length");
+        if (data == null || data.length != ADDRESS_LEN) {
+            throw BMVException.unknown("invalid Address data length");
+        }
         this.data = data;
     }
 
@@ -39,16 +41,23 @@ public class EthAddress {
         return new EthAddress(r.readByteArray());
     }
 
-    public void writeObject(ObjectWriter writer) {
-        writer.write(data);
+    public static void writeObject(ObjectWriter writer, EthAddress o) {
+        writer.write(o.data);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        } else if (!(o instanceof EthAddress)) {
+            return false;
+        }
         EthAddress that = (EthAddress) o;
         return Arrays.equals(data, that.data);
     }
 
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(data);
+    }
 }

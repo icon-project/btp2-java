@@ -18,11 +18,10 @@ package foundation.icon.btp.bmv.btpblock;
 
 import score.Context;
 import score.ObjectReader;
-import score.ObjectWriter;
 
 public class BlockUpdate {
-    private BlockHeader blockHeader;
-    private byte[] blockProof;
+    private final BlockHeader blockHeader;
+    private final byte[] blockProof;
 
     public BlockUpdate(BlockHeader blockHeader, byte[] blockProof) {
         this.blockHeader = blockHeader;

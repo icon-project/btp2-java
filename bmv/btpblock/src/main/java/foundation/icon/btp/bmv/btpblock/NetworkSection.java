@@ -23,11 +23,11 @@ import score.ObjectWriter;
 import java.math.BigInteger;
 
 public class NetworkSection {
-    private BigInteger nid;
-    private BigInteger updateNumber;
-    private byte[] prev;
-    private BigInteger messageCnt;
-    private byte[] messagesRoot;
+    private final BigInteger nid;
+    private final BigInteger updateNumber;
+    private final byte[] prev;
+    private final BigInteger messageCnt;
+    private final byte[] messagesRoot;
 
     public NetworkSection(BigInteger nid, BigInteger updateNumber, byte[] prev, BigInteger messageCnt, byte[] messagesRoot) {
         this.nid = nid;
