@@ -23,27 +23,38 @@ public class ChainConfig {
     public final long ChainID;
     public final long Epoch;
     public final long Period;
-    private final long RamanujanBlock;
-    private final long PlanckBlock;
+    public final BigInteger Hertz;
 
-    private ChainConfig(long chainId, long epoch, long period, long ramanujanBlock, long planckBlock) {
+    private static ChainConfig instance;
+
+    public static ChainConfig setChainID(BigInteger cid) {
+        if (instance == null || instance.ChainID != cid.longValueExact()) {
+            instance = fromChainID(cid);
+        }
+        return instance;
+    }
+
+    private ChainConfig(long chainId, long epoch, long period, BigInteger hertz) {
         this.ChainID = chainId;
         this.Epoch = epoch;
         this.Period = period;
-        this.RamanujanBlock = ramanujanBlock;
-        this.PlanckBlock = planckBlock;
+        this.Hertz = hertz;
+    }
+
+    public static ChainConfig getInstance() {
+        return instance;
     }
 
     public static ChainConfig fromChainID(BigInteger cid) {
         if (cid.longValue() == 56L) {
             // BSC Mainnet
-            return new ChainConfig(56L, 200L, 3L, 0L, 27281024L);
+            return new ChainConfig(56L, 200L, 3L, null);
         } else if (cid.longValue() == 97L) {
             // BSC Testnet
-            return new ChainConfig(97L, 200L, 3L, 1010000L, 28196022L);
+            return new ChainConfig(97L, 200L, 3L, BigInteger.valueOf(31103030L));
         } else if (cid.longValue() == 99L) {
             // Private BSC Testnet
-            return new ChainConfig(99L, 200L, 3L, 0L, 0L);
+            return new ChainConfig(99L, 200L, 3L, null);
         }
 
         Context.require(false, "No Chain Config - ChainID(" + cid.intValue() + ")");
@@ -52,6 +63,10 @@ public class ChainConfig {
 
     public boolean isEpoch(BigInteger number) {
         return number.longValue() % this.Epoch == 0;
+    }
+
+    public boolean isHertz(BigInteger number) {
+        return Hertz != null && Hertz.compareTo(number) <= 0;
     }
 
 }

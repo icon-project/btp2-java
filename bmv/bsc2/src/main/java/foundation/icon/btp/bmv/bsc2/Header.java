@@ -53,6 +53,7 @@ public class Header {
     private final byte[] extra;
     private final Hash mixDigest;
     private final byte[] nonce;
+    private final BigInteger baseFee;
 
     // caches
     private Hash hashCache;
@@ -62,7 +63,7 @@ public class Header {
     public Header(Hash parentHash, Hash uncleHash, EthAddress coinbase, Hash root,
             Hash txHash, Hash receiptHash, byte[] bloom, BigInteger difficulty,
             BigInteger number, BigInteger gasLimit, BigInteger gasUsed, long time,
-            byte[] extra, Hash mixDigest, byte[] nonce)
+            byte[] extra, Hash mixDigest, byte[] nonce, BigInteger baseFee)
     {
         this.parentHash = parentHash;
         this.uncleHash = uncleHash;
@@ -79,6 +80,7 @@ public class Header {
         this.extra = extra;
         this.mixDigest = mixDigest;
         this.nonce = nonce;
+        this.baseFee = baseFee;
     }
 
     public static Header readObject(ObjectReader r) {
@@ -98,13 +100,17 @@ public class Header {
         byte[] extra = r.readByteArray();
         Hash mixDigest = r.read(Hash.class);
         byte[] nonce = r.readByteArray();
+        BigInteger baseFee = null;
+        if (ChainConfig.getInstance().isHertz(number)) {
+            baseFee = r.readBigInteger();
+        }
         r.end();
         return new Header(parentHash, uncleHash, coinbase, root, txHash, receiptHash, bloom,
-                difficulty, number, gasLimit, gasUsed, time, extra, mixDigest, nonce);
+                difficulty, number, gasLimit, gasUsed, time, extra, mixDigest, nonce, baseFee);
     }
 
     public static void writeObject(ObjectWriter w, Header o) {
-        w.beginList(15);
+        w.beginList(15 + (o.baseFee != null ? 1 : 0));
         w.write(o.parentHash);
         w.write(o.uncleHash);
         w.write(o.coinbase);
@@ -120,12 +126,20 @@ public class Header {
         w.write(o.extra);
         w.write(o.mixDigest);
         w.write(o.nonce);
+        if (o.baseFee != null) {
+            w.write(o.baseFee);
+        }
         w.end();
     }
 
     public static Header fromBytes(byte[] bytes) {
         ObjectReader r = Context.newByteArrayObjectReader("RLP", bytes);
         return Header.readObject(r);
+    }
+
+    @Override
+    public int hashCode() {
+        return getHash().hashCode();
     }
 
     public byte[] toBytes() {
@@ -230,24 +244,8 @@ public class Header {
         return Context.hash("keccak-256", w.toByteArray());
     }
 
-    public Hash getRoot() {
-        return root;
-    }
-
-    public Hash getTxHash() {
-        return txHash;
-    }
-
     public Hash getReceiptHash() {
         return receiptHash;
-    }
-
-    public byte[] getBloom() {
-        return bloom;
-    }
-
-    public byte[] getNonce() {
-        return nonce;
     }
 
     public Hash getParentHash() {

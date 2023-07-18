@@ -90,18 +90,4 @@ public class EthAddresses {
         w.end();
     }
 
-    public static void sort(List<EthAddress> a) {
-        int len = a.size();
-        for (int i = 0; i < len; i++) {
-            EthAddress v = a.get(i);
-            for (int j = i+1; j < len; j++) {
-                if (v.compareTo(a.get(j)) > 0) {
-                    EthAddress t = v;
-                    v = a.get(j);
-                    a.set(j, t);
-                }
-            }
-            a.set(i, v);
-        }
-    }
 }

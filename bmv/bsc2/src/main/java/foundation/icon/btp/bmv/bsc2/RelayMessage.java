@@ -62,12 +62,6 @@ public class RelayMessage {
         return readObject(r);
     }
 
-    public byte[] toBytes() {
-        ByteArrayObjectWriter w = Context.newByteArrayObjectWriter("RLP");
-        writeObject(w, this);
-        return w.toByteArray();
-    }
-
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
@@ -125,6 +119,11 @@ public class RelayMessage {
             w.write(o.type);
             w.write(o.payload);
             w.end();
+        }
+
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
         }
 
         @Override

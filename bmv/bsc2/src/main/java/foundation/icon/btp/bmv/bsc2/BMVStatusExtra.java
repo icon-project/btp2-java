@@ -20,8 +20,8 @@ import score.Context;
 
 public class BMVStatusExtra {
     // mta offset
-    private long offset;
-    private BlockTree tree;
+    private final long offset;
+    private final BlockTree tree;
 
     public BMVStatusExtra(long offset, BlockTree tree) {
         this.offset = offset;
