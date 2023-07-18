@@ -24,7 +24,7 @@ import java.util.Arrays;
 public class EthAddress implements Comparable<EthAddress> {
     public static final int LENGTH = 20;
 
-    private byte[] data;
+    private final byte[] data;
 
     public EthAddress(byte[] data) {
         this.data = data;
@@ -74,8 +74,6 @@ public class EthAddress implements Comparable<EthAddress> {
 
     @Override
     public int hashCode() {
-        return StringUtil.toString(data).hashCode();
+        return Arrays.hashCode(data);
     }
-
-
 }

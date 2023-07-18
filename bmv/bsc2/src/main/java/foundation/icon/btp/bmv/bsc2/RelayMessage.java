@@ -22,7 +22,6 @@ import score.ObjectWriter;
 import scorex.util.ArrayList;
 import scorex.util.Collections;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class RelayMessage {
@@ -121,24 +120,11 @@ public class RelayMessage {
         }
 
         @Override
-        public int hashCode() {
-            return toString().hashCode();
-        }
-
-        @Override
         public String toString() {
             return "TypePrefixedMessage{" +
                     "type=" + type +
                     ", payload=" + StringUtil.bytesToHex(payload) +
                     '}';
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TypePrefixedMessage that = (TypePrefixedMessage) o;
-            return type == that.type && Arrays.equals(payload, that.payload);
         }
     }
 }

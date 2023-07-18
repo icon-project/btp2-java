@@ -137,11 +137,6 @@ public class Header {
         return Header.readObject(r);
     }
 
-    @Override
-    public int hashCode() {
-        return getHash().hashCode();
-    }
-
     public byte[] toBytes() {
         ByteArrayObjectWriter w = Context.newByteArrayObjectWriter("RLP");
         writeObject(w, this);
@@ -287,17 +282,4 @@ public class Header {
     public Hash getMixDigest() {
         return this.mixDigest;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof Header)) {
-            return false;
-        }
-        Header other = (Header) o;
-        return this.getHash().equals(other.getHash());
-    }
-
 }
