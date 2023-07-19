@@ -18,10 +18,10 @@ public class VoteAttestation {
     private final byte[] extra;
 
     public VoteAttestation(byte[] votes, byte[] signature, VoteRange range, byte[] extra) {
-        this.votes = Utils.copy(votes);
-        this.signature = Utils.copy(signature);
+        this.votes = votes;
+        this.signature = signature;
         this.range = range;
-        this.extra = Utils.copy(extra);
+        this.extra = extra;
     }
 
     public static VoteAttestation fromBytes(byte[] bytes) {

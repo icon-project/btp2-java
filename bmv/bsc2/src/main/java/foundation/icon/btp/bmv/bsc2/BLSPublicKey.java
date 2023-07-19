@@ -14,7 +14,7 @@ public class BLSPublicKey {
 
     public BLSPublicKey(byte[] data) {
         Context.require(data.length == LENGTH, "Invalid bls public key");
-        this.data = copy(data);
+        this.data = data;
     }
 
     @Override
@@ -44,15 +44,6 @@ public class BLSPublicKey {
     }
 
     public byte[] toBytes() {
-        return copy(this.data);
-    }
-
-    private static byte[] copy(byte[] src) {
-        byte[] dst = new byte[LENGTH];
-        int i = -1;
-        while (++i < LENGTH) {
-            dst[i] = src[i];
-        }
-        return dst;
+        return this.data;
     }
 }
