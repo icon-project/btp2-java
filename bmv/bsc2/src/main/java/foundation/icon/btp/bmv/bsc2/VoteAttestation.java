@@ -62,7 +62,8 @@ public class VoteAttestation {
 
     public void verify(Validators validators) {
         byte[] aggr = aggregate(validators);
-        Context.verifySignature("bls12-381-g2", range.hash(), signature, aggr);
+        Context.require(Context.verifySignature("bls12-381-g2", range.hash(), signature, aggr),
+                "Invalid votes signature");
     }
 
     public byte[] aggregate(Validators validators) {
