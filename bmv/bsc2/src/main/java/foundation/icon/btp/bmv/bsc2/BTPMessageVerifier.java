@@ -280,11 +280,9 @@ public class BTPMessageVerifier implements BMV {
             Context.require(head.getDifficulty().compareTo(BigInteger.ZERO) != 0, "Invalid difficulty");
         }
         byte[] extra = head.getExtra();
-        Context.require(extra.length >= EXTRA_VANITY, "Missing signer vanity");
-        Context.require(extra.length >= EXTRA_VANITY + EXTRA_SEAL, "Missing signer seal");
-        int validatorsBytes = extra.length - EXTRA_VANITY - EXTRA_SEAL;
+        Context.require(extra.length >= EXTRA_VANITY + EXTRA_SEAL, "Missing vanity/seal fields");
         if (config.isEpoch(head.getNumber())) {
-            Context.require(validatorsBytes != 0, "Malformed validators set bytes");
+            Context.require(extra.length > EXTRA_VANITY + EXTRA_SEAL, "Missing validators set bytes");
         }
         Context.require(head.getMixDigest().equals(Hash.EMPTY), "Invalid mix digest" + head.getMixDigest());
         Context.require(head.getGasLimit().compareTo(MIN_GAS_LIMIT) >= 0, "Invalid gas limit(< min)");
