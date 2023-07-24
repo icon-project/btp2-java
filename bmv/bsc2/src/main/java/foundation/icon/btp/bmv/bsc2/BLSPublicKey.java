@@ -17,6 +17,13 @@ public class BLSPublicKey {
         this.data = data;
     }
 
+    public static BLSPublicKey of(String data) {
+        if (data.substring(0, 2).compareTo("0x") == 0) {
+            data = data.substring(2);
+        }
+        return new BLSPublicKey(StringUtil.hexToBytes(data));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
