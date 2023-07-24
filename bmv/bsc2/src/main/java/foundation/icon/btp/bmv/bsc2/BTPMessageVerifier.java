@@ -282,9 +282,8 @@ public class BTPMessageVerifier implements BMV {
         byte[] extra = head.getExtra();
         Context.require(extra.length >= EXTRA_VANITY, "Missing signer vanity");
         Context.require(extra.length >= EXTRA_VANITY + EXTRA_SEAL, "Missing signer seal");
-        int validatorsBytes = extra.length - EXTRA_VANITY - EXTRA_SEAL;
         if (config.isEpoch(head.getNumber())) {
-            Context.require(validatorsBytes != 0, "Malformed validators set bytes");
+            Context.require(extra.length > EXTRA_VANITY + EXTRA_SEAL, "Malformed validators set bytes");
         }
         Context.require(head.getMixDigest().equals(Hash.EMPTY), "Invalid mix digest" + head.getMixDigest());
         Context.require(head.getGasLimit().compareTo(MIN_GAS_LIMIT) >= 0, "Invalid gas limit(< min)");

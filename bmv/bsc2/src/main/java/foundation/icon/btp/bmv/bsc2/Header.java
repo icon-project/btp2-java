@@ -27,9 +27,9 @@ import java.util.List;
 
 public class Header {
     public static final int EXTRA_VANITY = 32;
+    public static final int EXTRA_SEAL = 65;
     public static final int VALIDATOR_NUMBER_SIZE = 1;
     public static final int VALIDATOR_BYTES_LENGTH = EthAddress.LENGTH + BLSPublicKey.LENGTH;
-    public static final int EXTRA_SEAL = 65;
     // pre-calculated constant uncle hash:) rlp([])
     public static final Hash UNCLE_HASH = Hash.of("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
     public static final BigInteger INTURN_DIFF = BigInteger.valueOf(2L);
@@ -151,9 +151,10 @@ public class Header {
     }
 
     public Validators getValidators(ChainConfig config) {
+        Context.require(config.isEpoch(number), "not epoch block");
         if (valsCache == null) {
             List<Validator> validators = new ArrayList<>();
-            byte[] b = getValidatorBytes(config);
+            byte[] b = getValidatorBytes();
             int n = b.length / VALIDATOR_BYTES_LENGTH;
             for (int i = 0; i < n; i++) {
                 byte[] consensus = Arrays.copyOfRange(b, i * VALIDATOR_BYTES_LENGTH,
@@ -167,21 +168,13 @@ public class Header {
         return valsCache;
     }
 
-    public byte[] getValidatorBytes(ChainConfig config) {
-        if (extra.length <= EXTRA_VANITY + EXTRA_SEAL) {
-            return null;
-        }
-
-        if (!config.isEpoch(number)) {
-            return null;
-        }
+    private byte[] getValidatorBytes() {
+        Context.require(extra.length > EXTRA_VANITY, "no field for the number of validators");
         int num = extra[EXTRA_VANITY];
-        if (num == 0 || extra.length <= EXTRA_VANITY + EXTRA_SEAL + num * VALIDATOR_BYTES_LENGTH) {
-            return null;
-        }
-
+        Context.require(num > 0, "not allowed validators size data");
         int start = EXTRA_VANITY + VALIDATOR_NUMBER_SIZE;
         int end = start + num * VALIDATOR_BYTES_LENGTH;
+        Context.require(extra.length > end, "invalid validator bytes");
         return Arrays.copyOfRange(extra, start, end);
     }
 
