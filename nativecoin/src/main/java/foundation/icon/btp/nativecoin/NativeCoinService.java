@@ -97,15 +97,7 @@ public class NativeCoinService implements NCS, IRC31Receiver, BSH, OwnerManager 
 
     static String generateTokenIdString(String name) {
         byte[] resByte = Context.hash("sha3-256", name.getBytes());
-
-        char[] hexArray = "0123456789abcdef".toCharArray();
-        char[] hexChars = new char[resByte.length * 2];
-        for ( int j = 0; j < resByte.length; j++ ) {
-            int v = resByte[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-        }
-        return new String(hexChars);
+        return StringUtil.bytesToHex(resByte);
     }
 
     static void require(boolean condition, String message) {
