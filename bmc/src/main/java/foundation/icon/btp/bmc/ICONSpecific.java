@@ -132,4 +132,20 @@ public interface ICONSpecific {
     @External(readonly = true)
     long getBTPLinkOffset(String _link);
 
+    /**
+     * Sets the mode of BMC.
+     * Called by the operator to manage the BTP network.
+     *
+     * @param _mode Integer ( Mode of BMC, 0: Normal, 1: Maintenance )
+     */
+    @External
+    void setMode(BigInteger _mode);
+
+    /**
+     * Returns the mode of BMC
+     *
+     * @return Integer ( Mode of BMC, 0: Normal, 1: Maintenance )
+     */
+    @External(readonly = true)
+    BigInteger getMode();
 }
