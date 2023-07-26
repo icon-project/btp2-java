@@ -25,6 +25,7 @@ public class Logger {
     static String loggerId(Class<?> clazz) {
         return clazz.getName();
     }
+
     static Map<String, Logger> loggers = new HashMap<>();
 
     /**
@@ -36,7 +37,7 @@ public class Logger {
     public static Logger getLogger(Class<?> clazz) {
         String id = loggerId(clazz);
         Logger logger = loggers.get(id);
-        if(logger == null) {
+        if (logger == null) {
             logger = new Logger(id);
             loggers.put(id, logger);
         }
@@ -55,10 +56,10 @@ public class Logger {
      *
      * @param msg list of message
      */
-    public void println(String ... msg) {
+    public void println(String... msg) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(this.id).append("]");
-        for(String s : msg) {
+        for (String s : msg) {
             sb.append(DELIMITER).append(s);
         }
         Context.println(sb.toString());
@@ -68,16 +69,16 @@ public class Logger {
      * Print list of object
      *
      * @param prefix prefix
-     * @param objs list of object
+     * @param objs   list of object
      */
-    public void println(String prefix, Object ... objs) {
+    public void println(String prefix, Object... objs) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(this.id);
         if (prefix != null) {
             sb.append(":").append(prefix);
         }
         sb.append("]");
-        for(Object obj : objs) {
+        for (Object obj : objs) {
             sb.append(DELIMITER).append(StringUtil.toString(obj));
         }
         Context.println(sb.toString());
@@ -87,15 +88,14 @@ public class Logger {
      * Print key, value with ClassName
      *
      * @param prefix prefix
-     * @param key  key
+     * @param key    key
      * @param value  value
      */
     public void printKeyValue(String prefix, Object key, Object value) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[").append(this.id).append(":").append(prefix).append("]");
-        sb.append(DELIMITER).append("key: ").append(toStringWithClassName(key));
-        sb.append(DELIMITER).append("value: ").append(toStringWithClassName(value));
-        Context.println(sb.toString());
+        String sb = "[" + this.id + ":" + prefix + "]" +
+                DELIMITER + "key: " + toStringWithClassName(key) +
+                DELIMITER + "value: " + toStringWithClassName(value);
+        Context.println(sb);
     }
 
     public static String toStringWithClassName(Object obj) {
@@ -103,12 +103,10 @@ public class Logger {
             return "null";
         } else {
             if (obj instanceof String) {
-                return (String)obj;
+                return (String) obj;
             } else {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Class<").append(obj.getClass().getName()).append(">");
-                sb.append(StringUtil.toString(obj));
-                return sb.toString();
+                return "Class<" + obj.getClass().getName() + ">" +
+                        StringUtil.toString(obj);
             }
         }
     }

@@ -65,7 +65,7 @@ public class ArrayUtil {
         int len = a.length;
         for (int i = 0; i < len; i++) {
             T v = a[i];
-            for (int j = i+1; j < len; j++) {
+            for (int j = i + 1; j < len; j++) {
                 if (v.compareTo(a[j]) > 0) {
                     T t = v;
                     v = a[j];
