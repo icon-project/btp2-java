@@ -23,6 +23,7 @@ import score.Context;
 import score.DictDB;
 import score.VarDB;
 import score.annotation.External;
+import score.annotation.Optional;
 import scorex.util.ArrayList;
 import scorex.util.HashMap;
 
@@ -39,41 +40,44 @@ public class BTPMessageVerifier implements BMV {
     private final VarDB<MerkleTreeAccumulator> mta = Context.newVarDB("mta", MerkleTreeAccumulator.class);
     private final DictDB<byte[], Header> heads = Context.newDictDB("heads", Header.class);
 
-    public BTPMessageVerifier(Address _bmc, BigInteger _chainId, byte[] _header,
-                              byte[] _validators, byte[] _candidates, byte[] _recents) {
-
+    public BTPMessageVerifier(Address _bmc, BigInteger _chainId, @Optional byte[] _header,
+                              @Optional byte[] _validators, @Optional byte[] _candidates, @Optional byte[] _recents) {
         ChainConfig config = ChainConfig.setChainID(_chainId);
-        Header head = Header.fromBytes(_header);
-        verify(config, head);
+        if (_header != null) {
+            Header head = Header.fromBytes(_header);
+            verify(config, head);
 
-        MerkleTreeAccumulator mta = new MerkleTreeAccumulator();
-        mta.setHeight(head.getNumber().longValue());
-        mta.setOffset(head.getNumber().longValue());
-        mta.add(head.getHash().toBytes());
+            MerkleTreeAccumulator mta = new MerkleTreeAccumulator();
+            mta.setHeight(head.getNumber().longValue());
+            mta.setOffset(head.getNumber().longValue());
+            mta.add(head.getHash().toBytes());
 
-        Validators validators = Validators.fromBytes(_validators);
-        EthAddresses recents = EthAddresses.fromBytes(_recents);
-        if (head.getNumber().compareTo(BigInteger.ZERO) == 0) {
-            Context.require(recents.size() == 1, "Wrong recent signers");
+            Validators validators = Validators.fromBytes(_validators);
+            EthAddresses recents = EthAddresses.fromBytes(_recents);
+            if (head.getNumber().compareTo(BigInteger.ZERO) == 0) {
+                Context.require(recents.size() == 1, "Wrong recent signers");
+            } else {
+                Context.require(recents.size() == validators.size() / 2 + 1,
+                        "Wrong recent signers - validators/2+1");
+            }
+
+            this.bmc.set(_bmc);
+            this.tree.set(new BlockTree(head.getHash()));
+            this.mta.set(mta);
+            this.heads.set(head.getHash().toBytes(), head);
+            VoteAttestation attestation = head.getVoteAttestation(config);
+            Context.require(attestation != null, "No vote attestation");
+            this.snap.set(new Snapshot(
+                        head.getHash(),
+                        head.getNumber(),
+                        Validators.fromBytes(_validators),
+                        Validators.fromBytes(_candidates),
+                        Validators.fromBytes(_validators),
+                        EthAddresses.fromBytes(_recents),
+                        attestation));
         } else {
-            Context.require(recents.size() == validators.size() / 2 + 1,
-                    "Wrong recent signers - validators/2+1");
+            Context.require(_bmc.equals(this.bmc.get()), "Missmatch BMC address");
         }
-
-        this.bmc.set(_bmc);
-        this.tree.set(new BlockTree(head.getHash()));
-        this.mta.set(mta);
-        this.heads.set(head.getHash().toBytes(), head);
-        VoteAttestation attestation = head.getVoteAttestation(config);
-        Context.require(attestation != null, "No vote attestation");
-        this.snap.set(new Snapshot(
-                head.getHash(),
-                head.getNumber(),
-                Validators.fromBytes(_validators),
-                Validators.fromBytes(_candidates),
-                Validators.fromBytes(_validators),
-                EthAddresses.fromBytes(_recents),
-                attestation));
     }
 
     @External(readonly = true)
