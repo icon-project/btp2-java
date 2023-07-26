@@ -50,11 +50,13 @@ public class BTPMessageVerifierUnitTest extends TestBase {
             assertEquals(p.getStatus().getHeight(), status.getHeight());
         }
     }
-    public static class Sepolia {
+
+    public static class SepoliaTest {
         private static final DataSource sepoliaData = DataSource.loadDataSource("sepolia.json");
         private static final DataSource historicalSummaryData = DataSource.loadDataSource("historicalRoot.json");
         private static final String PREV_BMC = "btp://aa36a7.eth/0xd2f04942ff92709ed9d41988d161710d18d7f1fe";
         private static final String NET = "0x42.icon";
+
         @TestFactory
         public Collection<DynamicTest> handleRelayMessageTests() {
             DataSource[] dataSources = {sepoliaData, historicalSummaryData};

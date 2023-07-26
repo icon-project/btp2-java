@@ -40,8 +40,8 @@ public class BTPMessageVerifierUnitTest extends TestBase {
     static final Account owner = sm.createAccount();
     static final String SRC_NETWORK_ID = "btp://0x1.icon";
     static final String network = "0x1.icon";
-    static final Account bmcAccount = Account.newScoreAccount(Integer.MAX_VALUE);
-    static final Account prevAccount = Account.newScoreAccount(0);
+    static final Account bmcAccount = sm.createScoreAccount();
+    static final Account prevAccount = sm.createScoreAccount();
     static final BTPAddress bmc = new BTPAddress(BTPIntegrationTest.Faker.btpNetwork(),
             bmcAccount.getAddress().toString());
     static final BTPAddress prev = new BTPAddress(network, prevAccount.getAddress().toString());
