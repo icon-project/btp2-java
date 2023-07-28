@@ -18,13 +18,13 @@ package foundation.icon.btp.bmv.btpblock;
 import foundation.icon.score.util.StringUtil;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RelayMessageTest {
     @Test
     void typePrefixedMessageTest() {
-        var typedMessage = new RelayMessage.TypePrefixedMessage(1, StringUtil.hexToBytes("0x11"));
+        var typedMessage = new RelayMessage.TypePrefixedMessage(1, StringUtil.hexToBytes("1122"));
         var bytes = typedMessage.toBytes();
         var fromBytes = RelayMessage.TypePrefixedMessage.fromBytes(bytes);
         assertEquals(typedMessage, fromBytes);
@@ -32,8 +32,8 @@ public class RelayMessageTest {
 
     @Test
     void relayMessageTest() {
-        var typedMessage1 = new RelayMessage.TypePrefixedMessage(1, StringUtil.hexToBytes("0x11"));
-        var typedMessage2 = new RelayMessage.TypePrefixedMessage(2, StringUtil.hexToBytes("0x11"));
+        var typedMessage1 = new RelayMessage.TypePrefixedMessage(1, StringUtil.hexToBytes("1122"));
+        var typedMessage2 = new RelayMessage.TypePrefixedMessage(2, StringUtil.hexToBytes("1122"));
         var messages = new RelayMessage.TypePrefixedMessage[]{typedMessage1, typedMessage2};
         var relayMessage = new RelayMessage();
         relayMessage.setMessages(messages);

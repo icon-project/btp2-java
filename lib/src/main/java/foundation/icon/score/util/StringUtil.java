@@ -22,33 +22,6 @@ import scorex.util.StringTokenizer;
 import java.util.List;
 
 public class StringUtil {
-    public static String toLowerCamelCase(String str) {
-        String camelCase = toCamelCase(str);
-        if (camelCase.length() > 0) {
-            StringBuilder builder = new StringBuilder();
-            builder.append(camelCase.substring(0, 1).toLowerCase());
-            if (camelCase.length() > 1) {
-                builder.append(camelCase.substring(1));
-            }
-        }
-        return camelCase;
-    }
-
-    public static String toCamelCase(String str) {
-        StringBuilder builder = new StringBuilder();
-        List<String> words = tokenize(str, '_');
-        for (String word : words) {
-            if (word.length() > 0) {
-                String lower = word.toLowerCase();
-                builder.append(lower.substring(0, 1).toUpperCase());
-                if (word.length() > 1) {
-                    builder.append(lower.substring(1));
-                }
-            }
-        }
-        return builder.toString();
-    }
-
     public static List<String> tokenize(String str, char... delimiters) {
         List<String> list = new ArrayList<>();
         StringTokenizer st = new StringTokenizer(str, new String(delimiters));
@@ -74,18 +47,21 @@ public class StringUtil {
     }
 
     public static byte[] hexToBytes(String hexString) {
-        if (hexString == null) {
-            return null;
+        if (hexString == null || hexString.isEmpty()) {
+            throw new IllegalArgumentException("null or empty string");
         }
-        if (hexString.length() % 2 > 0) {
-            throw new IllegalArgumentException("hex cannot has odd length");
+        int len = hexString.length();
+        if (len % 2 != 0) {
+            throw new IllegalArgumentException("odd length string");
         }
-        int l = hexString.length() / 2;
-        int j = 0;
-        byte[] bytes = new byte[l];
-        for (int i = 0; i < l; i++) {
-            bytes[i] = (byte) ((Character.digit(hexString.charAt(j++), 16) << 4) |
-                    Character.digit(hexString.charAt(j++), 16) & 0xFF);
+        byte[] bytes = new byte[len / 2];
+        for (int i = 0, j = 0; i < bytes.length; i++) {
+            int high = Character.digit(hexString.charAt(j++), 16);
+            int low = Character.digit(hexString.charAt(j++), 16);
+            if (high < 0 || low < 0) {
+                throw new IllegalArgumentException("not a valid hex digit, index=" + i);
+            }
+            bytes[i] = (byte) ((high << 4) | low & 0xFF);
         }
         return bytes;
     }
