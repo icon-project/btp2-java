@@ -91,7 +91,7 @@ public class Snapshot {
 
         // ensure the coinbase is sealer
         EthAddress sealer = head.getCoinbase();
-        Context.require(newValidators.contains(sealer), "UnauthorizedValidator");
+        Context.require(validators.contains(sealer), "UnauthorizedValidator");
 
         Validators newCandidates = config.isEpoch(newNumber) ? head.getValidators(config) : candidates;
         EthAddresses newRecents = new EthAddresses(recents);
