@@ -18,6 +18,8 @@ package foundation.icon.btp.bmv.bsc;
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
+import foundation.icon.btp.lib.MTAException;
+import foundation.icon.btp.lib.MerkleTreeAccumulator;
 import score.Address;
 import score.Context;
 import score.DictDB;

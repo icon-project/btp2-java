@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package foundation.icon.btp.bmv.icon;
+package foundation.icon.btp.lib;
 
 public class MTAException extends RuntimeException {
     public MTAException(String message) {

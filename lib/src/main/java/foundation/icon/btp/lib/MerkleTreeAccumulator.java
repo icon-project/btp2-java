@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package foundation.icon.btp.bmv.icon;
+package foundation.icon.btp.lib;
 
 import foundation.icon.score.util.StringUtil;
 import score.ByteArrayObjectWriter;
@@ -163,7 +163,7 @@ public class MerkleTreeAccumulator {
         }
         long idx = height - 1 - offset;
         int rootIdx = (roots == null ? 0 : roots.length) - 1;
-        while (rootIdx >= 0) {
+        while (roots != null && rootIdx >= 0) {
             if (roots[rootIdx] != null) {
                 long bitFlag = 1L << rootIdx;
                 if (idx < bitFlag) {

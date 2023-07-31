@@ -19,6 +19,8 @@ package foundation.icon.btp.bmv.icon;
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
+import foundation.icon.btp.lib.MTAException;
+import foundation.icon.btp.lib.MerkleTreeAccumulator;
 import foundation.icon.score.util.Logger;
 import foundation.icon.score.util.StringUtil;
 import score.Address;
