@@ -70,8 +70,8 @@ public class Node {
     void ensureHash(boolean force) {
         if (level <= LEVEL_LEAF) return;
         if (force || value.length == 0) {
-            if (left != null) left.ensureHash(force);
-            if (right != null) right.ensureHash(force);
+            left.ensureHash(force);
+            right.ensureHash(force);
             value = concatAndHash(left.value, right.value);
         }
     }
