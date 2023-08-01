@@ -50,7 +50,7 @@ public class Node {
             this.numOfLeaf = numOfLeaf;
             this.value = value;
         } else {
-            if (left != null && right != null && left.numOfLeaf != right.numOfLeaf) {
+            if (left != null && left.numOfLeaf != right.numOfLeaf) {
                 right = right.add(numOfLeaf, value);
                 this.numOfLeaf += numOfLeaf;
             } else {
@@ -70,11 +70,9 @@ public class Node {
     void ensureHash(boolean force) {
         if (level <= LEVEL_LEAF) return;
         if (force || value.length == 0) {
-            if (left != null && right != null) {
-                left.ensureHash(force);
-                right.ensureHash(force);
-                value = concatAndHash(left.value, right.value);
-            }
+            left.ensureHash(force);
+            right.ensureHash(force);
+            value = concatAndHash(left.value, right.value);
         }
     }
 
