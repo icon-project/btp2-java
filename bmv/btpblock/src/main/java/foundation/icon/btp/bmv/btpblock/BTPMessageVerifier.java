@@ -19,8 +19,6 @@ package foundation.icon.btp.bmv.btpblock;
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
-import foundation.icon.score.util.Logger;
-import foundation.icon.score.util.StringUtil;
 import score.Address;
 import score.Context;
 import score.VarDB;
@@ -33,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BTPMessageVerifier implements BMV {
-    private static final Logger logger = Logger.getLogger(BTPMessageVerifier.class);
     private static final String HASH = "keccak-256";
     private static final String SIGNATURE_ALG = "ecdsa-secp256k1";
     private final VarDB<BMVProperties> propertiesDB = Context.newVarDB("properties", BMVProperties.class);
@@ -242,11 +239,7 @@ public class BTPMessageVerifier implements BMV {
             }
         }
         if (expectedMessageCnt.intValue() != result.total) {
-            var rightProofNodes = messageProof.getRightProofNodes();
-            for (int i = 0; i < rightProofNodes.length; i++) {
-                logger.println("ProofInRight["+i+"] : " + "NumOfLeaf:"+rightProofNodes[i].getNumOfLeaf()
-                        + "value:" + StringUtil.bytesToHex(rightProofNodes[i].getValue()));
-            }
+            messageProof.printRightNodes();
             throw BMVException.unknown(
                     "mismatch MessageCount offset:" + result.offset +
                             ", expected:" + expectedMessageCnt +
