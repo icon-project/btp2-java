@@ -38,7 +38,6 @@ public class BTPMessageVerifierUnitTest extends TestBase {
     static Score score;
     static final ServiceManager sm = getServiceManager();
     static final Account owner = sm.createAccount();
-    static final String SRC_NETWORK_ID = "0x1.icon";
     static final String network = "0x1.icon";
     static final Account bmcAccount = sm.createScoreAccount();
     static final Account prevAccount = sm.createScoreAccount();
@@ -94,7 +93,7 @@ public class BTPMessageVerifierUnitTest extends TestBase {
     @Test
     public void scenario2() throws Exception {
         score = sm.deploy(owner, BTPMessageVerifier.class,
-                SRC_NETWORK_ID,
+                network,
                 2,
                 Address.fromString(bmc.account()),
                 StringUtil.hexToBytes(FAIL_CASE_FIRST_BLOCK_UPDATE),
@@ -286,7 +285,7 @@ public class BTPMessageVerifierUnitTest extends TestBase {
 
     private void successCase(List<String> relayMessages, List<String[]> messages) throws Exception {
         score = sm.deploy(owner, BTPMessageVerifier.class,
-                SRC_NETWORK_ID,
+                network,
                 2,
                 Address.fromString(bmc.account()),
                 StringUtil.hexToBytes(relayMessages.get(0)),

@@ -75,8 +75,8 @@ public class BTPMessageVerifierScoreTest extends TestBase {
         ensureIcxBalance(txHandler, ownerWallet.getAddress(), BigInteger.ZERO, amount);
 
         // Deploy BMCs
-        bmcScore = BMCScore.mustDeploy(txHandler, ownerWallet, "0x1.icon");
-        prevBmCScore = BMCScore.mustDeploy(txHandler, ownerWallet, "0x1.icon");
+        bmcScore = BMCScore.mustDeploy(txHandler, ownerWallet, srcNetworkID);
+        prevBmCScore = BMCScore.mustDeploy(txHandler, ownerWallet, srcNetworkID);
         otherNetworkBMC = BMCScore.mustDeploy(txHandler, ownerWallet, "0x2.icon");
     }
 
