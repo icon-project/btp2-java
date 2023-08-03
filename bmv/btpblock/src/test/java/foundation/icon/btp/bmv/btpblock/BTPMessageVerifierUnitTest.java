@@ -38,12 +38,12 @@ public class BTPMessageVerifierUnitTest extends TestBase {
     static Score score;
     static final ServiceManager sm = getServiceManager();
     static final Account owner = sm.createAccount();
-    static final String network = "0x1.icon";
+    static final String SRC_NETWORK_ID = "0x1.icon";
     static final Account bmcAccount = sm.createScoreAccount();
     static final Account prevAccount = sm.createScoreAccount();
     static final BTPAddress bmc = new BTPAddress(BTPIntegrationTest.Faker.btpNetwork(),
             bmcAccount.getAddress().toString());
-    static final BTPAddress prev = new BTPAddress(network, prevAccount.getAddress().toString());
+    static final BTPAddress prev = new BTPAddress(SRC_NETWORK_ID, prevAccount.getAddress().toString());
     static final List<String> SUCCESS_RELAY_MESSAGE1 = List.of(
             "f8a40a00a0b59054f1aa87fde02bf970f13e6f32eca3ccaecbf8504c4fdd7d44e9764d7009c00201f80001a041791102999c339c844880b23950704cc43aa840f3739e365323cda4dfa89e7ab858f856f85494b2b9e51c766cc3cbceadcf1fb1ff915475d28fd5945e9843a7ab917006c228186d2539ee0a49bd027f94550177c85e84af7e5637afa8e8c53526b892a15794ad3d0afe910c0aa74d0e0f64835d6633756c03ef",
             "cecdcc028ac9f800c483646f67f800",
@@ -93,7 +93,7 @@ public class BTPMessageVerifierUnitTest extends TestBase {
     @Test
     public void scenario2() throws Exception {
         score = sm.deploy(owner, BTPMessageVerifier.class,
-                network,
+                SRC_NETWORK_ID,
                 2,
                 Address.fromString(bmc.account()),
                 StringUtil.hexToBytes(FAIL_CASE_FIRST_BLOCK_UPDATE),
@@ -285,7 +285,7 @@ public class BTPMessageVerifierUnitTest extends TestBase {
 
     private void successCase(List<String> relayMessages, List<String[]> messages) throws Exception {
         score = sm.deploy(owner, BTPMessageVerifier.class,
-                network,
+                SRC_NETWORK_ID,
                 2,
                 Address.fromString(bmc.account()),
                 StringUtil.hexToBytes(relayMessages.get(0)),
