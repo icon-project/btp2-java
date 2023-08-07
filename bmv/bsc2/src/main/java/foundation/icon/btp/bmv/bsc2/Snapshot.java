@@ -96,13 +96,19 @@ public class Snapshot {
         Validators newCandidates = config.isEpoch(newNumber) ? head.getValidators(config) : candidates;
         EthAddresses newRecents = new EthAddresses(recents);
         if (newRecents.size() > newValidators.size() / 2) {
-            for (int i = 0; i < newRecents.size() - newValidators.size()/2; i++) {
+            int size = newRecents.size();
+            for (int i = 0; i < size - newValidators.size()/2; i++) {
                 newRecents.remove(i);
             }
         }
 
         Context.require(!newRecents.contains(sealer), "RecentlySigned");
         newRecents.add(head.getCoinbase());
+        if (newNumber.compareTo(BigInteger.valueOf(newValidators.size() / 2 + 1)) < 0) {
+            Context.require(newRecents.size() == newNumber.intValue(), "Invalid recents size");
+        } else {
+            Context.require(newRecents.size() == newValidators.size() / 2 + 1, "Invalid recents size");
+        }
 
         VoteAttestation newAttestation = head.getVoteAttestation(config);
         if (newAttestation != null) {

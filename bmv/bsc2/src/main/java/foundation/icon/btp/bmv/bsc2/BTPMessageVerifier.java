@@ -317,8 +317,6 @@ public class BTPMessageVerifier implements BMV {
                 "Invalid gas limit");
 
         Context.require(snap.getValidators().getAddresses().contains(head.getCoinbase()), "Unauthorized validator");
-        Context.require(!snap.getRecents().contains(head.getCoinbase()) ||
-                snap.getRecents().size() <= snap.getValidators().size() / 2 + 1, "Recently signed");
         if (snap.inturn(head.getCoinbase())) {
             Context.require(head.getDifficulty().equals(INTURN_DIFF), "Wrong difficulty(in-turn)");
         } else {
