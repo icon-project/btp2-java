@@ -57,7 +57,7 @@ public class BMVTest extends TestBase {
                 t.add(DynamicTest.dynamicTest(c.getDescription(),
                         () -> {
                             Score bmv = deployBmv(c.getDeployment());
-                            handleRelayMessageTest(c, bmv, "");
+                            handleRelayMessageTest(c, bmv, "0x1234567890123456789012345678901234567890");
                         }
                 ));
             }

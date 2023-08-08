@@ -103,6 +103,8 @@ public class BTPMessageVerifier implements BMV {
         BigInteger seq = _seq.add(BigInteger.ONE);
 
         RelayMessage rm = RelayMessage.fromBytes(_msg);
+        EthAddress prev = EthAddress.of(BTPAddress.parse(_prev).account());
+        BTPAddress bmc = BTPAddress.parse(_bmc);
         for (RelayMessage.TypePrefixedMessage tpm : rm.getMessages()) {
             Object msg = tpm.getMessage();
             if (msg instanceof BlockUpdate) {
@@ -111,8 +113,7 @@ public class BTPMessageVerifier implements BMV {
                 confirmations.add(handleBlockProof((BlockProof) msg, mta));
             } else if (msg instanceof MessageProof) {
                 msgs.addAll(handleMessageProof((MessageProof) msg, confirmations,
-                        seq.add(BigInteger.valueOf(msgs.size())),
-                        EthAddress.of(BTPAddress.parse(_prev).account()), BTPAddress.parse(_bmc)));
+                        seq.add(BigInteger.valueOf(msgs.size())), prev, bmc));
             }
         }
 
