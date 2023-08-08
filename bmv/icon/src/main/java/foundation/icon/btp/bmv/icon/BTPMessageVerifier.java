@@ -21,9 +21,11 @@ import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
 import foundation.icon.btp.lib.MTAException;
 import foundation.icon.btp.lib.MerkleTreeAccumulator;
+import foundation.icon.btp.lib.MerklePatriciaTree;
 import foundation.icon.score.util.Logger;
 import foundation.icon.score.util.StringUtil;
 import score.Address;
+import score.ByteArrayObjectWriter;
 import score.Context;
 import score.VarDB;
 import score.annotation.External;
@@ -146,11 +148,20 @@ public class BTPMessageVerifier implements BMV {
         return ret;
     }
 
+    private static byte[] encodeKey(Object value) {
+        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLPn");
+        writer.write(value);
+        return writer.toByteArray();
+    }
+
+    private static final String SHA3_256 = "sha3-256";
+
     private Receipt proveReceiptProof(ReceiptProof receiptProof, byte[] receiptHash) {
         try {
             byte[] serializedReceipt = MerklePatriciaTree.prove(
+                    SHA3_256,
                     receiptHash,
-                    MerklePatriciaTree.encodeKey(receiptProof.getIndex()),
+                    encodeKey(receiptProof.getIndex()),
                     receiptProof.getProofs().getProofs());
             Receipt receipt = Receipt.fromBytes(serializedReceipt);
             byte[] eventLogsHash = receipt.getEventLogsHash();
@@ -160,8 +171,9 @@ public class BTPMessageVerifier implements BMV {
                 int i=0;
                 for(MPTProof eventProof : eventProofs){
                     byte[] serializedEventLog = MerklePatriciaTree.prove(
+                            SHA3_256,
                             eventLogsHash,
-                            MerklePatriciaTree.encodeKey(eventProof.getIndex()),
+                            encodeKey(eventProof.getIndex()),
                             eventProof.getProofs().getProofs());
                     EventLog eventLog = EventLog.fromBytes(serializedEventLog);
                     eventLogs[i++] = eventLog;

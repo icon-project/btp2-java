@@ -20,6 +20,7 @@ import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
 import foundation.icon.btp.lib.MTAException;
 import foundation.icon.btp.lib.MerkleTreeAccumulator;
+import foundation.icon.btp.lib.MerklePatriciaTree;
 import score.Address;
 import score.Context;
 import score.DictDB;
