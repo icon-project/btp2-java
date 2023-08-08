@@ -53,28 +53,11 @@ public class MerkleTreeAccumulatorTest {
         return hashes[idx+offset];
     }
 
-    private static byte[][] getProof(int depth, int index) {
-        var proofs = new ArrayList<byte[]>();
-        for (int i=0 ; i<depth ; i++, index/=2) {
-            if (index%2 == 0) {
-                proofs.add(getHash(i, index+1));
-            } else {
-                proofs.add(getHash(i, index-1));
-            }
-        }
-        var ret = new byte[proofs.size()][];
-        for (int i=0 ; i<ret.length ; i++) {
-            ret[i] = proofs.get(i);
-        }
-        return ret;
-    }
-
     private static byte[][] getProofAt(int height, int index) {
         if (height > HASH_COUNT || index <0 || index >= height ) {
             throw new IllegalArgumentException("InvalidHeightOrIndex");
         }
         var proofs = new ArrayList<byte[]>();
-        int covered = 2;
         for (int i=0 ; (index|1)+1<=height ; i++, height/=2, index/=2) {
             if (index%2 == 0) {
                 proofs.add(getHash(i, index+1));
@@ -90,7 +73,7 @@ public class MerkleTreeAccumulatorTest {
     }
 
     @Test
-    public void testBasic() throws Exception {
+    public void testBasic() {
         var mta = new MerkleTreeAccumulator();
         for (int i=0 ; i<HASH_COUNT ; i++) {
             mta.add(hashes[i]);
@@ -102,7 +85,7 @@ public class MerkleTreeAccumulatorTest {
     }
 
     @Test
-    public void testForAllSize() throws Exception {
+    public void testForAllSize() {
         var mta = new MerkleTreeAccumulator();
         for (int i=0 ; i<HASH_COUNT ; i++) {
             mta.add(hashes[i]);
@@ -110,8 +93,8 @@ public class MerkleTreeAccumulatorTest {
                 var proof = getProofAt((int)mta.getHeight(), j);
                 try {
                     mta.verify(proof, hashes[j], j, mta.getHeight());
-                } catch (Exception ex) {
-                    throw new Exception("Invalid("+j+"/"+(i+1)+")", ex);
+                } catch (MTAException ex) {
+                    throw new MTAException("Invalid("+j+"/"+(i+1)+")", ex);
                 }
             }
             int k = i+1;
