@@ -50,8 +50,8 @@ public class BTPMessageVerifier implements BMV {
             Header head = Header.fromBytes(_header);
             verify(config, head);
 
-        MerkleTreeAccumulator mta = new MerkleTreeAccumulator(head.getNumber().longValueExact());
-        mta.add(head.getHash().toBytes());
+            MerkleTreeAccumulator mta = new MerkleTreeAccumulator(head.getNumber().longValueExact());
+            mta.add(head.getHash().toBytes());
 
             Validators validators = Validators.fromBytes(_validators);
             EthAddresses recents = EthAddresses.fromBytes(_recents);
