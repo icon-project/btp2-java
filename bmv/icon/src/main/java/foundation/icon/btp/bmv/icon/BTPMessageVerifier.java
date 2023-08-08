@@ -38,19 +38,19 @@ public class BTPMessageVerifier implements BMV {
 
     private final VarDB<BMVProperties> properties = Context.newVarDB("properties", BMVProperties.class);
 
-    public BTPMessageVerifier(Address _bmc, String _net, String _validators, long _offset) {
+    public BTPMessageVerifier(Address _bmc, String _net, String _validators, byte[] _header) {
         BMVProperties properties = getProperties();
         properties.setBmc(_bmc);
         properties.setNet(_net);
         Validators validators = Validators.fromString(_validators);
+        BlockHeader header = BlockHeader.fromBytes(_header);
         properties.setValidators(validators);
         if (properties.getLastHeight() == 0) {
-            properties.setLastHeight(_offset);
+            properties.setLastHeight(header.getHeight());
         }
         if (properties.getMta() == null) {
-            MerkleTreeAccumulator mta = new MerkleTreeAccumulator();
-            mta.setHeight(_offset);
-            mta.setOffset(_offset);
+            MerkleTreeAccumulator mta = new MerkleTreeAccumulator(header.getHeight());
+            mta.add(hash(header.toBytes()));
             properties.setMta(mta);
         }
         setProperties(properties);
@@ -180,7 +180,7 @@ public class BTPMessageVerifier implements BMV {
         for(BlockUpdate blockUpdate : blockUpdates) {
             BlockHeader blockHeader = blockUpdate.getBlockHeader();
             long blockHeight = blockHeader.getHeight();
-            long nextHeight = mta.getHeight() + 1;
+            long nextHeight = mta.getHeight();
             if (nextHeight == blockHeight) {
                 byte[] blockHash = hash(blockHeader.toBytes());
                 verifyVotes(blockUpdate.getVotes(), blockHeight, blockHash, validators);

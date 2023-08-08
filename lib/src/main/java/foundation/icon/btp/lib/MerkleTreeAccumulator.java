@@ -32,80 +32,25 @@ public class MerkleTreeAccumulator {
     private long height;
     private byte[][] roots;
     private long offset;
-    //optional reader.hasNext()
     private Integer rootSize;
-    private Integer cacheSize;
-    private byte[][] cache;
-    private Boolean allowNewerWitness;
-    //
-    private Integer cacheIdx;
+
+    /**
+     * Constructor for decoding
+     */
+    public MerkleTreeAccumulator() {
+    }
+
+    public MerkleTreeAccumulator(long height) {
+        this.height = height;
+        this.offset = height;
+    }
 
     public long getOffset() {
         return offset;
     }
 
-    public void setOffset(long offset) {
-        this.offset = offset;
-    }
-
     public long getHeight() {
         return height;
-    }
-
-    public void setHeight(long height) {
-        this.height = height;
-    }
-
-    public byte[][] getRoots() {
-        return roots;
-    }
-
-    public void setRoots(byte[][] roots) {
-        this.roots = roots;
-    }
-
-    public Integer getRootSize() {
-        return rootSize;
-    }
-
-    public void setRootSize(Integer rootSize) {
-        this.rootSize = rootSize;
-    }
-
-    public Integer getCacheSize() {
-        return cacheSize;
-    }
-
-    public void setCacheSize(Integer cacheSize) {
-        this.cacheSize = cacheSize;
-    }
-
-    public Integer getCacheIdx() {
-        return cacheIdx;
-    }
-
-    public void setCacheIdx(Integer cacheIdx) {
-        this.cacheIdx = cacheIdx;
-    }
-
-    public byte[][] getCache() {
-        return cache;
-    }
-
-    public void setCache(byte[][] cache) {
-        this.cache = cache;
-    }
-
-    public Boolean getAllowNewerWitness() {
-        return allowNewerWitness;
-    }
-
-    public void setAllowNewerWitness(Boolean allowNewerWitness) {
-        this.allowNewerWitness = allowNewerWitness;
-    }
-
-    public boolean isAllowNewerWitness() {
-        return allowNewerWitness != null && allowNewerWitness;
     }
 
     private static byte[] concatAndHash(byte[] b1, byte[] b2) {
@@ -133,35 +78,27 @@ public class MerkleTreeAccumulator {
     public void verify(byte[][] witness, byte[] hash, long height, long at) {
         if (this.height == at) {
             byte[] root = getRoot(witness.length);
-            verify(witness, witness.length, root, hash, height - 1 - offset);
+            verify(witness, witness.length, root, hash, height - offset);
         } else if (this.height < at) {
-            if (!isAllowNewerWitness()) {
-                throw new MTAException.InvalidWitnessNewerException("not allowed newer witness");
-            }
-            if (this.height < height) {
+            if (this.height <= height) {
                 throw new MTAException("given witness for newer node");
+            }
+            if (this.offset > height) {
+                throw new MTAException("not allowed old witness");
             }
             int rootIdx = getRootIdxByHeight(height);
             byte[] root = getRoot(rootIdx);
-            verify(witness, rootIdx, root, hash, height - 1 - offset);
+            verify(witness, rootIdx, root, hash, height - offset);
         } else {
-            // acc: new, wit: old
-            // rebuild witness is not supported, but able to verify by cache if enabled
-            if (isCacheEnabled() && (this.height - height - 1) < cacheSize) {
-                if (!hasCache(hash)) {
-                    throw new MTAException("invalid old witness");
-                }
-            } else {
-                throw new MTAException.InvalidWitnessOldException("not allowed old witness");
-            }
+            throw new MTAException.InvalidWitnessOldException("not allowed old witness");
         }
     }
 
     private int getRootIdxByHeight(long height) {
-        if (height <= offset) {
+        if (height < offset) {
             throw new MTAException("given height is out of range");
         }
-        long idx = height - 1 - offset;
+        long idx = height -  offset;
         int rootIdx = (roots == null ? 0 : roots.length) - 1;
         while (roots != null && rootIdx >= 0) {
             if (roots[rootIdx] != null) {
@@ -198,28 +135,58 @@ public class MerkleTreeAccumulator {
         return rootSize != null && rootSize > 0;
     }
 
+    public void setRootSizeLimit(Integer size) {
+        this.setRootSizeLimit(size, false);
+    }
+
     /**
-     * call after update rootSize
+     * Set root size limit
+     * @param size Root size limit(null for no limits). It limits size of roots by pruning old data.
+     * @param unsafe Set it as true for ignoring remaining tracked elements. Otherwise,
+     *               It ensures that it tracks 2^(size-1) added elements even though it prunes old data.
+     * @throws IllegalArgumentException
      */
-    public void ensureRoots() {
-        if (isRootSizeLimitEnabled() && rootSize < this.roots.length) {
-            byte[][] roots = new byte[rootSize][];
-            int i = rootSize - 1;
-            int j = this.roots.length - 1;
-            while(i >= 0) {
-                roots[i--] = this.roots[j--];
+    public void setRootSizeLimit(Integer size, boolean unsafe) {
+        if (size == null) {
+            this.rootSize = null;
+        } else {
+            if (size<1) {
+                throw new IllegalArgumentException("Invalid size value");
             }
-            while(j >= 0) {
-                if (this.roots[j] != null) {
-                    addOffset(j--);
+            this.updateRootsBySize(size, unsafe);
+            this.rootSize = size;
+        }
+    }
+
+    /**
+     * Get root size limit
+     */
+    public Integer getRootSizeLimit() {
+        return rootSize;
+    }
+
+    private void updateRootsBySize(int rootSize, boolean unsafe) {
+        if (this.roots!= null && rootSize < this.roots.length) {
+            int size = this.roots.length;
+            long offset = this.offset;
+            while (size>rootSize) {
+                if (this.roots[size-1] != null) {
+                    offset += (long)StrictMath.pow(2, size-1);
                 }
+                size -= 1;
             }
+            if (!unsafe && roots[size-1] == null) {
+                throw new IllegalArgumentException("No way to keep required elements");
+            }
+            while (size>0 && roots[size-1] == null) size--;
+            byte[][] roots = new byte[size][];
+            System.arraycopy(this.roots, 0, roots, 0, size);
             this.roots = roots;
+            this.offset = offset;
         }
     }
 
     public void add(byte[] hash) {
-        putCache(hash);
         if (height == offset) {
             appendRoot(hash);
         } else {
@@ -255,66 +222,6 @@ public class MerkleTreeAccumulator {
         this.offset += offset;
     }
 
-    public boolean isCacheEnabled() {
-        return cacheSize != null && cacheSize > 0;
-    }
-
-    /**
-     * call after update cacheSize
-     */
-    public void ensureCache() {
-        if (isCacheEnabled()) {
-            if (cache == null) {
-                cache = new byte[cacheSize][];
-                cacheIdx = 0;
-            } else if (cache.length != cacheSize) {
-                byte[][] cache = new byte[cacheSize][];
-                //copy this.cache to cache
-                int len = this.cache.length;
-                int src = this.cacheIdx;
-                int dst = 0;
-                for (int i = 0; i < len; i++) {
-                    byte[] v = this.cache[src++];
-                    if (src >= len) {
-                        src = 0;
-                    }
-                    if (v == null) {
-                        continue;
-                    }
-                    cache[dst++] = v;
-                    if (dst >= cacheSize) {
-                        dst = 0;
-                        break;
-                    }
-                }
-                this.cache = cache;
-                this.cacheIdx = dst;
-            }
-        } else {
-            cache = null;
-        }
-    }
-
-    private boolean hasCache(byte[] hash) {
-        if (isCacheEnabled()) {
-            for (byte[] v : cache) {
-                if (Arrays.equals(v, hash)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private void putCache(byte[] hash) {
-        if (isCacheEnabled()) {
-            cache[cacheIdx++] = hash;
-            if (cacheIdx >= cache.length) {
-                cacheIdx = 0;
-            }
-        }
-    }
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("MerkleTreeAccumulator{");
@@ -322,10 +229,6 @@ public class MerkleTreeAccumulator {
         sb.append(", roots=").append(StringUtil.toString(roots));
         sb.append(", offset=").append(offset);
         sb.append(", rootSize=").append(rootSize);
-        sb.append(", cacheSize=").append(cacheSize);
-        sb.append(", cache=").append(StringUtil.toString(cache));
-        sb.append(", allowNewerWitness=").append(allowNewerWitness);
-        sb.append(", cacheIdx=").append(cacheIdx);
         sb.append('}');
         return sb.toString();
     }
@@ -338,48 +241,29 @@ public class MerkleTreeAccumulator {
     public static MerkleTreeAccumulator readObject(ObjectReader reader) {
         MerkleTreeAccumulator obj = new MerkleTreeAccumulator();
         reader.beginList();
-        obj.setHeight(reader.readLong());
+        obj.height = reader.readLong();
         if (reader.beginNullableList()) {
-            byte[][] roots = null;
             List<byte[]> rootsList = new ArrayList<>();
             while(reader.hasNext()) {
                 rootsList.add(reader.readNullable(byte[].class));
             }
-            roots = new byte[rootsList.size()][];
-            for(int i=0; i<rootsList.size(); i++) {
-                roots[i] = (byte[])rootsList.get(i);
+            var roots = new byte[rootsList.size()][];
+            for (int i=0 ; i<roots.length ;i++) {
+                roots[i] = rootsList.get(i);
             }
-            obj.setRoots(roots);
+            obj.roots = roots;
             reader.end();
         }
-        obj.setOffset(reader.readLong());
-        obj.setRootSize(reader.readNullable(Integer.class));
-        obj.setCacheSize(reader.readNullable(Integer.class));
-        if (reader.beginNullableList()) {
-            byte[][] cache = null;
-            List<byte[]> cacheList = new ArrayList<>();
-            while(reader.hasNext()) {
-                cacheList.add(reader.readNullable(byte[].class));
-            }
-            cache = new byte[cacheList.size()][];
-            for(int i=0; i<cacheList.size(); i++) {
-                cache[i] = (byte[])cacheList.get(i);
-            }
-            obj.setCache(cache);
-            reader.end();
-        }
-        obj.setAllowNewerWitness(reader.readNullable(Boolean.class));
-        if (reader.hasNext()) {
-            obj.setCacheIdx(reader.readNullable(Integer.class));
-        }
+        obj.offset = reader.readLong();
+        obj.rootSize = reader.readNullable(Integer.class);
         reader.end();
         return obj;
     }
 
     public void writeObject(ObjectWriter writer) {
-        writer.beginList(8);
-        writer.write(this.getHeight());
-        byte[][] roots = this.getRoots();
+        writer.beginList(4);
+        writer.write(this.height);
+        byte[][] roots = this.roots;
         if (roots != null) {
             writer.beginNullableList(roots.length);
             for(byte[] v : roots) {
@@ -389,31 +273,20 @@ public class MerkleTreeAccumulator {
         } else {
             writer.writeNull();
         }
-        writer.write(this.getOffset());
-        writer.writeNullable(this.getRootSize());
-        writer.writeNullable(this.getCacheSize());
-        byte[][] cache = this.getCache();
-        if (cache != null) {
-            writer.beginNullableList(cache.length);
-            for(byte[] v : cache) {
-                writer.writeNullable(v);
-            }
-            writer.end();
-        } else {
-            writer.writeNull();
-        }
-        writer.writeNullable(this.getAllowNewerWitness());
-        writer.writeNullable(this.getCacheIdx());
+        writer.write(this.offset);
+        writer.writeNullable(this.rootSize);
         writer.end();
     }
 
+    private static final String RLPn = "RLPn";
+
     public static MerkleTreeAccumulator fromBytes(byte[] bytes) {
-        ObjectReader reader = Context.newByteArrayObjectReader("RLPn", bytes);
+        ObjectReader reader = Context.newByteArrayObjectReader(RLPn, bytes);
         return MerkleTreeAccumulator.readObject(reader);
     }
 
     public byte[] toBytes() {
-        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLPn");
+        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter(RLPn);
         MerkleTreeAccumulator.writeObject(writer, this);
         return writer.toByteArray();
     }
