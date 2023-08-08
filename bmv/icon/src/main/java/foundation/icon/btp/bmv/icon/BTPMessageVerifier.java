@@ -20,8 +20,8 @@ import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
 import foundation.icon.btp.lib.MTAException;
-import foundation.icon.btp.lib.MerkleTreeAccumulator;
 import foundation.icon.btp.lib.MerklePatriciaTree;
+import foundation.icon.btp.lib.MerkleTreeAccumulator;
 import foundation.icon.score.util.Logger;
 import foundation.icon.score.util.StringUtil;
 import score.Address;
@@ -37,6 +37,7 @@ import java.util.List;
 
 public class BTPMessageVerifier implements BMV {
     private static final Logger logger = Logger.getLogger(BTPMessageVerifier.class);
+    private static final String SHA3_256 = "sha3-256";
 
     private final VarDB<BMVProperties> properties = Context.newVarDB("properties", BMVProperties.class);
 
@@ -59,7 +60,7 @@ public class BTPMessageVerifier implements BMV {
     }
 
     static byte[] hash(byte[] bytes) {
-        return Context.hash("sha3-256",bytes);
+        return Context.hash(SHA3_256, bytes);
     }
 
     static Address recoverAddress(byte[] msg, byte[] sig, boolean compressed) {
@@ -153,8 +154,6 @@ public class BTPMessageVerifier implements BMV {
         writer.write(value);
         return writer.toByteArray();
     }
-
-    private static final String SHA3_256 = "sha3-256";
 
     private Receipt proveReceiptProof(ReceiptProof receiptProof, byte[] receiptHash) {
         try {
@@ -301,5 +300,4 @@ public class BTPMessageVerifier implements BMV {
                 mta.getOffset(), properties.getLastHeight()).toBytes());
         return s;
     }
-
 }
