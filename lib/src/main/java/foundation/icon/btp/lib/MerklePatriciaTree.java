@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 ICON Foundation
+ * Copyright 2023 ICON Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package foundation.icon.btp.bmv.icon;
+package foundation.icon.btp.lib;
 
 import foundation.icon.score.util.ArrayUtil;
 import foundation.icon.score.util.StringUtil;
-import score.ByteArrayObjectWriter;
 import score.Context;
 import score.ObjectReader;
 
@@ -29,22 +27,18 @@ public class MerklePatriciaTree {
         public MPTException(String message) {
             super(message);
         }
-
-        public MPTException(String message, Throwable cause) {
-            super(message, cause);
-        }
     }
 
-    public static byte[] encodeKey(Object key) {
-        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLPn");
-        writer.write(key);
-        return writer.toByteArray();
-    }
+    public static final String HashAlgorithm = "keccak-256";
 
     public static byte[] prove(byte[] rootHash, byte[] key, byte[][] proofs) {
+        return MerklePatriciaTree.prove(HashAlgorithm, rootHash, key, proofs);
+    }
+
+    public static byte[] prove(String hasher, byte[] rootHash, byte[] key, byte[][] proofs) {
         byte[] nibbles = bytesToNibbles(key, 0, null);
         Node node = new Node(rootHash);
-        return node.prove(nibbles, proofs, 0);
+        return node.prove(hasher, nibbles, proofs, 0);
     }
 
     public static byte[] bytesToNibbles(byte[] bytes, int from, byte[] nibbles) {
@@ -65,7 +59,7 @@ public class MerklePatriciaTree {
         return ret;
     }
 
-    public static class Node {
+    private static class Node {
         private byte[] hash;
         private byte[] nibbles;
         private Node[] children;
@@ -136,33 +130,33 @@ public class MerklePatriciaTree {
         }
 
         public static Node fromBytes(byte[] bytes) {
-            ObjectReader reader = Context.newByteArrayObjectReader("RLPn", bytes);
+            ObjectReader reader = Context.newByteArrayObjectReader("RLP", bytes);
             return readObject(reader);
         }
 
-        public byte[] prove(byte[] nibbles, byte[][] proofs, int i) {
+        public byte[] prove(String hasher, byte[] nibbles, byte[][] proofs, int i) {
             if (isHash()) {
                 byte[] serialized = proofs[i];
-                byte[] hash = hash(serialized);
+                byte[] hash = Context.hash(hasher, serialized);
                 if (!Arrays.equals(this.hash, hash)) {
                     throw new MPTException("mismatch hash");
                 }
                 Node node = Node.fromBytes(serialized);
                 node.hash = hash;
                 node.serialized = serialized;
-                return node.prove(nibbles, proofs, i+1);
+                return node.prove(hasher, nibbles, proofs, i+1);
             } else if (isExtension()) {
                 int cnt = ArrayUtil.matchCount(this.nibbles, nibbles);
                 if (cnt < this.nibbles.length) {
                     throw new MPTException("mismatch nibbles on extension");
                 }
-                return children[0].prove(Arrays.copyOfRange(nibbles, cnt, nibbles.length), proofs, i);
+                return children[0].prove(hasher, Arrays.copyOfRange(nibbles, cnt, nibbles.length), proofs, i);
             } else if (isBranch()) {
                 if(nibbles.length == 0) {
                     return data;
                 } else {
                     Node node = children[nibbles[0]];
-                    return node.prove(Arrays.copyOfRange(nibbles, 1, nibbles.length), proofs, i);
+                    return node.prove(hasher, Arrays.copyOfRange(nibbles, 1, nibbles.length), proofs, i);
                 }
             } else {
                 int cnt = ArrayUtil.matchCount(this.nibbles, nibbles);
@@ -171,10 +165,6 @@ public class MerklePatriciaTree {
                 }
                 return data;
             }
-        }
-
-        static byte[] hash(byte[] bytes) {
-            return Context.hash("sha3-256",bytes);
         }
 
         private boolean isHash() {

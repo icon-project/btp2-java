@@ -18,6 +18,7 @@ package foundation.icon.btp.bmv.eth2;
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
+import foundation.icon.btp.lib.MerklePatriciaTree;
 import foundation.icon.score.util.Logger;
 import foundation.icon.score.util.StringUtil;
 import score.Address;

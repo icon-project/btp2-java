@@ -18,6 +18,9 @@ package foundation.icon.btp.bmv.bsc;
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
+import foundation.icon.btp.lib.MTAException;
+import foundation.icon.btp.lib.MerklePatriciaTree;
+import foundation.icon.btp.lib.MerkleTreeAccumulator;
 import score.Address;
 import score.Context;
 import score.DictDB;
@@ -48,9 +51,7 @@ public class BTPMessageVerifier implements BMV {
         Context.require(config.isEpoch(head.getNumber()), "No epoch block");
         verify(config, head);
 
-        MerkleTreeAccumulator mta = new MerkleTreeAccumulator();
-        mta.setHeight(head.getNumber().longValue());
-        mta.setOffset(head.getNumber().longValue());
+        MerkleTreeAccumulator mta = new MerkleTreeAccumulator(head.getNumber().longValueExact());
         mta.add(head.getHash().toBytes());
 
         if (head.getNumber().compareTo(BigInteger.ZERO) == 0) {
@@ -192,7 +193,7 @@ public class BTPMessageVerifier implements BMV {
 
         try {
             mta.verify(bp.getWitness(), head.getHash().toBytes(),
-                    head.getNumber().longValue()+1, bp.getHeight().intValue());
+                    head.getNumber().longValue(), bp.getHeight().intValue());
         } catch (MTAException.InvalidWitnessOldException e) {
             throw BMVException.invalidBlockWitnessOld(e.getMessage());
         } catch (MTAException e) {

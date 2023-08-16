@@ -19,9 +19,13 @@ package foundation.icon.btp.bmv.icon;
 import foundation.icon.btp.lib.BMV;
 import foundation.icon.btp.lib.BMVStatus;
 import foundation.icon.btp.lib.BTPAddress;
+import foundation.icon.btp.lib.MTAException;
+import foundation.icon.btp.lib.MerklePatriciaTree;
+import foundation.icon.btp.lib.MerkleTreeAccumulator;
 import foundation.icon.score.util.Logger;
 import foundation.icon.score.util.StringUtil;
 import score.Address;
+import score.ByteArrayObjectWriter;
 import score.Context;
 import score.VarDB;
 import score.annotation.External;
@@ -33,29 +37,30 @@ import java.util.List;
 
 public class BTPMessageVerifier implements BMV {
     private static final Logger logger = Logger.getLogger(BTPMessageVerifier.class);
+    private static final String SHA3_256 = "sha3-256";
 
     private final VarDB<BMVProperties> properties = Context.newVarDB("properties", BMVProperties.class);
 
-    public BTPMessageVerifier(Address _bmc, String _net, String _validators, long _offset) {
+    public BTPMessageVerifier(Address _bmc, String _net, String _validators, byte[] _header) {
         BMVProperties properties = getProperties();
         properties.setBmc(_bmc);
         properties.setNet(_net);
         Validators validators = Validators.fromString(_validators);
+        BlockHeader header = BlockHeader.fromBytes(_header);
         properties.setValidators(validators);
         if (properties.getLastHeight() == 0) {
-            properties.setLastHeight(_offset);
+            properties.setLastHeight(header.getHeight());
         }
         if (properties.getMta() == null) {
-            MerkleTreeAccumulator mta = new MerkleTreeAccumulator();
-            mta.setHeight(_offset);
-            mta.setOffset(_offset);
+            MerkleTreeAccumulator mta = new MerkleTreeAccumulator(header.getHeight());
+            mta.add(hash(header.toBytes()));
             properties.setMta(mta);
         }
         setProperties(properties);
     }
 
     static byte[] hash(byte[] bytes) {
-        return Context.hash("sha3-256",bytes);
+        return Context.hash(SHA3_256, bytes);
     }
 
     static Address recoverAddress(byte[] msg, byte[] sig, boolean compressed) {
@@ -144,11 +149,18 @@ public class BTPMessageVerifier implements BMV {
         return ret;
     }
 
+    private static byte[] encodeKey(Object value) {
+        ByteArrayObjectWriter writer = Context.newByteArrayObjectWriter("RLPn");
+        writer.write(value);
+        return writer.toByteArray();
+    }
+
     private Receipt proveReceiptProof(ReceiptProof receiptProof, byte[] receiptHash) {
         try {
             byte[] serializedReceipt = MerklePatriciaTree.prove(
+                    SHA3_256,
                     receiptHash,
-                    MerklePatriciaTree.encodeKey(receiptProof.getIndex()),
+                    encodeKey(receiptProof.getIndex()),
                     receiptProof.getProofs().getProofs());
             Receipt receipt = Receipt.fromBytes(serializedReceipt);
             byte[] eventLogsHash = receipt.getEventLogsHash();
@@ -158,8 +170,9 @@ public class BTPMessageVerifier implements BMV {
                 int i=0;
                 for(MPTProof eventProof : eventProofs){
                     byte[] serializedEventLog = MerklePatriciaTree.prove(
+                            SHA3_256,
                             eventLogsHash,
-                            MerklePatriciaTree.encodeKey(eventProof.getIndex()),
+                            encodeKey(eventProof.getIndex()),
                             eventProof.getProofs().getProofs());
                     EventLog eventLog = EventLog.fromBytes(serializedEventLog);
                     eventLogs[i++] = eventLog;
@@ -178,7 +191,7 @@ public class BTPMessageVerifier implements BMV {
         for(BlockUpdate blockUpdate : blockUpdates) {
             BlockHeader blockHeader = blockUpdate.getBlockHeader();
             long blockHeight = blockHeader.getHeight();
-            long nextHeight = mta.getHeight() + 1;
+            long nextHeight = mta.getHeight();
             if (nextHeight == blockHeight) {
                 byte[] blockHash = hash(blockHeader.toBytes());
                 verifyVotes(blockUpdate.getVotes(), blockHeight, blockHash, validators);
@@ -287,5 +300,4 @@ public class BTPMessageVerifier implements BMV {
                 mta.getOffset(), properties.getLastHeight()).toBytes());
         return s;
     }
-
 }

@@ -104,7 +104,6 @@ public class BTPMessageVerifier implements BMV {
 
     private void handleFirstBlockHeader(BlockHeader blockHeader, BMVProperties bmvProperties) {
         var prev = blockHeader.getPrev();
-        if (prev != null) throw BMVException.unknown("not first blockUpdate");
         var updateNumber = blockHeader.getUpdateNumber();
         var blockUpdateNid = blockHeader.getNid();
         var msgCnt = blockHeader.getMessageCount();
@@ -112,7 +111,7 @@ public class BTPMessageVerifier implements BMV {
         NetworkSection ns = new NetworkSection(
                 blockUpdateNid,
                 updateNumber,
-                null,
+                prev,
                 msgCnt,
                 msgRoot
         );
@@ -125,7 +124,7 @@ public class BTPMessageVerifier implements BMV {
         bmvProperties.setProofContextHash(nextProofContextHash);
         bmvProperties.setProofContext(nextProofContext);
         bmvProperties.setLastNetworkSectionHash(nsHash);
-        bmvProperties.setLastSequence(BigInteger.ZERO);
+        bmvProperties.setLastSequence(updateNumber.shiftRight(1));
         bmvProperties.setLastMessagesRoot(msgRoot);
         bmvProperties.setLastMessageCount(msgCnt);
         bmvProperties.setLastFirstMessageSN(blockHeader.getFirstMessageSn());

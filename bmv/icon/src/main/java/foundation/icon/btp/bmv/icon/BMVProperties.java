@@ -16,6 +16,7 @@
 
 package foundation.icon.btp.bmv.icon;
 
+import foundation.icon.btp.lib.MerkleTreeAccumulator;
 import score.*;
 
 public class BMVProperties {
