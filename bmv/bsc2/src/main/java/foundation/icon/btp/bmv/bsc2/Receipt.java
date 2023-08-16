@@ -21,10 +21,13 @@ import scorex.util.ArrayList;
 import scorex.util.Collections;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 
 public class Receipt {
     public static final int StatusFailed = 0;
+    private static final int AccessListTx = 1;
+    private static final int DynamicFeeTx = 2;
     private final byte[] postStatusOrState;
     private final List<EventLog> logs;
 
@@ -35,7 +38,6 @@ public class Receipt {
     }
 
     public static Receipt readObject(ObjectReader r) {
-        // TODO supports to decoding typed-receipt
         r.beginList();
         byte[] postStatusOrState = r.readByteArray();
         r.readBigInteger();
@@ -51,7 +53,18 @@ public class Receipt {
     }
 
     public static Receipt fromBytes(byte[] bytes) {
-        return Receipt.readObject(Context.newByteArrayObjectReader("RLP", bytes));
+        Context.require(bytes.length > 0, "Invalid receipt bytes");
+
+        // legacy transaction
+        if ((bytes[0] & 0xff) > 0x7f) {
+            return Receipt.readObject(Context.newByteArrayObjectReader("RLP", bytes));
+        }
+
+        // typed transaction
+        Context.require(bytes[0] == AccessListTx || bytes[0] == DynamicFeeTx,
+                "Unsupported typed transaction");
+        return Receipt.readObject(Context.newByteArrayObjectReader("RLP",
+                Arrays.copyOfRange(bytes, 1, bytes.length)));
     }
 
     public int getStatus() {
