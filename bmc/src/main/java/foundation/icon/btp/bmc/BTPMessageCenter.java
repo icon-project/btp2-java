@@ -540,6 +540,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
             link.setRxSeq(rxSeq.add(BigInteger.valueOf(msgCount)));
         }
         putLink(link);
+        RelayMessage(_prev, BigInteger.valueOf(msgCount));
 
         // dispatch BTPMessages
         for (byte[] serializedMsg : serializedMsgs) {
@@ -1183,5 +1184,9 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
         if (!getMode().equals(MODE_NORMAL)) {
             throw BMCException.unknown("not normal mode");
         }
+    }
+
+    @EventLog(indexed = 1)
+    public void RelayMessage(String _prev, BigInteger _count) {
     }
 }
