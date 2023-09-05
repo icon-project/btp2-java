@@ -153,11 +153,11 @@ public interface ICONSpecific {
      * (EventLog) Logs the event that handle the relay message
      * The tracker monitors this event.
      * <p>
-     * indexed: 1
+     * indexed: 0
      *
      * @param _prev  String ( BTP Address of the previous BMC )
      * @param _count Integer ( number of the processed BTP message )
      */
-    @EventLog(indexed = 1)
+    @EventLog
     void RelayMessage(String _prev, BigInteger _count);
 }

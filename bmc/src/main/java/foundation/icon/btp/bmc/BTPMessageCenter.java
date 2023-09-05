@@ -1186,7 +1186,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
         }
     }
 
-    @EventLog(indexed = 1)
+    @EventLog
     public void RelayMessage(String _prev, BigInteger _count) {
     }
 }
