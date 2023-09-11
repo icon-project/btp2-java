@@ -277,6 +277,8 @@ public class MessageWithFeeTest implements BMCIntegrationTest {
         System.out.println("handleRelayMessageShouldIncreaseRxSeqAndAccumulateReward");
         Consumer<TransactionResult> checker = MessageTest.rxSeqChecker(prev)
                 .andThen(rewardChecker(msg));
+        System.out.println("handleRelayMessageShouldEmitRelayMessage");
+        checker = checker.andThen(MessageTest.relayMessageEventChecker(prev, 1));
         if (expectBTPError != null) {
             System.out.println("handleRelayMessageShouldReplyBTPError");
             checker = checker.andThen(responseMessageChecker(prev, msg, expectBTPError));

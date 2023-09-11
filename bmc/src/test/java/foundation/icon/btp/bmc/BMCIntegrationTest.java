@@ -139,4 +139,10 @@ public interface BMCIntegrationTest extends BTPIntegrationTest {
                 consumer, null);
     }
 
+    static Consumer<TransactionResult> relayMessageEvent(
+            Consumer<ICONSpecificScoreClient.RelayMessage> consumer) {
+        return eventLogChecker(
+                ICONSpecificScoreClient.RelayMessage::eventLogs,
+                consumer, null);
+    }
 }

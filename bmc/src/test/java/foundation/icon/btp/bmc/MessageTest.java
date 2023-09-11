@@ -158,6 +158,15 @@ public class MessageTest implements BMCIntegrationTest {
                 )));
     }
 
+    static Consumer<TransactionResult> relayMessageEventChecker(
+            final BTPAddress prev, final int count) {
+        return BMCIntegrationTest.relayMessageEvent(
+                (el) -> {
+                    assertEquals(prev.toString(), el.get_prev());
+                    assertEquals(BigInteger.valueOf(count), el.get_count());
+                });
+    }
+
     @ParameterizedTest
     @MethodSource("sendMessageShouldSuccessArguments")
     void sendMessageShouldSuccess(
@@ -282,6 +291,8 @@ public class MessageTest implements BMCIntegrationTest {
 
         System.out.println("handleRelayMessageShouldIncreaseRxSeq");
         Consumer<TransactionResult> checker = rxSeqChecker(prev);
+        System.out.println("handleRelayMessageShouldEmitRelayMessage");
+        checker = checker.andThen(relayMessageEventChecker(prev, 1));
         if (expectBTPError != null) {
             if (snCompare > 0) {
                 System.out.println("handleRelayMessageShouldReplyBTPError");
