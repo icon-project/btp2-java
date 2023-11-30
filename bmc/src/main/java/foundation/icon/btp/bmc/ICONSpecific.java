@@ -160,4 +160,16 @@ public interface ICONSpecific {
      */
     @EventLog
     void RelayMessage(String _prev, BigInteger _count);
+
+    /**
+     * (EventLog) Logs the event that handle the fee table
+     * The tracker monitors this event.
+     * <p>
+     * indexed: 0
+     *
+     * @param _dst   String[] ( Rlp encoded of list of BTP Network Address of the destination BMC )
+     * @param _value Integer[][] ( Rlp encoded of lists of relay fees in the path including return path )
+     */
+    @EventLog
+    void SetFeeTable(byte[] _dst, byte[] _value);
 }

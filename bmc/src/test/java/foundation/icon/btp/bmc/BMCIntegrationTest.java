@@ -145,4 +145,12 @@ public interface BMCIntegrationTest extends BTPIntegrationTest {
                 ICONSpecificScoreClient.RelayMessage::eventLogs,
                 consumer, null);
     }
+
+    static Consumer<TransactionResult> setFeeTableEvent(
+            Consumer<ICONSpecificScoreClient.SetFeeTable> consumer) {
+        return eventLogChecker(
+                ICONSpecificScoreClient.SetFeeTable::eventLogs,
+                consumer, null);
+    }
+
 }
