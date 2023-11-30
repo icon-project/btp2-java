@@ -60,7 +60,7 @@ public class BlockTree {
         List<Item> items = new ArrayList<>();
         items.add(new Item(nleaves, root));
 
-        while(items.size() > 0) {
+        while(!items.isEmpty()) {
             Item item = items.remove(0);
             Hash id = item.id;
             List<Hash> children = new ArrayList<>();
@@ -79,12 +79,12 @@ public class BlockTree {
         List<Hash> children = new ArrayList<>();
         children.add(o.root);
         w.beginList(o.nodes.size());
-        while (children.size() > 0) {
+        while (!children.isEmpty()) {
             Hash node = children.remove(0);
             List<Hash> tmp = o.nodes.get(node);
             w.write(tmp.size());
             w.write(node);
-            if (tmp.size() > 0) {
+            if (!tmp.isEmpty()) {
                 children.addAll(tmp);
             }
         }
@@ -155,9 +155,13 @@ public class BlockTree {
     }
 
     public void prune(Hash until, OnRemoveListener lst) {
+        if (until.equals(root)) {
+            return;
+        }
+
         List<Hash> removals = new ArrayList<>();
         removals.add(root);
-        while (removals.size() > 0) {
+        while (!removals.isEmpty()) {
             List<Hash> buf = new ArrayList<>();
             for (Hash removal : removals) {
                 List<Hash> leaves = nodes.get(removal);
@@ -178,7 +182,7 @@ public class BlockTree {
 
     @Override
     public String toString() {
-        return "BlockTrie{" +
+        return "BlockTree{" +
                 "root=" + root +
                 ", nodes=" + nodes +
                 '}';
