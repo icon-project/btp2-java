@@ -44,6 +44,8 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
+import static foundation.icon.score.util.Encode.encode;
+
 public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
     private static final Logger logger = Logger.getLogger(BTPMessageCenter.class);
 
@@ -359,6 +361,7 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
                 fees.remove(dstNet);
             }
         }
+        SetFeeTable(encode(_dst), encode(_value));
     }
 
     private BigInteger[] getFeeList(String net, boolean includeBackward) {
@@ -1188,5 +1191,9 @@ public class BTPMessageCenter implements BMC, ICONSpecific, OwnerManager {
 
     @EventLog
     public void RelayMessage(String _prev, BigInteger _count) {
+    }
+
+    @EventLog
+    public void SetFeeTable(byte[] _dst, byte[] _value) {
     }
 }

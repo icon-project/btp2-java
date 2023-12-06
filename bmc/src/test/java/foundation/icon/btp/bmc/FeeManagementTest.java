@@ -20,17 +20,23 @@ import foundation.icon.btp.lib.BTPAddress;
 import foundation.icon.btp.test.BTPIntegrationTest;
 import foundation.icon.btp.test.MockBMVIntegrationTest;
 import foundation.icon.jsonrpc.Address;
+import foundation.icon.jsonrpc.model.TransactionResult;
 import foundation.icon.score.test.ScoreIntegrationTest;
 import foundation.icon.score.util.ArrayUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import score.ByteArrayObjectWriter;
+import score.Context;
+import score.ObjectReader;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
+import static foundation.icon.score.util.Encode.encode;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -108,8 +114,10 @@ public class FeeManagementTest implements BMCIntegrationTest {
         BigInteger[][] _value = fees.stream()
                 .map(FeeInfo::getValues)
                 .toArray(BigInteger[][]::new);
-        bmc.setFeeTable(_dst, _value);
 
+
+        Consumer<TransactionResult> checker = setFeeTableEventChecker(_dst, _value);
+        bmc.setFeeTable(checker, _dst, _value);
         BigInteger[][] ret = bmc.getFeeTable(_dst);
         assertArrayEquals(_value, ret);
     }
@@ -151,4 +159,15 @@ public class FeeManagementTest implements BMCIntegrationTest {
         assertEquals(ArrayUtil.sum(forward(reachableFee.getValues())), bmc.getFee(reachable.net(), false));
         assertEquals(ArrayUtil.sum(reachableFee.getValues()), bmc.getFee(reachable.net(), true));
     }
+
+    static Consumer<TransactionResult> setFeeTableEventChecker(
+            String[] _dst, BigInteger[][] _value) {
+
+        return BMCIntegrationTest.setFeeTableEvent(
+                (el) -> {
+                    assertArrayEquals(encode(_dst), el.get_dst());
+                    assertArrayEquals(encode(_value), el.get_value());
+                });
+    }
+
 }
