@@ -87,6 +87,7 @@ public class BTPMessageVerifier implements BMV {
                 ret[i] = msgList.get(i);
             }
         }
+        Context.setFeeSharingProportion(100);
         return ret;
     }
 
