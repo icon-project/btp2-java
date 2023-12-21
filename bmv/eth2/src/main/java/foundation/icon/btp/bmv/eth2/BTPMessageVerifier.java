@@ -106,8 +106,10 @@ public class BTPMessageVerifier implements BMV {
         }
         var retSize = msgList.size();
         var ret = new byte[retSize][];
-        for (int i = 0; i < retSize; i ++)
+        for (int i = 0; i < retSize; i++) {
             ret[i] = msgList.get(i);
+        }
+        Context.setFeeSharingProportion(100);
         return ret;
     }
 
