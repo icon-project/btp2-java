@@ -101,6 +101,7 @@ public class VoteAttestation {
         Context.require(nth <= 64, "Invalid voter index");
         int i = nth / 8;
         Context.require(i < VOTES_BYTES_LENGTH, "Invalid bitset access");
-        return (votes[i] >> (nth % 8) & 1) == 1;
+        Context.require(votes.length >= i + 1, "Invalid votes index");
+        return (votes[votes.length - i - 1] >> (nth % 8) & 1) == 1;
     }
 }
