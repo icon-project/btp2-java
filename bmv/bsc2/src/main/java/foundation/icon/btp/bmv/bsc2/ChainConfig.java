@@ -48,7 +48,7 @@ public class ChainConfig {
     public static ChainConfig fromChainID(BigInteger cid) {
         if (cid.longValue() == 56L) {
             // BSC Mainnet
-            return new ChainConfig(56L, 200L, 3L, null);
+            return new ChainConfig(56L, 200L, 3L, BigInteger.valueOf(31302048L));
         } else if (cid.longValue() == 97L) {
             // BSC Testnet
             return new ChainConfig(97L, 200L, 3L, BigInteger.valueOf(31103030L));
