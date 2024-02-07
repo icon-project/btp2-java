@@ -167,6 +167,8 @@ public class BlockUpdate {
                 return Constants.MAINNET_ALTAIR_VERSION;
             return Constants.MAINNET_GENESIS_VERSION;
         } else if (Arrays.equals(genesisValidatorsRoot, Constants.SEPOLIA_GENESIS_VALIDATORS_ROOT)) {
+            if (epoch.compareTo(Constants.SEPOLIA_DENEB_EPOCH) >= 0)
+                return Constants.SEPOLIA_DENEB_VERSION;
             if (epoch.compareTo(Constants.SEPOLIA_CAPELLA_EPOCH) >= 0)
                 return Constants.SEPOLIA_CAPELLA_VERSION;
             if (epoch.compareTo(Constants.SEPOLIA_BELLATRIX_EPOCH) >= 0)
