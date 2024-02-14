@@ -159,6 +159,8 @@ public class BlockUpdate {
 
     private static byte[] computeForkVersion(BigInteger epoch, byte[] genesisValidatorsRoot) {
         if (Arrays.equals(genesisValidatorsRoot, Constants.MAINNET_GENESIS_VALIDATORS_ROOT)) {
+            if (epoch.compareTo(Constants.MAINNET_DENEB_EPOCH) >= 0)
+                return Constants.MAINNET_DENEB_VERSION;
             if (epoch.compareTo(Constants.MAINNET_CAPELLA_EPOCH) >= 0)
                 return Constants.MAINNET_CAPELLA_VERSION;
             if (epoch.compareTo(Constants.MAINNET_BELLATRIX_EPOCH) >= 0)

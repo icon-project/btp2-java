@@ -32,18 +32,20 @@ public class Constants {
     public static final BigInteger MAINNET_ALTAIR_EPOCH = BigInteger.valueOf(74240);
     public static final BigInteger MAINNET_BELLATRIX_EPOCH = BigInteger.valueOf(144896);
     public static final BigInteger MAINNET_CAPELLA_EPOCH = BigInteger.valueOf(194048);
-    public static final byte[] MAINNET_CAPELLA_VERSION = StringUtil.hexToBytes("03000000");
-    public static final byte[] MAINNET_BELLATRIX_VERSION = StringUtil.hexToBytes("02000000");
-    public static final byte[] MAINNET_ALTAIR_VERSION = StringUtil.hexToBytes("01000000");
+    public static final BigInteger MAINNET_DENEB_EPOCH = BigInteger.valueOf(269568);
     public static final byte[] MAINNET_GENESIS_VERSION = StringUtil.hexToBytes("00000000");
+    public static final byte[] MAINNET_ALTAIR_VERSION = StringUtil.hexToBytes("01000000");
+    public static final byte[] MAINNET_BELLATRIX_VERSION = StringUtil.hexToBytes("02000000");
+    public static final byte[] MAINNET_CAPELLA_VERSION = StringUtil.hexToBytes("03000000");
+    public static final byte[] MAINNET_DENEB_VERSION = StringUtil.hexToBytes("04000000");
 
     public static final BigInteger SEPOLIA_ALTAIR_EPOCH = BigInteger.valueOf(50);
     public static final BigInteger SEPOLIA_BELLATRIX_EPOCH = BigInteger.valueOf(100);
     public static final BigInteger SEPOLIA_CAPELLA_EPOCH = BigInteger.valueOf(56832);
     public static final BigInteger SEPOLIA_DENEB_EPOCH = BigInteger.valueOf(132608);
-    public static final byte[] SEPOLIA_DENEB_VERSION = StringUtil.hexToBytes("90000073");
-    public static final byte[] SEPOLIA_CAPELLA_VERSION = StringUtil.hexToBytes("90000072");
-    public static final byte[] SEPOLIA_BELLATRIX_VERSION = StringUtil.hexToBytes("90000071");
-    public static final byte[] SEPOLIA_ALTAIR_VERSION = StringUtil.hexToBytes("90000070");
     public static final byte[] SEPOLIA_GENESIS_VERSION = StringUtil.hexToBytes("90000069");
+    public static final byte[] SEPOLIA_ALTAIR_VERSION = StringUtil.hexToBytes("90000070");
+    public static final byte[] SEPOLIA_BELLATRIX_VERSION = StringUtil.hexToBytes("90000071");
+    public static final byte[] SEPOLIA_CAPELLA_VERSION = StringUtil.hexToBytes("90000072");
+    public static final byte[] SEPOLIA_DENEB_VERSION = StringUtil.hexToBytes("90000073");
 }
