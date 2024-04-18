@@ -135,10 +135,10 @@ public class Header {
     }
 
     public static void writeObject(ObjectWriter w, Header o) {
-        if (ChainConfig.getInstance().isHertz(o.number)) {
-            w.beginList(16);
-        } else if (ChainConfig.getInstance().isTycho(o.number)) {
+        if (ChainConfig.getInstance().isTycho(o.number)) {
             w.beginList(19);
+        } else if (ChainConfig.getInstance().isHertz(o.number)) {
+            w.beginList(16);
         } else {
             w.beginList(15);
         }
