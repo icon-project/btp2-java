@@ -24,6 +24,7 @@ public class ChainConfig {
     public final long Epoch;
     public final long Period;
     public final BigInteger Hertz;
+    public final BigInteger Tycho;
 
     private static ChainConfig instance;
 
@@ -34,11 +35,12 @@ public class ChainConfig {
         return instance;
     }
 
-    private ChainConfig(long chainId, long epoch, long period, BigInteger hertz) {
+    private ChainConfig(long chainId, long epoch, long period, BigInteger hertz, BigInteger tycho) {
         this.ChainID = chainId;
         this.Epoch = epoch;
         this.Period = period;
         this.Hertz = hertz;
+        this.Tycho = tycho;
     }
 
     public static ChainConfig getInstance() {
@@ -48,13 +50,14 @@ public class ChainConfig {
     public static ChainConfig fromChainID(BigInteger cid) {
         if (cid.longValue() == 56L) {
             // BSC Mainnet
-            return new ChainConfig(56L, 200L, 3L, BigInteger.valueOf(31302048L));
+            return new ChainConfig(56L, 200L, 3L, BigInteger.valueOf(31302048L), null);
         } else if (cid.longValue() == 97L) {
             // BSC Testnet
-            return new ChainConfig(97L, 200L, 3L, BigInteger.valueOf(31103030L));
+            return new ChainConfig(97L, 200L, 3L, BigInteger.valueOf(31103030L),
+                    BigInteger.valueOf(39539137L));
         } else if (cid.longValue() == 99L) {
             // Private BSC Testnet
-            return new ChainConfig(99L, 200L, 3L, BigInteger.valueOf(8));
+            return new ChainConfig(99L, 200L, 3L, BigInteger.valueOf(8), null);
         }
 
         Context.require(false, "No Chain Config - ChainID(" + cid.intValue() + ")");
@@ -67,6 +70,10 @@ public class ChainConfig {
 
     public boolean isHertz(BigInteger number) {
         return Hertz != null && Hertz.compareTo(number) <= 0;
+    }
+
+    public boolean isTycho(BigInteger number) {
+        return Tycho != null && Tycho.compareTo(number) <= 0;
     }
 
 }
