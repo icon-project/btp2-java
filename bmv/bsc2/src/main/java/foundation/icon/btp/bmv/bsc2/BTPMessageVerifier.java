@@ -301,6 +301,10 @@ public class BTPMessageVerifier implements BMV {
         Context.require(head.getGasLimit().compareTo(MAX_GAS_LIMIT) <= 0, "Invalid gas limit(> max)");
         Context.require(head.getGasUsed().compareTo(head.getGasLimit()) < 0, "Invalid gas used");
         Context.require(head.getSigner(BigInteger.valueOf(config.ChainID)).equals(head.getCoinbase()), "Coinbase mismatch");
+
+        if (config.isTycho(head.getNumber())) {
+            Context.require(head.getWithdrawalsHash().equals(EMPTY_WITHDRAWALS_HASH), "Invalid withdrawals hash");
+        }
     }
 
     private void verify(ChainConfig config, Header head, Header parent, Snapshot snap) {

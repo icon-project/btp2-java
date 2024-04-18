@@ -31,7 +31,11 @@ public class Header {
     public static final int VALIDATOR_NUMBER_SIZE = 1;
     public static final int VALIDATOR_BYTES_LENGTH = EthAddress.LENGTH + BLSPublicKey.LENGTH;
     // pre-calculated constant uncle hash:) rlp([])
-    public static final Hash UNCLE_HASH = Hash.of("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
+    public static final Hash UNCLE_HASH =
+        Hash.of("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
+    // known hash of empty withdrawl set
+    public static final Hash EMPTY_WITHDRAWALS_HASH =
+        Hash.of("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421");
     public static final BigInteger INTURN_DIFF = BigInteger.valueOf(2L);
     public static final BigInteger NOTURN_DIFF = BigInteger.valueOf(1L);
     public static final BigInteger GAS_LIMIT_BOUND_DIVISOR = BigInteger.valueOf(256L);
@@ -54,6 +58,9 @@ public class Header {
     private final Hash mixDigest;
     private final byte[] nonce;
     private final BigInteger baseFee;
+    private final Hash withdrawalsHash;
+    private final BigInteger blobGasUsed;
+    private final BigInteger excessBlobGas;
 
     // caches
     private Hash hashCache;
@@ -63,7 +70,8 @@ public class Header {
     public Header(Hash parentHash, Hash uncleHash, EthAddress coinbase, Hash root,
             Hash txHash, Hash receiptHash, byte[] bloom, BigInteger difficulty,
             BigInteger number, BigInteger gasLimit, BigInteger gasUsed, long time,
-            byte[] extra, Hash mixDigest, byte[] nonce, BigInteger baseFee)
+            byte[] extra, Hash mixDigest, byte[] nonce, BigInteger baseFee, Hash withdrawalsHash,
+            BigInteger blobGasUsed, BigInteger excessBlobGas)
     {
         this.parentHash = parentHash;
         this.uncleHash = uncleHash;
@@ -81,6 +89,9 @@ public class Header {
         this.mixDigest = mixDigest;
         this.nonce = nonce;
         this.baseFee = baseFee;
+        this.withdrawalsHash = withdrawalsHash;
+        this.blobGasUsed = blobGasUsed;
+        this.excessBlobGas = excessBlobGas;
     }
 
     public static Header readObject(ObjectReader r) {
@@ -100,17 +111,37 @@ public class Header {
         byte[] extra = r.readByteArray();
         Hash mixDigest = r.read(Hash.class);
         byte[] nonce = r.readByteArray();
+
+        // For Hertz Upgrade
         BigInteger baseFee = null;
         if (ChainConfig.getInstance().isHertz(number)) {
             baseFee = r.readBigInteger();
         }
+
+        // For Tycho Upgrade
+        Hash withdrawalsHash = Hash.EMPTY;
+        BigInteger blobGasUsed = null;
+        BigInteger excessBlobGas = null;
+        if (ChainConfig.getInstance().isTycho(number)) {
+            withdrawalsHash = r.read(Hash.class);
+            blobGasUsed = r.readBigInteger();
+            excessBlobGas = r.readBigInteger();
+        }
+
         r.end();
         return new Header(parentHash, uncleHash, coinbase, root, txHash, receiptHash, bloom,
-                difficulty, number, gasLimit, gasUsed, time, extra, mixDigest, nonce, baseFee);
+                difficulty, number, gasLimit, gasUsed, time, extra, mixDigest, nonce, baseFee,
+                withdrawalsHash, blobGasUsed, excessBlobGas);
     }
 
     public static void writeObject(ObjectWriter w, Header o) {
-        w.beginList(15 + (o.baseFee != null ? 1 : 0));
+        if (ChainConfig.getInstance().isTycho(o.number)) {
+            w.beginList(19);
+        } else if (ChainConfig.getInstance().isHertz(o.number)) {
+            w.beginList(16);
+        } else {
+            w.beginList(15);
+        }
         w.write(o.parentHash);
         w.write(o.uncleHash);
         w.write(o.coinbase);
@@ -126,8 +157,16 @@ public class Header {
         w.write(o.extra);
         w.write(o.mixDigest);
         w.write(o.nonce);
-        if (o.baseFee != null) {
+        if (ChainConfig.getInstance().isHertz(o.number)) {
+            Context.require(o.baseFee != null, "no fields for hertz");
             w.write(o.baseFee);
+        }
+        if (ChainConfig.getInstance().isTycho(o.number)) {
+            Context.require(o.withdrawalsHash != Hash.EMPTY && o.blobGasUsed != null
+                    && o.excessBlobGas != null, "no fields for tycho");
+            w.write(o.withdrawalsHash);
+            w.write(o.blobGasUsed);
+            w.write(o.excessBlobGas);
         }
         w.end();
     }
@@ -274,5 +313,9 @@ public class Header {
 
     public Hash getMixDigest() {
         return this.mixDigest;
+    }
+
+    public Hash getWithdrawalsHash() {
+        return this.withdrawalsHash;
     }
 }
