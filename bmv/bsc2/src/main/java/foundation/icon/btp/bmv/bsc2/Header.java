@@ -122,7 +122,7 @@ public class Header {
         Hash withdrawalsHash = Hash.EMPTY;
         BigInteger blobGasUsed = null;
         BigInteger excessBlobGas = null;
-        if (ChainConfig.getInstance().isTycho(number)) {
+        if (ChainConfig.getInstance().isTycho(time)) {
             withdrawalsHash = r.read(Hash.class);
             blobGasUsed = r.readBigInteger();
             excessBlobGas = r.readBigInteger();
@@ -135,7 +135,7 @@ public class Header {
     }
 
     public static void writeObject(ObjectWriter w, Header o) {
-        if (ChainConfig.getInstance().isTycho(o.number)) {
+        if (ChainConfig.getInstance().isTycho(o.time)) {
             w.beginList(19);
         } else if (ChainConfig.getInstance().isHertz(o.number)) {
             w.beginList(16);
@@ -161,7 +161,7 @@ public class Header {
             Context.require(o.baseFee != null, "no fields for hertz");
             w.write(o.baseFee);
         }
-        if (ChainConfig.getInstance().isTycho(o.number)) {
+        if (ChainConfig.getInstance().isTycho(o.time)) {
             Context.require(o.withdrawalsHash != Hash.EMPTY && o.blobGasUsed != null
                     && o.excessBlobGas != null, "no fields for tycho");
             w.write(o.withdrawalsHash);
