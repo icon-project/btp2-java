@@ -50,11 +50,12 @@ public class ChainConfig {
     public static ChainConfig fromChainID(BigInteger cid) {
         if (cid.longValue() == 56L) {
             // BSC Mainnet
-            return new ChainConfig(56L, 200L, 3L, BigInteger.valueOf(31302048L), null);
+            return new ChainConfig(56L, 200L, 3L, BigInteger.valueOf(31302048L),
+                    BigInteger.valueOf(1718863500L));
         } else if (cid.longValue() == 97L) {
             // BSC Testnet
             return new ChainConfig(97L, 200L, 3L, BigInteger.valueOf(31103030L),
-                    BigInteger.valueOf(39539137L));
+                    BigInteger.valueOf(1713330442L));
         } else if (cid.longValue() == 99L) {
             // Private BSC Testnet
             return new ChainConfig(99L, 200L, 3L, BigInteger.valueOf(8), null);
@@ -72,8 +73,8 @@ public class ChainConfig {
         return Hertz != null && Hertz.compareTo(number) <= 0;
     }
 
-    public boolean isTycho(BigInteger number) {
-        return Tycho != null && Tycho.compareTo(number) <= 0;
+    public boolean isTycho(long time) {
+        return Tycho != null && Tycho.longValue() <= time;
     }
 
 }
