@@ -44,7 +44,8 @@ public class BTPMessageVerifier implements BMV {
     private final DictDB<byte[], Header> heads = Context.newDictDB("heads", Header.class);
 
     public BTPMessageVerifier(Address _bmc, BigInteger _chainId, @Optional byte[] _header,
-                              @Optional byte[] _validators, @Optional byte[] _candidates, @Optional byte[] _recents) {
+                              @Optional byte[] _validators, @Optional byte[] _candidates,
+                              @Optional byte[] _recents, @Optional int _currTurnLength, @Optional int _nextTurnLength) {
         ChainConfig config = ChainConfig.setChainID(_chainId);
         if (_header != null) {
             Header head = Header.fromBytes(_header);
@@ -75,7 +76,7 @@ public class BTPMessageVerifier implements BMV {
                         Validators.fromBytes(_candidates),
                         Validators.fromBytes(_validators),
                         EthAddresses.fromBytes(_recents),
-                        attestation));
+                        attestation, _currTurnLength, _nextTurnLength));
         } else {
             Context.require(_bmc.equals(this.bmc.get()), "Mismatch BMC address");
         }
@@ -300,7 +301,7 @@ public class BTPMessageVerifier implements BMV {
         Context.require(head.getGasLimit().compareTo(MIN_GAS_LIMIT) >= 0, "Invalid gas limit(< min)");
         Context.require(head.getGasLimit().compareTo(MAX_GAS_LIMIT) <= 0, "Invalid gas limit(> max)");
         Context.require(head.getGasUsed().compareTo(head.getGasLimit()) < 0, "Invalid gas used");
-        Context.require(head.getSigner(BigInteger.valueOf(config.ChainID)).equals(head.getCoinbase()), "Coinbase mismatch");
+        Context.require(head.getSigner(config, BigInteger.valueOf(config.ChainID)).equals(head.getCoinbase()), "Coinbase mismatch");
 
         if (config.isTycho(head.getTime())) {
             Context.require(head.getWithdrawalsHash().equals(EMPTY_WITHDRAWALS_HASH), "Invalid withdrawals hash");
@@ -384,7 +385,7 @@ public class BTPMessageVerifier implements BMV {
         Validators vals = snap.getValidators();
         long number = head.getNumber().longValue();
         EthAddress inturn = vals.get((int)(number % (long)vals.size())).getAddress();
-        if (snap.getRecents().contains(inturn)) {
+        if (snap.isRecentlySigned(inturn)) {
             return 0L;
         }
         return DEFAULT_BACKOFF_TIME;

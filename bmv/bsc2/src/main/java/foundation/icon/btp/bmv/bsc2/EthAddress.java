@@ -23,6 +23,7 @@ import java.util.Arrays;
 
 public class EthAddress implements Comparable<EthAddress> {
     public static final int LENGTH = 20;
+    public static final EthAddress EMPTY = new EthAddress(new byte[LENGTH]);
 
     private final byte[] data;
 
