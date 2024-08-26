@@ -191,6 +191,9 @@ public class Snapshot {
                 ", candidates=" + candidates +
                 ", voters=" + voters +
                 ", recents=" + recents +
+                ", attestation=" + attestation +
+                ", currTurnLength=" + currTurnLength +
+                ", nextTurnLength=" + nextTurnLength +
                 '}';
     }
 
