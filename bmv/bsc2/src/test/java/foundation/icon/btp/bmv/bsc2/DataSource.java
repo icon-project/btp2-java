@@ -61,8 +61,8 @@ public class DataSource {
             private String validators;
             private String candidates;
             private String recents;
-            private int currTurnLength;
-            private int nextTurnLength;
+            private Integer currTurnLength;
+            private Integer nextTurnLength;
 
             public byte[] getHeader() {
                 return StringUtil.hexToBytes(header);

@@ -45,7 +45,7 @@ public class BTPMessageVerifier implements BMV {
 
     public BTPMessageVerifier(Address _bmc, BigInteger _chainId, @Optional byte[] _header,
                               @Optional byte[] _validators, @Optional byte[] _candidates,
-                              @Optional byte[] _recents, @Optional int _currTurnLength, @Optional int _nextTurnLength) {
+                              @Optional byte[] _recents, @Optional Integer _currTurnLength, @Optional Integer _nextTurnLength) {
         ChainConfig config = ChainConfig.setChainID(_chainId);
         if (_header != null) {
             Header head = Header.fromBytes(_header);
@@ -84,7 +84,7 @@ public class BTPMessageVerifier implements BMV {
 
     @External(readonly = true)
     public String getVersion() {
-        return "0.7.0";
+        return "0.7.1";
     }
 
     @External(readonly = true)

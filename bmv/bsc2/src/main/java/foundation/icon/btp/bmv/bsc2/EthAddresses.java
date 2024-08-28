@@ -67,8 +67,8 @@ public class EthAddresses {
 
     public int count(EthAddress cmp) {
         int cnt = 0;
-        for (int i = 0; i < addresses.size(); i++) {
-            if (addresses.get(i).equals(cmp)) {
+        for (EthAddress address : addresses) {
+            if (address.equals(cmp)) {
                 cnt++;
             }
         }
