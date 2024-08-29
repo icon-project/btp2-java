@@ -53,7 +53,7 @@ public class ChainConfig {
         if (cid.longValue() == 56L) {
             // BSC Mainnet
             return new ChainConfig(56L, 200L, 3L, BigInteger.valueOf(31302048L),
-                    BigInteger.valueOf(1718863500L), null);
+                    BigInteger.valueOf(1718863500L), BigInteger.valueOf(1727317200L));
         } else if (cid.longValue() == 97L) {
             // BSC Testnet
             return new ChainConfig(97L, 200L, 3L, BigInteger.valueOf(31103030L),
