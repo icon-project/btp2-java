@@ -96,7 +96,7 @@ public class Snapshot {
         Context.require(validators.contains(sealer), "UnauthorizedValidator");
 
         EthAddresses newRecents = new EthAddresses(recents);
-        if (newNumber.longValue() >= getMinerHistoryLength() + 1 && newRecents.size() > 0) {
+        if (newRecents.size() >= getMinerHistoryLength() + 1) {
             newRecents.remove(0);
         }
 
@@ -123,17 +123,18 @@ public class Snapshot {
         if (newNumber.longValue() % config.Epoch == getMinerHistoryLength()) {
             newCurrTurnLength = nextTurnLength;
             newValidators = candidates;
+
+            // If the number of current validators is less than the number of previous validators,
+            // the capacity of the recent signers should be adjusted
+            int limit = Utils.calcMinerHistoryLength(newValidators.size(), newCurrTurnLength) + 1;
+            for (int i = 0; i < newRecents.size() - limit; i++) {
+                newRecents.remove(i);
+            }
+
             if (config.isBohr(head.getTime())) {
                 // BEP-404: Clear Miner History when switching validators set
                 for (int i = 0; i < newRecents.size(); i++) {
                     newRecents.set(i, EthAddress.EMPTY);
-                }
-            } else {
-                // If the number of current validators is less than the number of previous validators,
-                // the capacity of the recent signers should be adjusted
-                int limit = newValidators.size() / 2;
-                for (int i = 0; i < newRecents.size() - limit; i++) {
-                    newRecents.remove(i);
                 }
             }
         }
@@ -146,7 +147,7 @@ public class Snapshot {
     }
 
     public int getMinerHistoryLength() {
-        return (validators.size() / 2 + 1) * currTurnLength - 1;
+        return Utils.calcMinerHistoryLength(validators.size(), currTurnLength);
     }
 
     public boolean isRecentlySigned(EthAddress signer) {

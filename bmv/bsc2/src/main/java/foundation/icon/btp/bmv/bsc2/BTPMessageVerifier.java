@@ -45,7 +45,7 @@ public class BTPMessageVerifier implements BMV {
 
     public BTPMessageVerifier(Address _bmc, BigInteger _chainId, @Optional byte[] _header,
                               @Optional byte[] _validators, @Optional byte[] _candidates,
-                              @Optional byte[] _recents, @Optional Integer _currTurnLength, @Optional Integer _nextTurnLength) {
+                              @Optional byte[] _recents, @Optional int _currTurnLength, @Optional int _nextTurnLength) {
         ChainConfig config = ChainConfig.setChainID(_chainId);
         if (_header != null) {
             Header head = Header.fromBytes(_header);
@@ -54,13 +54,14 @@ public class BTPMessageVerifier implements BMV {
             MerkleTreeAccumulator mta = new MerkleTreeAccumulator(head.getNumber().longValueExact());
             mta.add(head.getHash().toBytes());
 
+            Context.require(_currTurnLength > 0 && _nextTurnLength > 0, "Invalid turn lengths");
             Validators validators = Validators.fromBytes(_validators);
             EthAddresses recents = EthAddresses.fromBytes(_recents);
             if (head.getNumber().compareTo(BigInteger.ZERO) == 0) {
                 Context.require(recents.size() == 1, "Wrong recent signers");
             } else {
-                Context.require(recents.size() == validators.size() / 2 + 1,
-                        "Wrong recent signers - validators/2+1");
+                Context.require(recents.size() == Utils.calcMinerHistoryLength(validators.size(),
+                            _currTurnLength) + 1, "Wrong recent signer counts");
             }
 
             this.bmc.set(_bmc);
@@ -84,7 +85,7 @@ public class BTPMessageVerifier implements BMV {
 
     @External(readonly = true)
     public String getVersion() {
-        return "0.7.1";
+        return "0.7.2";
     }
 
     @External(readonly = true)

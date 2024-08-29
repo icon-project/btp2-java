@@ -36,7 +36,7 @@ public class BMVTest extends TestBase {
             byte[][] ret = (byte[][]) sm.call(BMC, BigInteger.ZERO, bmv.getAddress(), "handleRelayMessage",
                     BMC_BTP_ADDR.toString(), prev, BigInteger.valueOf(0), p.getMessage());
 
-            if (p.getResult().size() > 0) {
+            if (!p.getResult().isEmpty()) {
                 assertEquals(p.getResult().size(), ret.length);
                 for (int i=0; i<p.getResult().size(); i++) {
                     assertEquals(p.getResult().get(i), new String(ret[i]));
