@@ -24,7 +24,8 @@ public class BMVTest extends TestBase {
     public static Score deployBmv(DataSource.Case.Deployment deployment) throws Exception {
         return sm.deploy(sm.createAccount(), BTPMessageVerifier.class,
                 BMC.getAddress(), deployment.getChainId(), deployment.getHeader(),
-                deployment.getValidators(), deployment.getCandidates(), deployment.getRecents()
+                deployment.getValidators(), deployment.getCandidates(),
+                deployment.getRecents(), deployment.getCurrTurnLength(), deployment.getNextTurnLength()
         );
     }
 
@@ -35,7 +36,7 @@ public class BMVTest extends TestBase {
             byte[][] ret = (byte[][]) sm.call(BMC, BigInteger.ZERO, bmv.getAddress(), "handleRelayMessage",
                     BMC_BTP_ADDR.toString(), prev, BigInteger.valueOf(0), p.getMessage());
 
-            if (p.getResult().size() > 0) {
+            if (!p.getResult().isEmpty()) {
                 assertEquals(p.getResult().size(), ret.length);
                 for (int i=0; i<p.getResult().size(); i++) {
                     assertEquals(p.getResult().get(i), new String(ret[i]));

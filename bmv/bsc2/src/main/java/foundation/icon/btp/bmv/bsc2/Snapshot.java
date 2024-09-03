@@ -29,9 +29,13 @@ public class Snapshot {
     private final Validators voters;
     private final EthAddresses recents;
     private final VoteAttestation attestation;
+    private final int currTurnLength;
+    private final int nextTurnLength;
 
     public Snapshot(Hash hash, BigInteger number, Validators validators,
-            Validators candidates, Validators voters, EthAddresses recents, VoteAttestation attestation) {
+            Validators candidates, Validators voters, EthAddresses recents,
+            VoteAttestation attestation, int currTurnLength, int nextTurnLength) {
+
         this.hash = hash;
         this.number = number;
         // ensure the list of validators in ascending order
@@ -41,6 +45,8 @@ public class Snapshot {
         this.voters = voters;
         this.recents = recents;
         this.attestation = attestation;
+        this.currTurnLength = currTurnLength;
+        this.nextTurnLength = nextTurnLength;
     }
 
     public static void writeObject(ObjectWriter w, Snapshot o) {
@@ -52,6 +58,8 @@ public class Snapshot {
         w.write(o.voters);
         w.write(o.recents);
         w.write(o.attestation);
+        w.write(o.currTurnLength);
+        w.write(o.nextTurnLength);
         w.end();
     }
 
@@ -64,14 +72,17 @@ public class Snapshot {
         Validators voters = r.read(Validators.class);
         EthAddresses recents = r.read(EthAddresses.class);
         VoteAttestation attestation = r.read(VoteAttestation.class);
+        int currTurnLength = r.readOrDefault(Integer.class, Header.DEFAULT_TURN_LENGTH);
+        int nextTurnLength = r.readOrDefault(Integer.class, Header.DEFAULT_TURN_LENGTH);
         r.end();
-        return new Snapshot(hash, number, validators, candidates, voters, recents, attestation);
+        return new Snapshot(hash, number, validators, candidates, voters, recents, attestation,
+                currTurnLength, nextTurnLength);
     }
 
     public boolean inturn(EthAddress validator) {
-        BigInteger offset = number.add(BigInteger.ONE).mod(BigInteger.valueOf(validators.size()));
-        EthAddress[] vals = validators.getAddresses().toArray();
-        return vals[offset.intValue()].equals(validator);
+        BigInteger offset = number.add(BigInteger.ONE).divide(BigInteger.valueOf(currTurnLength))
+            .mod(BigInteger.valueOf(validators.size()));
+        return validators.getAddresses().get(offset.intValue()).equals(validator);
     }
 
     public Snapshot apply(ChainConfig config, Header head) {
@@ -80,34 +91,17 @@ public class Snapshot {
                 && hash.equals(head.getParentHash()), "Inconsistent block number");
         Context.require(hash.equals(head.getParentHash()), "Inconsistent block hash");
 
-
-        Validators newVoters = newNumber.longValue() % config.Epoch == (voters.size() / 2) + 1
-            ? validators
-            : voters;
-
-        Validators newValidators = newNumber.longValue() % config.Epoch == validators.size() / 2
-                ? candidates
-                : validators;
-
         // ensure the coinbase is sealer
         EthAddress sealer = head.getCoinbase();
         Context.require(validators.contains(sealer), "UnauthorizedValidator");
 
-        Validators newCandidates = config.isEpoch(newNumber) ? head.getValidators(config) : candidates;
         EthAddresses newRecents = new EthAddresses(recents);
-        int size = newRecents.size();
-        int limit = newValidators.size() / 2;
-        for (int i = 0; i < size - limit; i++) {
-            newRecents.remove(i);
+        if (newRecents.size() >= getMinerHistoryLength() + 1) {
+            newRecents.remove(0);
         }
 
-        Context.require(!newRecents.contains(sealer), "RecentlySigned");
-        newRecents.add(head.getCoinbase());
-        if (newNumber.compareTo(BigInteger.valueOf(limit + 1)) < 0) {
-            Context.require(newRecents.size() == newNumber.intValue(), "Invalid recents size");
-        } else {
-            Context.require(newRecents.size() == limit + 1, "Invalid recents size");
-        }
+        Context.require(newRecents.count(sealer) < currTurnLength, "RecentlySigned");
+        newRecents.add(sealer);
 
         VoteAttestation newAttestation = head.getVoteAttestation(config);
         if (newAttestation != null) {
@@ -116,7 +110,46 @@ public class Snapshot {
         } else {
             newAttestation = attestation;
         }
-        return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newVoters, newRecents, newAttestation);
+
+        int newCurrTurnLength = currTurnLength;
+        int newNextTurnLength = nextTurnLength;
+        Validators newValidators = validators;
+        Validators newCandidates = candidates;
+        Validators newVoters = voters;
+        if (newNumber.longValue() % config.Epoch == 0) {
+            newNextTurnLength = head.getTurnLength(config);
+            newCandidates = head.getValidators(config);
+        }
+        if (newNumber.longValue() % config.Epoch == getMinerHistoryLength()) {
+            newCurrTurnLength = nextTurnLength;
+            newValidators = candidates;
+
+            if (config.isBohr(head.getTime())) {
+                // BEP-404: Clear Miner History when switching validators set
+                newRecents.clear();
+            } else {
+                // If the number of current validators is less than the number of previous validators,
+                // the capacity of the recent signers should be adjusted
+                int limit = Utils.calcMinerHistoryLength(newValidators.size(), newCurrTurnLength) + 1;
+                for (int i = 0; i < newRecents.size() - limit; i++) {
+                    newRecents.remove(i);
+                }
+            }
+        }
+        if (newNumber.longValue() % config.Epoch == (long) (voters.size() / 2 + 1) * currTurnLength) {
+            newVoters = validators;
+        }
+
+        return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newVoters,
+                newRecents, newAttestation, newCurrTurnLength, newNextTurnLength);
+    }
+
+    public int getMinerHistoryLength() {
+        return Utils.calcMinerHistoryLength(validators.size(), currTurnLength);
+    }
+
+    public boolean isRecentlySigned(EthAddress signer) {
+        return recents.count(signer) >= currTurnLength;
     }
 
     public Hash getHash() {
@@ -156,6 +189,9 @@ public class Snapshot {
                 ", candidates=" + candidates +
                 ", voters=" + voters +
                 ", recents=" + recents +
+                ", attestation=" + attestation +
+                ", currTurnLength=" + currTurnLength +
+                ", nextTurnLength=" + nextTurnLength +
                 '}';
     }
 

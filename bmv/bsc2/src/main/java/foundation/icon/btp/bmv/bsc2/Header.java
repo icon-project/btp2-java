@@ -30,6 +30,7 @@ public class Header {
     public static final int EXTRA_SEAL = 65;
     public static final int VALIDATOR_NUMBER_SIZE = 1;
     public static final int VALIDATOR_BYTES_LENGTH = EthAddress.LENGTH + BLSPublicKey.LENGTH;
+    public static final int TURN_LENGTH_SIZE = 1;
     // pre-calculated constant uncle hash:) rlp([])
     public static final Hash UNCLE_HASH =
         Hash.of("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
@@ -41,6 +42,7 @@ public class Header {
     public static final BigInteger GAS_LIMIT_BOUND_DIVISOR = BigInteger.valueOf(256L);
     public static final BigInteger MAX_GAS_LIMIT = BigInteger.valueOf(0x7FFFFFFFFFFFFFFFL); // (2^63-1)
     public static final BigInteger MIN_GAS_LIMIT = BigInteger.valueOf(5000L);
+    public static final int DEFAULT_TURN_LENGTH = 1;
 
     private final Hash parentHash;
     private final Hash uncleHash;
@@ -61,6 +63,7 @@ public class Header {
     private final Hash withdrawalsHash;
     private final BigInteger blobGasUsed;
     private final BigInteger excessBlobGas;
+    private final Hash parentBeaconRoot;
 
     // caches
     private Hash hashCache;
@@ -92,6 +95,7 @@ public class Header {
         this.withdrawalsHash = withdrawalsHash;
         this.blobGasUsed = blobGasUsed;
         this.excessBlobGas = excessBlobGas;
+        this.parentBeaconRoot = Hash.EMPTY;
     }
 
     public static Header readObject(ObjectReader r) {
@@ -135,7 +139,9 @@ public class Header {
     }
 
     public static void writeObject(ObjectWriter w, Header o) {
-        if (ChainConfig.getInstance().isTycho(o.time)) {
+        if (ChainConfig.getInstance().isBohr(o.time)) {
+            w.beginList(20);
+        } else if (ChainConfig.getInstance().isTycho(o.time)) {
             w.beginList(19);
         } else if (ChainConfig.getInstance().isHertz(o.number)) {
             w.beginList(16);
@@ -167,6 +173,9 @@ public class Header {
             w.write(o.withdrawalsHash);
             w.write(o.blobGasUsed);
             w.write(o.excessBlobGas);
+        }
+        if (ChainConfig.getInstance().isBohr(o.time)) {
+            w.write(o.parentBeaconRoot);
         }
         w.end();
     }
@@ -232,6 +241,9 @@ public class Header {
                     return null;
                 }
                 int start = EXTRA_VANITY + VALIDATOR_NUMBER_SIZE + num * VALIDATOR_BYTES_LENGTH;
+                if (config.isBohr(time)) {
+                    start += TURN_LENGTH_SIZE;
+                }
                 int end = extra.length - EXTRA_SEAL;
                 blob = Arrays.copyOfRange(extra, start, end);
             }
@@ -240,34 +252,73 @@ public class Header {
         return atteCache;
     }
 
-    public EthAddress getSigner(BigInteger cid) {
+    public int getTurnLength(ChainConfig config) {
+        Context.require(config.isEpoch(number), "no turn length");
+        if (!config.isBohr(time)) {
+            return DEFAULT_TURN_LENGTH;
+        }
+
+        Context.require(extra.length > EXTRA_VANITY + EXTRA_SEAL, "too short extra data for including turn length");
+        int num = extra[EXTRA_VANITY];
+        int pos = EXTRA_VANITY + VALIDATOR_NUMBER_SIZE + num * VALIDATOR_BYTES_LENGTH;
+        Context.require(extra.length > pos, "no field for turn length");
+        return extra[pos];
+    }
+
+    public EthAddress getSigner(ChainConfig config, BigInteger cid) {
         Context.require(extra.length >= EXTRA_SEAL, "Invalid seal bytes");
         byte[] signature = Arrays.copyOfRange(extra, extra.length - EXTRA_SEAL, extra.length);
-        byte[] pubkey = Context.recoverKey("ecdsa-secp256k1", getSealHash(cid), signature, false);
+        byte[] pubkey = Context.recoverKey("ecdsa-secp256k1", getSealHash(config, cid), signature, false);
         byte[] pubhash  = Context.hash("keccak-256", Arrays.copyOfRange(pubkey, 1, pubkey.length));
         return new EthAddress(Arrays.copyOfRange(pubhash, 12, pubhash.length));
     }
 
-    private byte[] getSealHash(BigInteger cid) {
+    private byte[] getSealHash(ChainConfig config, BigInteger cid) {
         ByteArrayObjectWriter w = Context.newByteArrayObjectWriter("RLP");
-        w.beginList(16);
-        w.write(cid);
-        w.write(parentHash);
-        w.write(uncleHash);
-        w.write(coinbase);
-        w.write(root);
-        w.write(txHash);
-        w.write(receiptHash);
-        w.write(bloom);
-        w.write(difficulty);
-        w.write(number);
-        w.write(gasLimit);
-        w.write(gasUsed);
-        w.write(time);
-        w.write(Arrays.copyOfRange(extra, 0, extra.length-65));
-        w.write(mixDigest);
-        w.write(nonce);
-        w.end();
+        if (config.isBohr(time)) {
+            w.beginList(21);
+            w.write(cid);
+            w.write(parentHash);
+            w.write(uncleHash);
+            w.write(coinbase);
+            w.write(root);
+            w.write(txHash);
+            w.write(receiptHash);
+            w.write(bloom);
+            w.write(difficulty);
+            w.write(number);
+            w.write(gasLimit);
+            w.write(gasUsed);
+            w.write(time);
+            w.write(Arrays.copyOfRange(extra, 0, extra.length-65));
+            w.write(mixDigest);
+            w.write(nonce);
+            w.write(baseFee);
+            w.write(withdrawalsHash);
+            w.write(blobGasUsed);
+            w.write(excessBlobGas);
+            w.write(parentBeaconRoot);
+            w.end();
+        } else {
+            w.beginList(16);
+            w.write(cid);
+            w.write(parentHash);
+            w.write(uncleHash);
+            w.write(coinbase);
+            w.write(root);
+            w.write(txHash);
+            w.write(receiptHash);
+            w.write(bloom);
+            w.write(difficulty);
+            w.write(number);
+            w.write(gasLimit);
+            w.write(gasUsed);
+            w.write(time);
+            w.write(Arrays.copyOfRange(extra, 0, extra.length-65));
+            w.write(mixDigest);
+            w.write(nonce);
+            w.end();
+        }
         return Context.hash("keccak-256", w.toByteArray());
     }
 

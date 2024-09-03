@@ -25,6 +25,7 @@ public class ChainConfig {
     public final long Period;
     public final BigInteger Hertz;
     public final BigInteger Tycho;
+    public final BigInteger Bohr;
 
     private static ChainConfig instance;
 
@@ -35,12 +36,13 @@ public class ChainConfig {
         return instance;
     }
 
-    private ChainConfig(long chainId, long epoch, long period, BigInteger hertz, BigInteger tycho) {
+    private ChainConfig(long chainId, long epoch, long period, BigInteger hertz, BigInteger tycho, BigInteger bohr) {
         this.ChainID = chainId;
         this.Epoch = epoch;
         this.Period = period;
         this.Hertz = hertz;
         this.Tycho = tycho;
+        this.Bohr = bohr;
     }
 
     public static ChainConfig getInstance() {
@@ -51,14 +53,14 @@ public class ChainConfig {
         if (cid.longValue() == 56L) {
             // BSC Mainnet
             return new ChainConfig(56L, 200L, 3L, BigInteger.valueOf(31302048L),
-                    BigInteger.valueOf(1718863500L));
+                    BigInteger.valueOf(1718863500L), BigInteger.valueOf(1727317200L));
         } else if (cid.longValue() == 97L) {
             // BSC Testnet
             return new ChainConfig(97L, 200L, 3L, BigInteger.valueOf(31103030L),
-                    BigInteger.valueOf(1713330442L));
+                    BigInteger.valueOf(1713330442L), BigInteger.valueOf(1724116996L));
         } else if (cid.longValue() == 99L) {
             // Private BSC Testnet
-            return new ChainConfig(99L, 200L, 3L, BigInteger.valueOf(8), null);
+            return new ChainConfig(99L, 200L, 3L, BigInteger.valueOf(8), null, null);
         }
 
         Context.require(false, "No Chain Config - ChainID(" + cid.intValue() + ")");
@@ -75,6 +77,10 @@ public class ChainConfig {
 
     public boolean isTycho(long time) {
         return Tycho != null && Tycho.longValue() <= time;
+    }
+
+    public boolean isBohr(long time) {
+        return Bohr != null && Bohr.longValue() <= time;
     }
 
 }

@@ -44,7 +44,8 @@ public class BTPMessageVerifier implements BMV {
     private final DictDB<byte[], Header> heads = Context.newDictDB("heads", Header.class);
 
     public BTPMessageVerifier(Address _bmc, BigInteger _chainId, @Optional byte[] _header,
-                              @Optional byte[] _validators, @Optional byte[] _candidates, @Optional byte[] _recents) {
+                              @Optional byte[] _validators, @Optional byte[] _candidates,
+                              @Optional byte[] _recents, @Optional int _currTurnLength, @Optional int _nextTurnLength) {
         ChainConfig config = ChainConfig.setChainID(_chainId);
         if (_header != null) {
             Header head = Header.fromBytes(_header);
@@ -53,13 +54,14 @@ public class BTPMessageVerifier implements BMV {
             MerkleTreeAccumulator mta = new MerkleTreeAccumulator(head.getNumber().longValueExact());
             mta.add(head.getHash().toBytes());
 
+            Context.require(_currTurnLength > 0 && _nextTurnLength > 0, "Invalid turn lengths");
             Validators validators = Validators.fromBytes(_validators);
             EthAddresses recents = EthAddresses.fromBytes(_recents);
             if (head.getNumber().compareTo(BigInteger.ZERO) == 0) {
                 Context.require(recents.size() == 1, "Wrong recent signers");
             } else {
-                Context.require(recents.size() == validators.size() / 2 + 1,
-                        "Wrong recent signers - validators/2+1");
+                Context.require(recents.size() == Utils.calcMinerHistoryLength(validators.size(),
+                            _currTurnLength) + 1, "Wrong recent signer counts");
             }
 
             this.bmc.set(_bmc);
@@ -75,7 +77,7 @@ public class BTPMessageVerifier implements BMV {
                         Validators.fromBytes(_candidates),
                         Validators.fromBytes(_validators),
                         EthAddresses.fromBytes(_recents),
-                        attestation));
+                        attestation, _currTurnLength, _nextTurnLength));
         } else {
             Context.require(_bmc.equals(this.bmc.get()), "Mismatch BMC address");
         }
@@ -83,7 +85,7 @@ public class BTPMessageVerifier implements BMV {
 
     @External(readonly = true)
     public String getVersion() {
-        return "0.5.0";
+        return "0.7.2";
     }
 
     @External(readonly = true)
@@ -300,7 +302,7 @@ public class BTPMessageVerifier implements BMV {
         Context.require(head.getGasLimit().compareTo(MIN_GAS_LIMIT) >= 0, "Invalid gas limit(< min)");
         Context.require(head.getGasLimit().compareTo(MAX_GAS_LIMIT) <= 0, "Invalid gas limit(> max)");
         Context.require(head.getGasUsed().compareTo(head.getGasLimit()) < 0, "Invalid gas used");
-        Context.require(head.getSigner(BigInteger.valueOf(config.ChainID)).equals(head.getCoinbase()), "Coinbase mismatch");
+        Context.require(head.getSigner(config, BigInteger.valueOf(config.ChainID)).equals(head.getCoinbase()), "Coinbase mismatch");
 
         if (config.isTycho(head.getTime())) {
             Context.require(head.getWithdrawalsHash().equals(EMPTY_WITHDRAWALS_HASH), "Invalid withdrawals hash");
@@ -384,7 +386,7 @@ public class BTPMessageVerifier implements BMV {
         Validators vals = snap.getValidators();
         long number = head.getNumber().longValue();
         EthAddress inturn = vals.get((int)(number % (long)vals.size())).getAddress();
-        if (snap.getRecents().contains(inturn)) {
+        if (snap.isRecentlySigned(inturn)) {
             return 0L;
         }
         return DEFAULT_BACKOFF_TIME;

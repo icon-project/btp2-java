@@ -57,8 +57,26 @@ public class EthAddresses {
         return addresses.remove(i);
     }
 
+    public EthAddress set(int i, EthAddress v) {
+        return addresses.set(i, v);
+    }
+
     public int size() {
         return addresses.size();
+    }
+
+    public int count(EthAddress cmp) {
+        int cnt = 0;
+        for (EthAddress address : addresses) {
+            if (address.equals(cmp)) {
+                cnt++;
+            }
+        }
+        return cnt;
+    }
+
+    public void clear() {
+        addresses.clear();
     }
 
     @Override

@@ -34,4 +34,11 @@ public class Validator {
     public BLSPublicKey getPublicKey() {
         return pubkey;
     }
+
+    @Override
+    public String toString() {
+        return "Validator{" +
+                "address=" + address +
+                '}';
+    }
 }
