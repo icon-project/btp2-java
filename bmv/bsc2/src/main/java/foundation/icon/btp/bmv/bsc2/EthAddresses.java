@@ -75,6 +75,10 @@ public class EthAddresses {
         return cnt;
     }
 
+    public void clear() {
+        addresses.clear();
+    }
+
     @Override
     public String toString() {
         return "EthAddresses{" +

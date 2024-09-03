@@ -124,17 +124,15 @@ public class Snapshot {
             newCurrTurnLength = nextTurnLength;
             newValidators = candidates;
 
-            // If the number of current validators is less than the number of previous validators,
-            // the capacity of the recent signers should be adjusted
-            int limit = Utils.calcMinerHistoryLength(newValidators.size(), newCurrTurnLength) + 1;
-            for (int i = 0; i < newRecents.size() - limit; i++) {
-                newRecents.remove(i);
-            }
-
             if (config.isBohr(head.getTime())) {
                 // BEP-404: Clear Miner History when switching validators set
-                for (int i = 0; i < newRecents.size(); i++) {
-                    newRecents.set(i, EthAddress.EMPTY);
+                newRecents.clear();
+            } else {
+                // If the number of current validators is less than the number of previous validators,
+                // the capacity of the recent signers should be adjusted
+                int limit = Utils.calcMinerHistoryLength(newValidators.size(), newCurrTurnLength) + 1;
+                for (int i = 0; i < newRecents.size() - limit; i++) {
+                    newRecents.remove(i);
                 }
             }
         }
