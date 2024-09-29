@@ -237,9 +237,15 @@ public class Header {
                 blob = Arrays.copyOfRange(extra, EXTRA_VANITY, extra.length - EXTRA_SEAL);
             } else {
                 int num = extra[EXTRA_VANITY];
-                if (extra.length <= EXTRA_VANITY + EXTRA_SEAL + VALIDATOR_NUMBER_SIZE + num * VALIDATOR_BYTES_LENGTH) {
+                int turnLengthSize = 0;
+                if (config.isBohr(time)) {
+                    turnLengthSize = TURN_LENGTH_SIZE;
+                }
+
+                if (extra.length <= EXTRA_VANITY + EXTRA_SEAL + VALIDATOR_NUMBER_SIZE + num * VALIDATOR_BYTES_LENGTH + turnLengthSize) {
                     return null;
                 }
+
                 int start = EXTRA_VANITY + VALIDATOR_NUMBER_SIZE + num * VALIDATOR_BYTES_LENGTH;
                 if (config.isBohr(time)) {
                     start += TURN_LENGTH_SIZE;

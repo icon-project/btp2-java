@@ -85,7 +85,7 @@ public class BTPMessageVerifier implements BMV {
 
     @External(readonly = true)
     public String getVersion() {
-        return "0.7.2";
+        return "0.7.3";
     }
 
     @External(readonly = true)
