@@ -180,6 +180,10 @@ public class Snapshot {
         return attestation;
     }
 
+    public int getTurnLength() {
+        return currTurnLength;
+    }
+
     @Override
     public String toString() {
         return "Snapshot{" +

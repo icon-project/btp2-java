@@ -385,7 +385,7 @@ public class BTPMessageVerifier implements BMV {
 
         Validators vals = snap.getValidators();
         long number = head.getNumber().longValue();
-        EthAddress inturn = vals.get((int)(number % (long)vals.size())).getAddress();
+        EthAddress inturn = vals.get((int)(number / snap.getTurnLength() % (long)vals.size())).getAddress();
         if (snap.isRecentlySigned(inturn)) {
             return 0L;
         }
