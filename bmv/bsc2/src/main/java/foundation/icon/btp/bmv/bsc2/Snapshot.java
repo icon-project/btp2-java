@@ -31,10 +31,11 @@ public class Snapshot {
     private final VoteAttestation attestation;
     private final int currTurnLength;
     private final int nextTurnLength;
+    private final int pastTurnLength;
 
     public Snapshot(Hash hash, BigInteger number, Validators validators,
             Validators candidates, Validators voters, EthAddresses recents,
-            VoteAttestation attestation, int currTurnLength, int nextTurnLength) {
+            VoteAttestation attestation, int currTurnLength, int nextTurnLength, int pastTurnLength) {
 
         this.hash = hash;
         this.number = number;
@@ -47,6 +48,7 @@ public class Snapshot {
         this.attestation = attestation;
         this.currTurnLength = currTurnLength;
         this.nextTurnLength = nextTurnLength;
+        this.pastTurnLength = pastTurnLength;
     }
 
     public static void writeObject(ObjectWriter w, Snapshot o) {
@@ -60,6 +62,7 @@ public class Snapshot {
         w.write(o.attestation);
         w.write(o.currTurnLength);
         w.write(o.nextTurnLength);
+        w.write(o.pastTurnLength);
         w.end();
     }
 
@@ -74,9 +77,10 @@ public class Snapshot {
         VoteAttestation attestation = r.read(VoteAttestation.class);
         int currTurnLength = r.readOrDefault(Integer.class, Header.DEFAULT_TURN_LENGTH);
         int nextTurnLength = r.readOrDefault(Integer.class, Header.DEFAULT_TURN_LENGTH);
+        int pastTurnLength = r.readOrDefault(Integer.class, currTurnLength);
         r.end();
         return new Snapshot(hash, number, validators, candidates, voters, recents, attestation,
-                currTurnLength, nextTurnLength);
+                currTurnLength, nextTurnLength, pastTurnLength);
     }
 
     public boolean inturn(EthAddress validator) {
@@ -111,6 +115,7 @@ public class Snapshot {
             newAttestation = attestation;
         }
 
+        int newPastTurnLength = pastTurnLength;
         int newCurrTurnLength = currTurnLength;
         int newNextTurnLength = nextTurnLength;
         Validators newValidators = validators;
@@ -136,12 +141,13 @@ public class Snapshot {
                 }
             }
         }
-        if (newNumber.longValue() % config.Epoch == (long) (voters.size() / 2 + 1) * currTurnLength) {
+        if (newNumber.longValue() % config.Epoch == Utils.calcMinerHistoryLength(voters.size(), pastTurnLength) + 1) {
             newVoters = validators;
+            newPastTurnLength = currTurnLength;
         }
 
         return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newVoters,
-                newRecents, newAttestation, newCurrTurnLength, newNextTurnLength);
+                newRecents, newAttestation, newCurrTurnLength, newNextTurnLength, newPastTurnLength);
     }
 
     public int getMinerHistoryLength() {
