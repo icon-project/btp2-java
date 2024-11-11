@@ -77,7 +77,7 @@ public class BTPMessageVerifier implements BMV {
                         Validators.fromBytes(_candidates),
                         Validators.fromBytes(_validators),
                         EthAddresses.fromBytes(_recents),
-                        attestation, _currTurnLength, _nextTurnLength, _currTurnLength));
+                        attestation, _currTurnLength, _nextTurnLength, _currTurnLength, 0));
         } else {
             Context.require(_bmc.equals(this.bmc.get()), "Mismatch BMC address");
         }

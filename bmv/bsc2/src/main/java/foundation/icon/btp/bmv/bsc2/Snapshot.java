@@ -22,6 +22,9 @@ import score.ObjectWriter;
 import java.math.BigInteger;
 
 public class Snapshot {
+    private final int FLAG_UPDATE_VALIDATORS = 1;
+    private final int FLAG_UPDATE_VOTERS = 2;
+
     private final Hash hash;
     private final BigInteger number;
     private final Validators validators;
@@ -32,10 +35,11 @@ public class Snapshot {
     private final int currTurnLength;
     private final int nextTurnLength;
     private final int pastTurnLength;
+    private final int updateFlags;
 
-    public Snapshot(Hash hash, BigInteger number, Validators validators,
-            Validators candidates, Validators voters, EthAddresses recents,
-            VoteAttestation attestation, int currTurnLength, int nextTurnLength, int pastTurnLength) {
+    public Snapshot(Hash hash, BigInteger number, Validators validators, Validators candidates,
+            Validators voters, EthAddresses recents, VoteAttestation attestation,
+            int currTurnLength, int nextTurnLength, int pastTurnLength, int updateFlags) {
 
         this.hash = hash;
         this.number = number;
@@ -49,6 +53,7 @@ public class Snapshot {
         this.currTurnLength = currTurnLength;
         this.nextTurnLength = nextTurnLength;
         this.pastTurnLength = pastTurnLength;
+        this.updateFlags = updateFlags;
     }
 
     public static void writeObject(ObjectWriter w, Snapshot o) {
@@ -63,6 +68,7 @@ public class Snapshot {
         w.write(o.currTurnLength);
         w.write(o.nextTurnLength);
         w.write(o.pastTurnLength);
+        w.write(o.updateFlags);
         w.end();
     }
 
@@ -78,9 +84,10 @@ public class Snapshot {
         int currTurnLength = r.readOrDefault(Integer.class, Header.DEFAULT_TURN_LENGTH);
         int nextTurnLength = r.readOrDefault(Integer.class, Header.DEFAULT_TURN_LENGTH);
         int pastTurnLength = r.readOrDefault(Integer.class, currTurnLength);
+        int updateFlags = r.readOrDefault(Integer.class, 0);
         r.end();
         return new Snapshot(hash, number, validators, candidates, voters, recents, attestation,
-                currTurnLength, nextTurnLength, pastTurnLength);
+                currTurnLength, nextTurnLength, pastTurnLength, updateFlags);
     }
 
     public boolean inturn(EthAddress validator) {
@@ -115,6 +122,7 @@ public class Snapshot {
             newAttestation = attestation;
         }
 
+        int newUpdateFlags = updateFlags;
         int newPastTurnLength = pastTurnLength;
         int newCurrTurnLength = currTurnLength;
         int newNextTurnLength = nextTurnLength;
@@ -122,10 +130,12 @@ public class Snapshot {
         Validators newCandidates = candidates;
         Validators newVoters = voters;
         if (newNumber.longValue() % config.Epoch == 0) {
+            newUpdateFlags = 0;
             newNextTurnLength = head.getTurnLength(config);
             newCandidates = head.getValidators(config);
         }
-        if (newNumber.longValue() % config.Epoch == getMinerHistoryLength()) {
+        if (!isUpdated(FLAG_UPDATE_VALIDATORS) && newNumber.longValue() % config.Epoch == getMinerHistoryLength()) {
+            newUpdateFlags |= FLAG_UPDATE_VALIDATORS;
             newCurrTurnLength = nextTurnLength;
             newValidators = candidates;
 
@@ -141,13 +151,18 @@ public class Snapshot {
                 }
             }
         }
-        if (newNumber.longValue() % config.Epoch == Utils.calcMinerHistoryLength(voters.size(), pastTurnLength) + 1) {
+        if (!isUpdated(FLAG_UPDATE_VOTERS) && newNumber.longValue() % config.Epoch == Utils.calcMinerHistoryLength(voters.size(), pastTurnLength) + 1) {
+            newUpdateFlags |= FLAG_UPDATE_VOTERS;
             newVoters = validators;
             newPastTurnLength = currTurnLength;
         }
 
         return new Snapshot(head.getHash(), newNumber, newValidators, newCandidates, newVoters,
-                newRecents, newAttestation, newCurrTurnLength, newNextTurnLength, newPastTurnLength);
+                newRecents, newAttestation, newCurrTurnLength, newNextTurnLength, newPastTurnLength, newUpdateFlags);
+    }
+
+    private boolean isUpdated(int flag) {
+        return (updateFlags & flag) == flag;
     }
 
     public int getMinerHistoryLength() {
