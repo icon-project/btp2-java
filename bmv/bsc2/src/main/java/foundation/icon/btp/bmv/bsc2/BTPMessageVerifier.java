@@ -85,7 +85,7 @@ public class BTPMessageVerifier implements BMV {
 
     @External(readonly = true)
     public String getVersion() {
-        return "0.7.5";
+        return "0.7.6";
     }
 
     @External(readonly = true)
@@ -321,7 +321,7 @@ public class BTPMessageVerifier implements BMV {
                 "Inconsistent block number");
         Context.require(parent.getHash().equals(head.getParentHash()), "Inconsistent block hash");
 
-        // verifyForRamanujanFork(config, snap, head, parent);
+        verifyForRamanujanFork(config, snap, head, parent);
 
         BigInteger diff = parent.getGasLimit().add(head.getGasLimit().negate());
         if (diff.compareTo(BigInteger.ZERO) < 0) {
